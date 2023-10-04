@@ -50,6 +50,6 @@ fstat
 
 fcntl
 
-poll (or equivalent)
+poll (or equivalent) (select kqueue & epoll)
 
 */

@@ -15,7 +15,8 @@ void server() {
 	int 		connection;
 	sockaddr_in	address;
 
-	server_fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
+	// server_fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
+	server_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (server_fd < 0) {
 		std::cerr << "cannot create socket" << std::endl;
 	} else {
