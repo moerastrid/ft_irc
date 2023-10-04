@@ -24,13 +24,13 @@ listen
 
 accept
 
-htons
+htons - host to network short
 
-htonl
+htonl - host to network long
 
-ntohs
+ntohs - network to host short
 
-ntohl
+ntohl - network to host long
 
 inet_addr
 
