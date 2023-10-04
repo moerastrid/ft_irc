@@ -6,11 +6,15 @@ close
 
 setsockopt
 
-getsockname/getprotobyname
+getsockname
+
+getprotobyname
 
 gethostbyname
 
-getaddrinfo/freeaddrinfo
+getaddrinfo
+
+freeaddrinfo
 
 bind
 
@@ -20,7 +24,9 @@ listen
 
 accept
 
-htons/htonl
+htons
+
+htonl
 
 ntohs
 
@@ -30,7 +36,9 @@ inet_addr
 
 inet_ntoa
 
-send/recv
+send
+
+recv
 
 signal
 
