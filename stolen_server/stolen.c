@@ -77,7 +77,7 @@ void	read_fd(s_env* env)
 					FD_CLR(i,&env->master);
 				}
 				else {
-					send_all_client(env,nbytes,buff,i);
+					send_all_client(env, nbytes, buff, i);
 				}
 			}
 		}
@@ -85,31 +85,44 @@ void	read_fd(s_env* env)
 	}
 }
 
+void print_active_fds(fd_set *set) {
+    for (int fd = 0; fd < FD_SETSIZE; fd++) {
+        if (FD_ISSET(fd, set)) {
+            printf("%d ", fd);
+            // You can perform actions on the active file descriptor here
+        }
+    }
+	printf("\n\n");
+}
+
 int	main(void)
 {
 	struct addrinfo	hints;
 	struct addrinfo	*res;
-	s_env		env;
+	s_env			env;
 
-	memset(&hints, 0, sizeof hints);
+	bzero(&hints, sizeof hints);
 	hints.ai_family = AF_UNSPEC; 
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
 	getaddrinfo("127.0.0.1", "3490", &hints, &res);
+
 	env.sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 	bind(env.sockfd, res->ai_addr, res->ai_addrlen);
 	listen(env.sockfd, 10);
 	FD_ZERO(&env.fdreads);
 	FD_ZERO(&env.master);
-	FD_SET(env.sockfd,&env.master);
+	FD_SET(env.sockfd, &env.master);
 	env.fdmax = env.sockfd;
 
 	while (1)
 	{
 		env.fdreads = env.master;
-		printf("BEFORE\n");
-		select(env.fdmax + 1, &env.fdreads, NULL, NULL, NULL);
+		printf("============START OF ROUND==========\n");
+		// select(env.fdmax + 1, &env.fdreads, NULL, NULL, NULL);
 		read_fd(&env);
-		printf("AFTER\n\n");
+		
+		printf("Open connections on master: ");
+		print_active_fds(&env.fdreads);
 	}
 }
