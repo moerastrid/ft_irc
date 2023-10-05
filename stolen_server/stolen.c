@@ -19,8 +19,8 @@ void	send_all_client(s_env* env,int	nbytes, char* buff, int i)
 {
 	int	j;
 
-	printf("Essaye d4envoyer %d\n",nbytes);
-	printf("%s \n",buff);
+	printf("Sending %d bytes...\n",nbytes);
+	printf("Buffer contents: [%s]",buff);
 	j = 0;
 	while (j <= env->fdmax)
 	{
@@ -34,22 +34,23 @@ void	send_all_client(s_env* env,int	nbytes, char* buff, int i)
 void	new_client(s_env* env)
 {
 	int	newfd;
-	char	buff[1024];
+	char	buff[1024]; bzero(buff, 1024);
 	char	welcom[] = "Welcome to the Internet Relay Network nick!user@host\n";
 	char 	yourhost[] = "Your host is servername, running version version\n";
 	char	create[] = "server_name version user_modes chan_modes\n";
 
 	env->addr_size = sizeof env->their_addr;
 	newfd = accept(env->sockfd, (struct sockaddr *)&env->their_addr,&env->addr_size);
-	printf("connex %d\n", newfd);
+	printf("Accepted connection on fd %d\n", newfd);
 	if (newfd > env->fdmax)
 		env->fdmax = newfd;
 	FD_SET(newfd, &env->master);
-	recv(newfd, buff, sizeof buff, 0);
-	printf("%s\n",buff);
-	send(newfd,welcom,sizeof welcom,0);
-	send(newfd,yourhost,sizeof yourhost,0);
-	send(newfd,create,sizeof create,0);
+	unsigned int nbytes = recv(newfd, buff, sizeof buff, 0);
+
+	printf("Message received from client: [%s] (%d bytes)\n",buff, nbytes);
+	send(newfd,welcom,sizeof welcom, 0);
+	send(newfd,yourhost,sizeof yourhost, 0);
+	send(newfd,create,sizeof create, 0);
 }
 
 void	read_fd(s_env* env)
@@ -57,6 +58,7 @@ void	read_fd(s_env* env)
 	int	i;
 	char 	buff[256];
 	int	nbytes;
+
 
 	i = 0;
 	while (i <= env->fdmax)
@@ -67,14 +69,16 @@ void	read_fd(s_env* env)
 				new_client(env);
 			else
 			{
+				bzero(buff, 256);
 				nbytes = recv(i, buff, sizeof buff, 0);
 				if(nbytes <= 0)
 				{
 					close(i);
 					FD_CLR(i,&env->master);
 				}
-				else
+				else {
 					send_all_client(env,nbytes,buff,i);
+				}
 			}
 		}
 		i = i + 1;
@@ -99,12 +103,13 @@ int	main(void)
 	FD_ZERO(&env.master);
 	FD_SET(env.sockfd,&env.master);
 	env.fdmax = env.sockfd;
+
 	while (1)
 	{
 		env.fdreads = env.master;
-		printf("AVANT\n");
+		printf("BEFORE\n");
 		select(env.fdmax + 1, &env.fdreads, NULL, NULL, NULL);
-		printf("APRES\n");
 		read_fd(&env);
+		printf("AFTER\n\n");
 	}
 }
