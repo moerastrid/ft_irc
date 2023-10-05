@@ -1,10 +1,11 @@
 #include "ft_irc.hpp"
-
-void	server(void);
+#include "message.hpp"
 
 int main(int argc, char **argv) {
 	sayhi();
-	server();
+	if (parse(argc, argv) != 0)
+		return (1);
+	// server();
 	(void)argc;
 	(void)argv;
 

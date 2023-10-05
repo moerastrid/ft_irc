@@ -2,11 +2,14 @@ NAME := ft_irc
 # FLAGS =  -Wall -Wextra -Werror -std=c++20
 CXX = c++
 
-HDR = ft_irc.hpp
+HDR = ft_irc.hpp \
+	message.hpp
 
 SRC = main.cpp \
-	ft_irc.cpp\
-	server.cpp
+	ft_irc.cpp \
+	server.cpp \
+	parse.cpp \
+	message.cpp
 
 OBJ_DIR = obj
 
