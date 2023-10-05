@@ -80,6 +80,7 @@ void	new_client(s_env* env)
 	char	welcom[] = "Welcome to the Internet Relay Network nick!user@host\n";
 	// char 	yourhost[] = "Your host is servername, running version version\n";
 	// char	create[] = "server_name version user_modes chan_modes\n";
+	char userprompt[] = "Please enter your username: ";
 
 
 	//Accept the connection and save the socket FD and more. 
@@ -99,6 +100,7 @@ void	new_client(s_env* env)
 	// Receive a first message from the client, which we set as their username. Max length 30. Put in while loop to demand a non-empty name. 
 	char	username[30]; bzero(username, 30);
 	s_user* user = calloc(sizeof (s_user), 1);
+	send(newfd, userprompt, strlen(userprompt), 0);
 	unsigned int nbytes = recv(newfd, username, sizeof username, 0);
 	username[nbytes > 0 ? nbytes - 1 : nbytes] = '\0'; // Remove newline from username
 	printf("Username received from client: [%s] (%d bytes)\n", username, nbytes); //Had het idee om hier de username te vragen, voor nu.
