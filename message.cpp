@@ -1,19 +1,19 @@
 #include "message.hpp"
 
 void	message::debug(std::string text) {
-	std::cout << "\x1B[36m" << "DEBUG- " << text << "\x1B[0m" << std::endl;
+	std::cout << "\x1B[36m" << "DEBUG-\t\t" << text << "\x1B[0m" << std::endl;
 }
 
 void	message::info(std::string text) {
-	std::cout << "\x1B[35m" << "INFO- " << text << "\x1B[0m" << std::endl;
+	std::cout << "\x1B[34m" << "INFO-\t\t" << text << "\x1B[0m" << std::endl;
 }
 
 void	message::warning(std::string text) {
-	std::cout << "\x1B[34m" << "WARNING- " << text << "\x1B[0m" << std::endl;
+	std::cout << "\x1B[33m" << "WARNING-\t" << text << "\x1B[0m" << std::endl;
 }
 
 void	message::error(std::string text) {
-	std::cout << "\x1B[33m" << "ERROR- " << text << "\x1B[0m" << std::endl;
+	std::cout << "\x1B[31m" << "ERROR-\t\t" << text << "\x1B[0m" << std::endl;
 }
 
 message::message() {}								//default constructor

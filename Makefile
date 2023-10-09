@@ -3,7 +3,8 @@ NAME := ft_irc
 CXX = c++
 
 HDR = ft_irc.hpp \
-	message.hpp
+	message.hpp \
+	server.hpp
 
 SRC = main.cpp \
 	ft_irc.cpp \

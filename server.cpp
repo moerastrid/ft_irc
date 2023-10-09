@@ -1,70 +1,76 @@
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <iostream>
-#include <unistd.h>
+#include "server.hpp"
 
-using std::cout;
+server::server() {}
 
-void server() {
-	// create socket
-	const int	port = 8080;
-	// later port van cmd line
-	const int	max_connections = 4;
-	int 		server_fd;
-	int 		connection;
-	sockaddr_in	address;
+server::~server() {}
 
+server::server(const server &src) {
+	*this = src;
+}
+
+server &server::operator=(const server &src) {
+	this->_port = src._port;
+	this->_server_fd = src._server_fd;
+	this->_connection = src._connection;
+	return (*this);
+}
+
+server::server(const unsigned int argport) {
+	this->_port = argport;
 	// server_fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
-	server_fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (server_fd < 0) {
-		std::cerr << "cannot create socket" << std::endl;
+	this->_server_fd = socket(AF_INET, SOCK_STREAM, 0);
+	if (this->_server_fd < 0) {
+		message("cannot create socket", "ERROR");
+		exit(EXIT_FAILURE);
 	} else {
-		cout << "socket " << server_fd << " created" << std::endl;
+		message("socket created", "INFO");
 	}
 
 	// bind socket
-	address.sin_family = AF_INET;
-	address.sin_port = htons(port);
-	address.sin_addr.s_addr = INADDR_ANY;
-	if (bind(server_fd, ((const sockaddr *)&address), sizeof(address)) < 0) {
-		std::cerr << "Cannot bind socket" << std::endl;
-		return ;
+	this->_address.sin_family = AF_INET;
+	this->_address.sin_port = htons(this->_port);
+	this->_address.sin_addr.s_addr = INADDR_ANY;
+	if (bind(this->_server_fd, ((const sockaddr *)&this->_address), sizeof(this->_address)) < 0) {
+		message("Cannot bind socket", "ERROR");
+		exit(EXIT_FAILURE) ;
 	} else
-		std::cout << "socket " << server_fd << " bind success" << std::endl;
+		message("socket bind success", "INFO");
 
-	// wait for connection
-	if (listen(server_fd, max_connections) < 0) {
-		std::cerr << "Cannot hear socket" << std::endl;
-		return ;
+	// wait for _connection
+	if (listen(this->_server_fd, MAX_CONNECT) < 0) {
+		message("Cannot hear socket", "ERROR");
+		exit(EXIT_FAILURE) ;
 	} else
-		std::cout << "socket " << server_fd << " loud and clear over" << std::endl;
+		message("socket loud and clear over", "INFO");
+}
+
+void server::run() {
 	
-	socklen_t len = sizeof(address);
+	socklen_t len = sizeof(this->_address);
 
-	// begin loop? voor meerdere connections
+	// begin loop? voor meerdere _connections
 	while (1) {
-		connection = accept(server_fd, (struct sockaddr *)&address, &len);
-		if (connection < 0) {
+		_connection = accept(_server_fd, (struct sockaddr *)&_address, &len);
+		if (_connection < 0) {
 			// std::cerr << "Cannot accept socket" << std::endl;
-				(void)connection;
+				(void)_connection;
 			} else {
-			std::cout << "socket " << server_fd << " accepted" << std::endl;
+			std::cout << "socket " << _server_fd << " accepted" << std::endl;
 
 			// receive info
 			char buf[40000];
-			long valread = read(connection, buf, 40000);
+			long valread = read(_connection, buf, 40000);
 			std::cout << buf << std::endl;
 			std::cout << "valread : " << valread << std::endl;
 
 			// send message
 			std::string response = "this is FT_IRC over \n";
 			
-			send(connection, response.c_str(), response.size(), 0);
+			send(_connection, response.c_str(), response.size(), 0);
 			std::cout << "hello message sent" << std::endl;
 			}
 		// pas helemaal als je klaar bent:
-		close(connection);
+		close(_connection);
 	}
-	close(server_fd);
+	close(_server_fd);
 }
