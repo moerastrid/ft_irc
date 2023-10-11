@@ -2,7 +2,9 @@
 
 server::server() {}
 
-server::~server() {}
+server::~server() {
+	close(_server_fd);
+}
 
 server::server(const server &src) {
 	*this = src;
@@ -72,5 +74,4 @@ void server::run() {
 		// pas helemaal als je klaar bent:
 		close(_connection);
 	}
-	close(_server_fd);
 }
