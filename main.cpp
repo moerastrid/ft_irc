@@ -3,13 +3,14 @@
 #include "server.hpp"
 
 int main(int argc, char **argv) {
-	int port = 8080;
-	if (parse(argc, argv) != 0)
-		return (1);
+	int port = 0;
+	port = parse(argc, argv);
+	if (port < 0)
+		exit(EXIT_FAILURE);
 	server ircServer(port);
-	ircServer.run();
-	(void)argc;
-	(void)argv;
+	while (1) {
+		ircServer.run();
+	}
 
 	// message("test", "ERROR");
 	// message("test", "INFO");
