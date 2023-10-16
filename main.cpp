@@ -11,6 +11,7 @@ int main(int argc, char **argv) {
 	server ircServer(port, argv[2]);
 	while (1) {
 		ircServer.run();
+		// ?
 	}
 
 	// message("test", "ERROR");
