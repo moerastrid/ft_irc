@@ -125,7 +125,7 @@ void server::run() {
 
 			// excisting connection sending or receiving data
 			else {
-				message("fd != server_fd", "INFO");\
+				message("fd != server_fd", "INFO");
 				
 
 			}
