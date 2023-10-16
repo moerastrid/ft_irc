@@ -17,6 +17,7 @@ typedef struct	t_env
 	int			fdmax;
 	fd_set		master;
 	fd_set		fdreads;
+	fd_set		fdwrites;
 	s_user**	clients;
 	int			active_clients;
 }		s_env;

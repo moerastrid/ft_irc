@@ -34,13 +34,12 @@ char *ft_strjoin_3(char *a, char *b, char *c) {
 
 void	send_to_client(s_env* env, int i, char* buff)
 {
-
 	
 }
 
 void	send_all_client(s_env* env, int	nbytes, char* buff, int i) // i = sender FD
 {
-	int	j; // J == receiver FD;
+	int	j; // j == receiver FD;
 
 	printf("Incoming message: [%s]\n",buff);
 	printf("Sending %d bytes to all clients...\n",nbytes);
@@ -60,13 +59,8 @@ void	send_all_client(s_env* env, int	nbytes, char* buff, int i) // i = sender FD
 				// If found, prepend it to the message to show which user sent it, separated by a colon.
 				if (username != NULL) {
 					char* message = ft_strjoin_3(username, ": ", buff);
-					printf("username: [%s]\n", username);
-					printf("Buff: [%s]\n", buff);
-					printf("Message: [%s]\n", message);
-
 					send(j, message, strlen(message), 0);
 				} else {
-					printf("no\n");
 					send(j, buff, strlen(buff), 0);
 				}
 			}
@@ -78,10 +72,7 @@ void	new_client(s_env* env)
 {
 	int		newfd;
 	char	welcom[] = "Welcome to the Internet Relay Network nick!user@host\n";
-	// char 	yourhost[] = "Your host is servername, running version version\n";
-	// char	create[] = "server_name version user_modes chan_modes\n";
-	char userprompt[] = "Please enter your username: ";
-
+	char	userprompt[] = "Please enter your username: ";
 
 	//Accept the connection and save the socket FD and more. 
 	env->addr_size = sizeof env->their_addr;
@@ -101,7 +92,7 @@ void	new_client(s_env* env)
 	char	username[30]; bzero(username, 30);
 	s_user* user = calloc(sizeof (s_user), 1);
 	send(newfd, userprompt, strlen(userprompt), 0);
-	unsigned int nbytes = recv(newfd, username, sizeof username, 0);
+	unsigned int nbytes = recv(newfd, username, sizeof username, 0); // BLOCKS (still)
 	username[nbytes > 0 ? nbytes - 1 : nbytes] = '\0'; // Remove newline from username
 	printf("Username received from client: [%s] (%d bytes)\n", username, nbytes); //Had het idee om hier de username te vragen, voor nu.
 	
@@ -123,7 +114,6 @@ void	read_fd(s_env* env)
 	int		i;
 	char 	buff[256];
 	int		nbytes;
-
 
 	i = 0;
 	while (i <= env->fdmax)
@@ -157,17 +147,17 @@ int	main(void)
 	s_env			env;
 
 	bzero(&hints, sizeof hints);
-	hints.ai_family = AF_UNSPEC; 
+	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
 	getaddrinfo("127.0.0.1", "3490", &hints, &res);
 	// getaddrinfo("10.11.1.11", "3490", &hints, &res);
 
-
 	env.sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 	bind(env.sockfd, res->ai_addr, res->ai_addrlen);
 	listen(env.sockfd, 10);
 	FD_ZERO(&env.fdreads);
+	FD_ZERO(&env.fdwrites);
 	FD_ZERO(&env.master);
 	FD_SET(env.sockfd, &env.master);
 	env.fdmax = env.sockfd;
@@ -178,8 +168,12 @@ int	main(void)
 	while (1)
 	{
 		env.fdreads = env.master;
+		env.fdwrites = env.master;
 		printf("============START OF ROUND==========\n");
-		select(env.fdmax + 1, &env.fdreads, NULL, NULL, NULL);
+		struct timeval tv;
+		tv.tv_sec = 2;
+		tv.tv_usec = 0;
+		select(env.fdmax + 1, &env.fdreads, NULL, NULL, &tv);
 		read_fd(&env);
 		printf("\n");
 	}
