@@ -13,6 +13,7 @@ class server {
 		int				_port = -1;
 		int				_server_fd = 0;
 		int				_connection = 0;
+		std::string		_password;
 		sockaddr_in		_address;
 		server();								//default constructor
 
@@ -20,7 +21,7 @@ class server {
 		~server();								// default destructor
 		server(const server &src);				//copy constructor
 		server &operator=(const server &src);	// = sign operator
-		server(const unsigned int port);		// constructor (PORT)
+		server(const unsigned int port, const std::string password);		// constructor (PORT)
 		
 		void	run();
 };

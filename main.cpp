@@ -4,10 +4,11 @@
 
 int main(int argc, char **argv) {
 	int port = 0;
+
 	port = parse(argc, argv);
 	if (port < 0)
 		exit(EXIT_FAILURE);
-	server ircServer(port);
+	server ircServer(port, argv[2]);
 	while (1) {
 		ircServer.run();
 	}

@@ -17,8 +17,7 @@ server &server::operator=(const server &src) {
 	return (*this);
 }
 
-server::server(const unsigned int argport) {
-	this->_port = argport;
+server::server(const unsigned int port, std::string password) : _port(port), _password(password) {
 	// server_fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
 	this->_server_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (this->_server_fd < 0) {
