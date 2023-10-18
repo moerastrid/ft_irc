@@ -12,11 +12,15 @@
 
 class server {
 	private :
-		int				_port = -1;
-		int				_server_fd = 0;
-		int				_connection = 0;
-		std::string		_password;
-		sockaddr_in		_address;
+		const int			_opt = 1;
+		int					_port = -1;
+		int					_server_fd = 0;
+		int					_connection = 0;
+		std::string			_password;
+		sockaddr_in			_address;
+		int					_epoll_fd;
+		struct epoll_event	_ev;
+		struct epoll_event	_all_events[MAX_CONNECT];
 		server();								//default constructor
 
 	public :

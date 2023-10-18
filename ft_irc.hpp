@@ -2,7 +2,6 @@
 
 #include <string>
 
-#define	MAX_CONNECT	64
+#define	MAX_CONNECT	1000
 
-// void	server(void);
 int     parse(int argc, char **argv);
