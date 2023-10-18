@@ -20,6 +20,7 @@ typedef struct	t_env
 	fd_set		fdwrites;
 	s_user**	clients;
 	int			active_clients;
+	int			handshakes[256];
 }		s_env;
 
 #endif
