@@ -26,7 +26,7 @@ using std::endl;
 *      displyed.                                           *\n\
 * /MSG [-channel | -nick] <Target> <message>               *\n\
 *      Send a message to a nickname or channel.            *\n\
-*                                                          *\n\
+* /CHANNEL LIST                                            *\n\
 ************************************************************\n\
 *                      Operator:                           *\n\
 * /KICK [Channel] [Nick]                                   *\n\
@@ -89,36 +89,36 @@ Give or take channel operator status to [User] \n\
 Set the channel's user limit. 0 for unlimited"
 
 void parse_help([[maybe_unused]]const std::vector<string>& args) {
-    static map<string, string> table;
-    table["/help"] = HELP_HELP;
-    table["/msg"] = MSG_HELP;
-    table["/kick"] = KICK_HELP;
-    table["/invite"] = INVITE_HELP;
-    table["/topic"] = TOPIC_HELP;
-    table["/mode"] = MODE_HELP;
+	static map<string, string> table;
+	table["/help"] = HELP_HELP;
+	table["/msg"] = MSG_HELP;
+	table["/kick"] = KICK_HELP;
+	table["/invite"] = INVITE_HELP;
+	table["/topic"] = TOPIC_HELP;
+	table["/mode"] = MODE_HELP;
 
-    size_t len = args.size();
+	size_t len = args.size();
 
-    if (len == 0) {
-        cout << FULL_HELP_TEXT << endl;
-        //send_private_message(server, client, FULL_HELP_TEXT);
-    } else if (len == 1) {
-        if (table.find(args[0]) != table.end()) {
-            cout << table[args[0]] << endl;
-        }
-        else { // Help command not found
-            string out = string("No help for ").append(args[0]);
-            cout << out << endl;
-            //send_private_message(server, client, out);
-        }
-        //send_private_message(server, client, table[args[0]])
-    } else { // Too many arguments
-        cout << "No help for ";
-        for (const auto& el : args) {
-            cout << el << " ";
-        }
-        cout << endl;
-    }
+	if (len == 0) {
+		cout << FULL_HELP_TEXT << endl;
+		//send_private_message(server, client, FULL_HELP_TEXT);
+	} else if (len == 1) {
+		if (table.find(args[0]) != table.end()) {
+			cout << table[args[0]] << endl;
+		}
+		else { // Help command not found
+			string out = string("No help for ").append(args[0]);
+			cout << out << endl;
+			//send_private_message(server, client, out);
+		}
+		//send_private_message(server, client, table[args[0]])
+	} else { // Too many arguments
+		cout << "No help for ";
+		for (const auto& el : args) {
+			cout << el << " ";
+		}
+		cout << endl;
+	}
 }
 
 void parse_msg([[maybe_unused]]const std::vector<string>& args) {
@@ -134,64 +134,64 @@ void parse_topic([[maybe_unused]]const std::vector<string>& args) {
 }
 
 void parse_mode([[maybe_unused]]const std::vector<string>& args) {
-    string mode_options[] = {"i", "t", "k", "o", "l"};
+	string mode_options[] = {"i", "t", "k", "o", "l"};
 }
 
 void parse_user_command(const string& input) {
-    string commands[] = {"/help", "/msg", "/kick", "/invite", "/topic", "/mode"};
+	string commands[] = {"/help", "/msg", "/kick", "/invite", "/topic", "/mode"};
 
-    static map<string, function<void(const vector<string>&)>> table;
-    table["/help"] = parse_help;
-    table["/msg"] = parse_msg;
-    table["/kick"] = parse_kick;
-    table["/invite"] = parse_invite;
-    table["/topic"] = parse_topic;
-    table["/mode"] = parse_mode;
+	static map<string, function<void(const vector<string>&)>> table;
+	table["/help"] = parse_help;
+	table["/msg"] = parse_msg;
+	table["/kick"] = parse_kick;
+	table["/invite"] = parse_invite;
+	table["/topic"] = parse_topic;
+	table["/mode"] = parse_mode;
 
-    vector<string> args;
-    istringstream ss(input);
-    string arg;
-    string cmd;
+	vector<string> args;
+	istringstream ss(input);
+	string arg;
+	string cmd;
 
-    ss >> cmd;
+	ss >> cmd;
 
-    while (ss >> arg) {
-        args.push_back(arg);
-    }
+	while (ss >> arg) {
+		args.push_back(arg);
+	}
 
-    if (table.find(cmd) != table.end()) {
-        table[cmd](args); //run the function
-    } else { //not found
-        //send_private_message(server, client, "the stuff below this line")
-        string out = string("Unknown command [").append(cmd).append("]");
-        cout << out << endl;
-        return;
-    }
+	if (table.find(cmd) != table.end()) {
+		table[cmd](args); //run the function
+	} else { //not found
+		//send_private_message(server, client, "the stuff below this line")
+		string out = string("Unknown command [").append(cmd).append("]");
+		cout << out << endl;
+		return;
+	}
 }
 
 void test(string cmd) {
-    static int counter = 0;
-    cout << "                ====Test " << counter << "====" << endl;
-    cout << "Command: " << cmd << endl;
+	static int counter = 0;
+	cout << "				====Test " << counter << "====" << endl;
+	cout << "Command: " << cmd << endl;
 
-    cout << "output:\n";
-    parse_user_command(cmd);
-    cout << endl << endl;
+	cout << "output:\n";
+	parse_user_command(cmd);
+	cout << endl << endl;
 
-    counter++;
+	counter++;
 }
 
 int main() {
-    test("/help");
-    test("/help /help");
-    test("/help /msg");
-    test("/help /kick");
-    test("/help /invite");
-    test("/help /topic");
-    test("/help /mode");
+	test("/help");
+	test("/help /help");
+	test("/help /msg");
+	test("/help /kick");
+	test("/help /invite");
+	test("/help /topic");
+	test("/help /mode");
 
-    // Errors: 
-    cout << "===========Error tests:===========" << endl;
-    test("/hlep");
-    test("/help /hlep");
+	// Errors: 
+	cout << "===========Error tests:===========" << endl;
+	test("/hlep");
+	test("/help /hlep");
 }
