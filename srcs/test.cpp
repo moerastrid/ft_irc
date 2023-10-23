@@ -1,22 +1,37 @@
-#include "MessageParser.hpp"
 #include "Executor.hpp"
 
 #include <iostream>
 using std::cout;
 using std::endl;
 
+// class Test {
+// public:
+// 	vector<string&> strings;
+// }
+
 int main() {
+
+	// string s1 = "hello doofus";
+	// vector<string&> vec;
+	// vec.push_back(s1);
+	//
+	// Test t;
+	// t.strings = vec;
+	//
+	// cout << t.strings[0] << endl;
+
 	// Input:
 	int fd = 0;
 	string message = "NICK thibauld 123 test \n";
-	void* env = NULL;
+	env env;
+
+	env.server_address = "localhost";
 
 	// setup
-	MessageParser mp;
 	Executor ex;
 
 	// parse
-	Command cmd = mp.parse_client_message(env, message, fd);
+	Command cmd(message, fd);
 
 	//output from parser:
 	cout << cmd.getCommand() << endl;
@@ -26,5 +41,7 @@ int main() {
 	}
 
 	// run
-	ex.run(env, cmd, fd);
+	string received = ex.run(env, cmd, fd);
+
+	cout << "Message_received: [" << received << "]" << endl;
 }

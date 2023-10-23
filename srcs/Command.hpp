@@ -5,14 +5,18 @@
 using std::string;
 #include <vector>
 using std::vector;
+#include <sstream>
+using std::stringstream;
+#include <algorithm>
 
 class Command {
 private:
-	string command;
-	vector<string> args;
+	string			command;
+	vector<string>	args;
+	int				client_fd;
 public:
 	Command();
-	Command(string cmd, vector<string> args);
+	Command(const string& client_message_string, int client_fd);
 	~Command();
 	const Command& operator=(const Command& other);
 

@@ -1,8 +1,18 @@
 #include "Command.hpp"
 
-Command::Command(string cmd, vector<string> args) {
-	this->command = cmd;
-	this->args = args;
+Command::Command(const string& client_message_string, int client_fd) {
+	stringstream ss(client_message_string);
+
+	string cmd_str;
+	ss >> cmd_str;
+	this->setCmd(cmd_str);
+
+	std::string arg;
+	while (ss >> arg) {
+		this->addArg(arg);
+	}
+
+	this->client_fd = client_fd;
 }
 
 Command::Command() {}
