@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2023-10-23T16:12:24.196Z" agent="Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/118.0" etag="-VlSrrK6WI8221KVK-4e" version="22.0.6" type="device">
+<mxfile host="app.diagrams.net" modified="2023-10-23T20:49:02.491Z" agent="Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/118.0" etag="mTj3V8p-zJ3pn2r8FYBi" version="22.0.6" type="device">
   <diagram id="C5RBs43oDa-KdzZeNtuy" name="Page-1">
     <mxGraphModel dx="1362" dy="766" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
@@ -13,7 +13,7 @@
         <mxCell id="QCPalcbUQx9Sos6cTSxj-71" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="WIyWlLk6GJQsqaUBKTNV-7" target="QCPalcbUQx9Sos6cTSxj-61">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="WIyWlLk6GJQsqaUBKTNV-7" value="Parse/Tokenize one line&lt;br&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;output:&lt;/div&gt;&lt;div&gt;struct Command{&lt;/div&gt;&lt;div&gt;string cmd&lt;/div&gt;&lt;div&gt;string args}&lt;br&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;glass=0;strokeWidth=1;shadow=0;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
+        <mxCell id="WIyWlLk6GJQsqaUBKTNV-7" value="&lt;div&gt;Build Command:&lt;/div&gt;&lt;div&gt;&amp;lt;string cmd&amp;gt;&lt;/div&gt;&lt;div&gt;&amp;lt;vector&amp;lt;string&amp;gt; args&amp;gt;&lt;br&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;glass=0;strokeWidth=1;shadow=0;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
           <mxGeometry x="600" y="40" width="120" height="115" as="geometry" />
         </mxCell>
         <mxCell id="QCPalcbUQx9Sos6cTSxj-74" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="WIyWlLk6GJQsqaUBKTNV-11">
@@ -275,7 +275,7 @@
           <mxGeometry x="680" y="260" width="120" height="60" as="geometry" />
         </mxCell>
         <mxCell id="QCPalcbUQx9Sos6cTSxj-75" value="All command send a reply to the client." style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
-          <mxGeometry x="190" y="800" width="80" height="80" as="geometry" />
+          <mxGeometry x="200" y="690" width="80" height="80" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

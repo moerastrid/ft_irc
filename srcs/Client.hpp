@@ -2,20 +2,21 @@
 #define CLIENT_HPP
 
 #include <string>
+using std::string;
 
 #include "Channel.hpp"
-
-using std::string;
 
 class Client {
 private:
 
 
 public:
-	int         fd;
-	string      username;
-	string      nickname;
+	int			fd;
+	string		username;
+	string		realname;
+	string		nickname;
 	// Channel*    joined_channels;
+
 	Client();
 	~Client();
 	Client(int fd);

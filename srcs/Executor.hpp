@@ -42,7 +42,7 @@ class Executor {
 		string run_KICK(env& env, vector<string> args, int fd);
 		string run_QUIT(env& env, vector<string> args, int fd);
 
-		Client get_client_by_fd(env& env, int fd);
+		Client* get_client_by_fd(env& env, int fd);
 };
 
 #endif /* end of include guard: EXECUTOR_HPP */
