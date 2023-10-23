@@ -19,7 +19,7 @@ public:
 	~MessageParser();
 
 	Command parse_client_message(void* env, const string& client_message_string, const int active_client_fd);
-
+	int validate_command(Command& cmd, int fd);
 };
 
 #endif /* end of include guard: MESSAGE_PARSER_HPP */
