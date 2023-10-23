@@ -136,8 +136,8 @@ void	send_all_client(s_env* env, int	nbytes, char* buff, int i) // i = sender FD
 	{
 		if (FD_ISSET(j,&env->master))
 			if (j != env->sockfd && j != i) {
-				
-				// Find the username from the saved users by the socket's fd. 
+
+				// Find the username from the saved users by the socket's fd.
 				char *username = NULL;
 				for (int k = 0; k < env->active_clients; k++) {
 					if (env->clients[k]->fd == i) {
@@ -164,7 +164,7 @@ void	new_client(s_env* env)
 	char	welcom[] = ":localhost 001 tnuyten :Welcome to the Internet Relay Network Neus!tnuyten@localhost\n";
 	// char	userprompt[] = "Please enter your username: ";
 
-	//Accept the connection and save the socket FD and more. 
+	//Accept the connection and save the socket FD and more.
 	env->addr_size = sizeof env->their_addr;
 	newfd = accept(env->sockfd, (struct sockaddr *)&env->their_addr, &env->addr_size);
 	dprintf(2, "Accepted connection on fd %d\n", newfd);
@@ -184,12 +184,6 @@ void	new_client(s_env* env)
 	send(newfd, welcom, sizeof welcom, 0);
 }
 
-void send_CAP_response([[maybe_unused]]s_env* env, int fd, [[maybe_unused]]char**args) {
-	static char CAPmessage[] = ":localhost CAP NAK :-";
-	dprintf(2, "Sending CAP response: [%s]\n", CAPmessage);
-	send(fd, CAPmessage, sizeof CAPmessage, 0);
-}
-
 s_user* get_client_by_fd(s_env* env, int fd) {
 	for (int i = 0; i < env->active_clients; i++) {
 		if (env->clients[i]->fd == fd)
@@ -206,6 +200,12 @@ void send_server_error(s_env* env, int fd, int error_code) {
 	sprintf(message, ":%s %d %s :%s\n", env->server_address, error_code, client->nick, errors[error_code]);
 	send(fd, message, sizeof message, 0);
 	dprintf(2, "[%s]\n", message);
+}
+
+void send_CAP_response(s_env* env, int fd, char**args) {
+	static char CAPmessage[] = ":localhost CAP NAK :-";
+	dprintf(2, "Sending CAP response: [%s]\n", CAPmessage);
+	send(fd, CAPmessage, sizeof CAPmessage, 0);
 }
 
 void register_nickname(s_env* env, int fd, char** args) {
@@ -243,24 +243,24 @@ void register_nickname(s_env* env, int fd, char** args) {
 
 // }
 
-						// Now the server should respond to the NICK and USER messages. 
+						// Now the server should respond to the NICK and USER messages.
 						/*
 							The server should respond with one of the following responses:
 							NICK response:
-							NICKNAME in use: If the chosen nickname is already in use, 
-								the server will typically respond with an error message like 
+							NICKNAME in use: If the chosen nickname is already in use,
+								the server will typically respond with an error message like
 								433 ERR_NICKNAMEINUSE.
 								Example: [:server-name 433 * chosen-nickname :Nickname is already in use.]
-							Nickname changed: If the nickname change is successful, the server 
-								will respond with a confirmation message, indicating that the 
+							Nickname changed: If the nickname change is successful, the server
+								will respond with a confirmation message, indicating that the
 								nickname has been changed.
 								Example: [:server-name 001 your-nickname :Welcome to the IRC Network your-nickname!user@hostname]
-							USER response: 
-							USER Command: Similarly, when the client sends the USER command to register user information, 
+							USER response:
+							USER Command: Similarly, when the client sends the USER command to register user information,
 								the server should acknowledge this by responding with a confirmation message.
 								Example: [:server-name 001 your-nickname :Welcome to the IRC Network your-nickname!user@hostname
 						*/
-void parse_incoming_message(s_env* env, char* message, int fd, [[maybe_unused]]int nbytes) {
+void parse_incoming_message(s_env* env, char* message, int fd, int nbytes) {
 	static char* expected[] = {"CAP", "NICK"};// "USER", "MODE", "PING", "PRIVMSG", "WHOIS", "JOIN", "KICK", "QUIT" };
 	size_t EXPECTED_LEN = 2;
 	void (*functions[])(s_env*, int, char**) = {send_CAP_response, register_nickname}; //#TODO add rest of functions
