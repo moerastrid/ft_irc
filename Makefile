@@ -4,13 +4,15 @@ CXX = c++
 
 HDR = ft_irc.hpp \
 	message.hpp \
-	server.hpp
+	server.hpp \
+	connection.hpp \
 
 SRC = main.cpp \
 	ft_irc.cpp \
 	server.cpp \
 	parse.cpp \
-	message.cpp
+	message.cpp \
+	connection.cpp 
 
 OBJ_DIR = obj
 

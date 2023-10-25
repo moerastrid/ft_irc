@@ -1,4 +1,5 @@
 #include "server.hpp"
+#include <cstring>
 
 server::server() {}
 
@@ -112,6 +113,7 @@ server::server(const unsigned int port, std::string password) : _port(port), _pa
 // }
 
 void server::run() {
+	message("start while loop", "DEBUG");
 	// RETURN VALUE		epoll_wait():
     //    When successful, epoll_wait() returns the number of file descriptors ready for  the
     //    requested  I/O,  or  zero  if  no file descriptor became ready during the requested
@@ -127,6 +129,7 @@ void server::run() {
 	} else if (num_fds == 0) {
 		message("no connect/communication made or none of the fd's are ready", "INFO");
 	} else {
+		std::cout << "fd: " << num_fds << std::endl;
 		// Iterate over all the file descriptors ready for the requested I/O.
 		for (int i = 0; i < num_fds; i++) {
 			int fd = _all_events[i].data.fd;
@@ -138,8 +141,8 @@ void server::run() {
 				int					_new_conn;
 				int					new_len = sizeof(new_addr);
 
-				while (1) {
-					int	_new_conn = accept(_server_fd, (struct sockaddr*)&new_addr, (socklen_t*)&new_len);
+				// while (1) {
+					_new_conn = accept(_server_fd, (struct sockaddr*)&new_addr, (socklen_t*)&new_len);
 					if (_new_conn < 0) {
 						// we have processed all incoming connections
 						if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
@@ -159,8 +162,10 @@ void server::run() {
 						break;
 					} else {
 						message("connection added", "INFO");
+						std::string welcom = ":localhost 001 tnuyten :Welcome to the Internet Relay Network Neus!tnuyten@localhost\n";
+						send(_new_conn, welcom.c_str(), welcom.size(), 0);
 					}
-				}
+				// }
 			}
 
 			// excisting connection with a problem
@@ -174,7 +179,18 @@ void server::run() {
 			else {
 				message("fd != server_fd", "INFO");
 				std::cout << "HELLO THIS IS HAPPENING!!!" << std::endl;
-
+				char buf[100000];
+				bzero(buf, sizeof(buf));
+					int n = read(_all_events[i].data.fd, buf,
+						 sizeof(buf));
+					std::cout << "buf : " << std::endl;
+					if (n <= 0 /* || errno == EAGAIN */ ) {
+						break;
+					} else {
+						printf("[+] data: %s\n", buf);
+						write(_all_events[i].data.fd, buf,
+						      strlen(buf));
+					}
 			}
 		}
 	}

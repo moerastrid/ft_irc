@@ -6,8 +6,10 @@
 #include <netinet/in.h>
 #include <iostream>
 #include <unistd.h>
+#include <deque>
 #include "message.hpp"
 #include "ft_irc.hpp"
+#include "connection.hpp"
 
 
 class server {
@@ -22,6 +24,7 @@ class server {
 		struct epoll_event	_ev;
 		struct epoll_event	_all_events[MAX_CONNECT];
 		server();								//default constructor
+		std::deque<connection>	_all_cons;
 
 	public :
 		~server();								// default destructor
