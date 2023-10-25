@@ -122,9 +122,6 @@ RFC 1459
    "Identity Server".
 */
 
-#include <iostream>
-using std::cout;
-using std::endl;
 string Executor::run_USER(env& env, vector<string> args, int fd) {
 	if (args.size() < 4) {
 		return "461 ERR_NEEDMOREPARAMS NICK :Not enough parameters";
@@ -134,10 +131,9 @@ string Executor::run_USER(env& env, vector<string> args, int fd) {
 	}
 
 	string username, hostname, servername, realname;
-
-    if (!parseUserArguments(args, username, hostname, servername, realname)) {
-        return "432 ERR_ERRONEOUSNICKNAME :Invalid user arguments";
-    }
+	if (!parseUserArguments(args, username, hostname, servername, realname)) {
+		return "432 ERR_ERRONEOUSNICKNAME :Invalid user arguments";
+	}
 
 	Client* client = getClientByFD(env, fd);
 	string message;
@@ -167,7 +163,7 @@ string Executor::run_MODE(env& env, vector<string> args, int fd) {
 string Executor::run_PING(env& env, vector<string> args, int fd) {
 	(void)args;
 	(void)fd;
-	return "PONG" + env.server_address;
+	return "PONG " + env.server_address;
 }
 
 string Executor::run_PRIVMSG(env& env, vector<string> args, int fd) {
@@ -250,10 +246,10 @@ void Executor::addClientToVector(env& env, vector<string> args, string username,
 }
 
 bool Executor::parseUserArguments(const vector<string>& args, string& username, string& hostname, string& servername, string& realname) {
-    username = args[0];
-    hostname = args[1];
-    servername = args[2];
-    realname = args[3];
+	username = args[0];
+	hostname = args[1];
+	servername = args[2];
+	realname = args[3];
 
-    return !username.empty() && verify_name(username) && !hostname.empty() && !servername.empty() && (!realname.empty() || args[3] != ":");
+	return !username.empty() && verify_name(username) && !hostname.empty() && !servername.empty() && (!realname.empty() || args[3] != ":");
 }
