@@ -115,16 +115,6 @@ char **split_lines(const char *message) {
 }
 
 
-
-
-
-
-
-
-
-
-
-
 // SERVER
 
 void	send_all_client(s_env* env, int	nbytes, char* buff, int i) // i = sender FD
@@ -315,6 +305,7 @@ void	read_fd(s_env* env)
 			else { //Incoming request elsewhere implies chat message or command.
 				bzero(buff, 256);
 				nbytes = recv(i, buff, sizeof buff, 0);
+				dprintf(2, "Incoming message: [%s] on fd %d of %d bytes\n", buff, i, nbytes);
 				if (nbytes <= 0)
 				{
 					close(i);
@@ -322,7 +313,6 @@ void	read_fd(s_env* env)
 					dprintf(2, "Closed connection to client %d\n", i);
 				}
 				else {
-					dprintf(2, "Incoming message: [%s] on fd %d\n", buff, i);
 					parse_incoming_message(env, buff, i, nbytes);
 					// send_all_client(env, nbytes, buff, i);
 				}

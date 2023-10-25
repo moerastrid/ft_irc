@@ -27,15 +27,15 @@ int verify_realname(string arg) {
 // Executor class
 
 Executor::Executor() {
-	this->funcMap["CAP"] = &Executor::run_CAP;
-	this->funcMap["NICK"] = &Executor::run_NICK;
-	this->funcMap["USER"] = &Executor::run_USER;
-	this->funcMap["MODE"] = &Executor::run_MODE;
-	this->funcMap["PING"] = &Executor::run_PING;
-	this->funcMap["PRIVMSG"] = &Executor::run_PRIVMSG;
-	this->funcMap["WHOIS"] = &Executor::run_WHOIS;
-	this->funcMap["JOIN"] = &Executor::run_JOIN;
-	this->funcMap["QUIT"] = &Executor::run_QUIT;
+	this->funcMap["CAP"] 		= &Executor::run_CAP;
+	this->funcMap["NICK"] 		= &Executor::run_NICK;
+	this->funcMap["USER"] 		= &Executor::run_USER;
+	this->funcMap["MODE"] 		= &Executor::run_MODE;
+	this->funcMap["PING"] 		= &Executor::run_PING;
+	this->funcMap["PRIVMSG"] 	= &Executor::run_PRIVMSG;
+	this->funcMap["WHOIS"] 		= &Executor::run_WHOIS;
+	this->funcMap["JOIN"] 		= &Executor::run_JOIN;
+	this->funcMap["QUIT"] 		= &Executor::run_QUIT;
 }
 
 Executor::~Executor() {}
@@ -67,7 +67,7 @@ string Executor::run_NICK(env& env, vector<string> args, int fd) {
 		return "461 ERR_NEEDMOREPARAMS NICK :Not enough parameters";
 	}
 
-	string nickname = args[0];
+	string& nickname = args[0];
 
 	if (nickname.empty() || !verify_name(nickname)) {
 		return "432 ERR_ERRONEOUSNICKNAME :Erroneous nickname";
@@ -84,7 +84,7 @@ string Executor::run_NICK(env& env, vector<string> args, int fd) {
 		}
 		client->nickname = nickname;
 	} else { //first time connection.
-		addClientToVector(env, args, "", nickname, fd);
+		addClientToVector(env, nickname, "", "", "", "", fd);
 		message = ":" + env.server_address + " NOTICE " + nickname + ":Remember to set your username using the USER command.";
 	}
 	return message;
@@ -126,9 +126,6 @@ string Executor::run_USER(env& env, vector<string> args, int fd) {
 	if (args.size() < 4) {
 		return "461 ERR_NEEDMOREPARAMS NICK :Not enough parameters";
 	}
-	if (args.size() > 4) {
-		return "461 ERR_TOOMANYPARAMS NICK :Too many parameters";
-	}
 
 	string username, hostname, servername, realname;
 	if (!parseUserArguments(args, username, hostname, servername, realname)) {
@@ -140,14 +137,17 @@ string Executor::run_USER(env& env, vector<string> args, int fd) {
 
 	if (client != NULL) { //Existing connection.
 		if (client->username.empty()) {// first time connec part 2
-			message = env.server_address + " 001 " + client->nickname + " :Welcome to Astrid's & Thibauld's IRC server, " + username + "!";
+			message = ":" + env.server_address + " 001 " + client->nickname + " :Welcome to Astrid's & Thibauld's IRC server, " + username + "!";
 		} else {
 			message = ":" + env.server_address + " 482 " + username + ": Your username has been updated to " + username;
 		}
 		client->username = username;
+		client->hostname = hostname;
+		client->servername = servername;
+		client->realname = realname;
 	}
 	else { //first time connection.
-		addClientToVector(env, args, username, "", fd);
+		addClientToVector(env, "", username, hostname, servername, realname, fd);
 		message = ":" + env.server_address + " NOTICE " + username + ":Remember to set your nickname using the NICK command.";
 	}
 	return message;
@@ -160,9 +160,7 @@ string Executor::run_MODE(env& env, vector<string> args, int fd) {
 	return "";
 }
 
-string Executor::run_PING(env& env, vector<string> args, int fd) {
-	(void)args;
-	(void)fd;
+string Executor::run_PING(env& env, [[maybe_unused]]vector<string> args, [[maybe_unused]]int fd) {
 	return "PONG " + env.server_address;
 }
 
@@ -173,6 +171,7 @@ string Executor::run_PRIVMSG(env& env, vector<string> args, int fd) {
 	return "";
 }
 
+// #TODO finish
 string Executor::run_WHOIS(env& env, vector<string> args, int fd) {
 	// Any number of parameters is valid.
 
@@ -181,18 +180,18 @@ string Executor::run_WHOIS(env& env, vector<string> args, int fd) {
 
 	string finalmessage = "";
 
-
 	for (vector<string>::iterator it = args.begin(); it != args.end(); it++) {
-		string message = env.server_address + " 311 " + caller->nickname + " " + "";
+		string message = ":" + env.server_address + " 311 " + caller->nickname + " ";
 		Client* requestee = getClientByNickname(env, *it);
 		if (requestee == NULL) {
-			message = ":" + env.server_address + " 401 " + *it + ":No such nickname";
-
+			message = ":" + env.server_address + " 401 " + *it + " :No such nickname\n";
+		} else {
+			message += requestee->nickname + " " + requestee->username + " " + requestee->hostname + " * :" + requestee->realname + "\n";
 		}
 		finalmessage += message;
 	}
 
-	return env.server_address + " 311 " + "";
+	return finalmessage;
 }
 
 string Executor::run_JOIN(env& env, vector<string> args, int fd) {
@@ -237,19 +236,31 @@ Client* Executor::getClientByNickname(env& env, string nickname) {
 	return NULL;
 }
 
-void Executor::addClientToVector(env& env, vector<string> args, string username, string nickname, int fd) {
+void Executor::addClientToVector(env& env, string nickname, string username, string hostname, string servername, string realname, int fd) {
 	Client new_client;
 	new_client.fd = fd;
-	new_client.username = username;
 	new_client.nickname = nickname;
+	new_client.username = username;
+	new_client.hostname = hostname;
+	new_client.servername = servername;
+	new_client.realname = realname;
+
 	env.clients.push_back(new_client);
 }
+
+
 
 bool Executor::parseUserArguments(const vector<string>& args, string& username, string& hostname, string& servername, string& realname) {
 	username = args[0];
 	hostname = args[1];
 	servername = args[2];
-	realname = args[3];
+	// if(args[3].size() != 0 && args[3][0] == ':')
+	realname = args[3].substr(1);
+
+	for (size_t i = 4; i < args.size(); i++) {
+		realname += " " + args[i];
+	}
+	
 
 	return !username.empty() && verify_name(username) && !hostname.empty() && !servername.empty() && (!realname.empty() || args[3] != ":");
 }

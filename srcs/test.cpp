@@ -10,10 +10,16 @@ using std::endl;
 int main() {
 
 	// Input:
-	int fd = 0;
-	string message = "NICK thibauld\n";
-	string message2 = "USER thibauld thibauld THIBAULD :Thibauld\n";
-	string message3 = "PING\n";
+	int fd_user1 = 4;
+	string message = "NICK neus\n";
+	string message2 = "USER thibauld thibauld_PC localhost :Thibauld WW Nuyten\n";
+
+	int fd_user2 = 5;
+	string message3 = "NICK astrid\n";
+	string message4 = "USER astrid astrid_PC localhost :astrid geels\n";
+
+	string message5 = "PING :localhost\n";
+	string message6 = "WHOIS neus astrid doofus\n";
 	env env;
 
 	env.server_address = "localhost";
@@ -22,37 +28,25 @@ int main() {
 	Executor ex;
 
 	// parse
-	Command cmd(message, fd);
-	Command cmd2(message2, fd);
-	Command cmd3(message3, fd);
-
-
-	//output from parser:
-	cout << cmd.getCommand() << endl;
-	vector<string>args = cmd.getArgs();
-	for (vector<string>::iterator it = args.begin(); it != args.end(); it++) {
-		cout << *it << endl;
-	}
-
-	cout << cmd2.getCommand() << endl;
-	vector<string>args2 = cmd2.getArgs();
-	for (vector<string>::iterator it = args2.begin(); it != args2.end(); it++) {
-		cout << *it << endl;
-	}
-	
-	cout << cmd3.getCommand() << endl;
-	vector<string>args3 = cmd3.getArgs();
-	for (vector<string>::iterator it = args3.begin(); it != args3.end(); it++) {
-		cout << *it << endl;
-	}
+	Command cmd(message, fd_user1);
+	Command cmd2(message2, fd_user1);
+	Command cmd3(message3, fd_user2);
+	Command cmd4(message4, fd_user2);
+	Command cmd5(message5, fd_user1);
+	Command cmd6(message6, fd_user1);
 
 	// run
-	string received = ex.run(env, cmd, fd);
-	string received2 = ex.run(env, cmd2, fd);
-	string received3 = ex.run(env, cmd3, fd);
-	// ex.send_to_client(fd, received);
+	string received = ex.run(env, cmd, fd_user1);
+	string received2 = ex.run(env, cmd2, fd_user1);
+	string received3 = ex.run(env, cmd3, fd_user2);
+	string received4 = ex.run(env, cmd4, fd_user2);
+	string received5 = ex.run(env, cmd5, fd_user1);
+	string received6 = ex.run(env, cmd6, fd_user1);
 
 	cout << "Message_received: [" << received << "]" << endl;
 	cout << "Message_received: [" << received2 << "]" << endl;
 	cout << "Message_received: [" << received3 << "]" << endl;
+	cout << "Message_received: [" << received4 << "]" << endl;
+	cout << "Message_received: [" << received5 << "]" << endl;
+	cout << "Message_received: [" << received6 << "]" << endl;
 }

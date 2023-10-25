@@ -44,7 +44,7 @@ class Executor {
 
 		Client* getClientByFD(env& env, int fd);
 		Client* getClientByNickname(env& env, string nickname);
-		void addClientToVector(env& env, vector<string> args, string username, string nickname, int fd);
+		void addClientToVector(env& env, string username, string nickname, string hostname, string servername, string realname, int fd);
 		bool parseUserArguments(const vector<string>& args, string& username,
 				string& hostname, string& servername, string& realname);
 };
