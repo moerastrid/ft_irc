@@ -13,19 +13,19 @@ private:
 
 
 public:
-	int			fd;
-	string		username;
-	string		realname;
-	string		nickname;
-	// Channel*    joined_channels;
+	int				fd;
+	string			nickname;
+	string			username;
+	string			hostname;
+	string			servername;
+	string			realname;
+	vector<Channel>	joined_channels;
 
 	Client();
 	~Client();
-	Client(int fd);
 	Client(const Client& other);
 	Client& operator=(const Client& other);
-
-	// Client(/*args go here*/);
 };
 
+std::ostream& operator<<(std::ostream& os, const Client& client);
 #endif /* end of include guard: CLIENT_HPP */
