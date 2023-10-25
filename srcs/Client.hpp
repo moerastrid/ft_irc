@@ -6,6 +6,8 @@ using std::string;
 
 #include "Channel.hpp"
 
+class Channel; // Forward declaration
+
 class Client {
 private:
 

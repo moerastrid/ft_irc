@@ -1,15 +1,18 @@
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include "Executor.hpp"
 
 #include <iostream>
 using std::cout;
 using std::endl;
 
+
 int main() {
 
 	// Input:
 	int fd = 0;
-	string message2 = "NICK thibauld\n";
-	string message = "USER thibauld thibauld THIBAULD :Thibauld\n";
+	string message = "NICK thibauld\n";
+	string message2 = "USER thibauld thibauld THIBAULD :Thibauld\n";
 	// string message2 = "USER thibauld thibauld THIBAULD :Thibauld ww Nuyten\n";
 	env env;
 

@@ -15,12 +15,14 @@ Command::Command(const string& client_message_string, int client_fd) {
 	this->client_fd = client_fd;
 }
 
-Command::Command() {}
+Command::Command() {
+	this->client_fd = -1;
+}
 
 Command::~Command() {}
 
 const Command& Command::operator=(const Command& other) {
-	if(this != &other) {
+	if (this != &other) {
 		this->command = other.command;
 		this->args = other.args;
 	}
