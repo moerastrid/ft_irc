@@ -1,12 +1,15 @@
 #include "server.hpp"
+#include <cstring>
 
 server::server() {}
 
 server::~server() {
-	close(_server_fd);
-	// close epoll when done
-	if (close(_epoll_fd) < 0) {
-		message("close(epoll_fd) ", "ERROR");
+	if (close(_sockfd) < 0) {
+		message("close(_sockfd) ", "ERROR");
+		exit(EXIT_FAILURE);
+	}
+	if (close(_epfd) < 0) {
+		message("close(_epfd) ", "ERROR");
 		exit(EXIT_FAILURE);
 	}
 }
@@ -16,180 +19,135 @@ server::server(const server &src) {
 }
 
 server &server::operator=(const server &src) {
-	this->_port = src._port;
-	this->_server_fd = src._server_fd;
-	this->_connection = src._connection;
+	_port = src._port;
+	_sockfd = src._sockfd;
+	// _connection = src._connection;
 	return (*this);
 }
 
+
 server::server(const unsigned int port, std::string password) : _port(port), _password(password) {
-	this->_server_fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, IPPROTO_TCP);
-	if (this->_server_fd < 0) {
+	_sockfd = socket(AF_INET, SOCK_STREAM|SOCK_NONBLOCK, IPPROTO_TCP);
+	if (_sockfd < 0) {
 		message("cannot create socket", "ERROR");
 		exit(EXIT_FAILURE);
 	} else {
 		message("socket created", "INFO");
+		std::cout << "socket fd : " << _sockfd << std::endl;
 	}
 
-	// nog uitzoeken wat dit precies is
-	if (setsockopt(this->_server_fd, SOL_SOCKET, SO_REUSEADDR, (char *)&_opt, sizeof(_opt)) == -1) {
+	if (setsockopt(_sockfd, SOL_SOCKET, SO_REUSEADDR, (char *)&_opt, sizeof(_opt)) == -1) {
 		message("cannot set socket opt", "ERROR");
-		close(this->_server_fd);
+		close(_sockfd);
 		exit(EXIT_FAILURE);
 	}
 
-	// bind socket
-	this->_address.sin_family = AF_INET;
-	this->_address.sin_port = htons(this->_port);
-	this->_address.sin_addr.s_addr = INADDR_ANY;
-	if (bind(this->_server_fd, ((const struct sockaddr *)&this->_address), sizeof(this->_address)) < 0) {
+	_address.sin_family = AF_INET;
+	_address.sin_port = htons(_port);
+	_address.sin_addr.s_addr = INADDR_ANY;
+	if (bind(_sockfd, ((const struct sockaddr *)&_address), sizeof(_address)) < 0) {
 		message("Cannot bind socket", "ERROR");
-		close(this->_server_fd);
+		close(_sockfd);
 		exit(EXIT_FAILURE) ;
 	} else
 		message("socket bind success", "INFO");
 
-	// wait for _connection
-	if (listen(this->_server_fd, MAX_CONNECT) < 0) {
+	if (listen(_sockfd, MAX_CONN) < 0) {
 		message("Cannot hear socket", "ERROR");
-		close(this->_server_fd);
+		close(_sockfd);
 		exit(EXIT_FAILURE) ;
 	} else
 		message("socket loud and clear over", "INFO");
 
+	_epfd = epoll_create1(0);
 
-	// eerst een epoll instance
-	_epoll_fd = epoll_create1(0);
-
-	if (_epoll_fd < 0) {
+	if (_epfd < 0) {
 		message("epoll_fd", "ERROR");
+		close(_sockfd);
 		exit(EXIT_FAILURE);
 	} else {
 		message("epoll fd created", "INFO");
+		std::cout << "epoll fd : " << _epfd << std::endl;
 	}
 
-	// add file descriptors to be monitored & specify what to monitor (EPOLLET specifies non-blocking)
+	_event.events = EPOLLIN|EPOLLOUT|EPOLLET; /*epoll_wait always reports EPOLLERR so we don't need to specify it here */
+	_event.data.fd = _sockfd;
 
-	_ev.events = EPOLLIN | EPOLLOUT | EPOLLERR | EPOLLET;
-	_ev.data.fd = this->_server_fd;
-
-	if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, this->_server_fd, &_ev) < 0) {
+	if (epoll_ctl(_epfd, EPOLL_CTL_ADD, _sockfd, &_event) < 0) {
 		message("epoll_ctl", "ERROR");
-		close(_epoll_fd);
+		close(_sockfd);
+		close(_epfd);
 		exit(EXIT_FAILURE);
+	} else {
+		message("connection added", "INFO");
 	}
 }
 
-// static void	new_connection(int fd) {
-// 	struct sockaddr_in	new_addr;
-// 	int					_new_conn;
-// 	int					new_len = sizeof(new_addr);
-
-// 	while (1) {
-// 		int	_new_conn = accept(_server_fd, (const struct sockaddr*)&new_addr, &new_len);
-// 		if (_new_conn < 0) {
-// 			// we have processed all incoming connections
-// 			if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
-//                 break;
-//             }
-//             else {
-//                 message("cannot accept socket", "WARNING");
-//                 break;
-//             }
-// 		} else {
-// 			message("socket accepted", "INFO");
-// 		}
-
-// 		// Allow epoll to monitor new connection
-
-// 		if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, _new_conn, &_ev) == -1) {
-// 	 		message("epoll_ctl: conn_sock", "WARNING");
-// 	 		break;
-// 	 	} else {
-// 	 		message("connection added", "INFO");
-// 	 	}
-// 	}
-// }
-
 void server::run() {
-	// RETURN VALUE		epoll_wait():
-    //    When successful, epoll_wait() returns the number of file descriptors ready for  the
-    //    requested  I/O,  or  zero  if  no file descriptor became ready during the requested
-    //    timeout milliseconds.  When an error occurs, epoll_wait() returns -1 and  errno  is
-    //    set appropriately
-	int timeout = -1;
-	// int timeout = 2000; // time in ms. timeout=0 makes epoll return immediately even if no events are ready
-	int	num_fds = epoll_wait(_epoll_fd, _all_events, MAX_CONNECT, timeout);
-
-	if (num_fds < 0) {
+	message("start while loop", "DEBUG");
+	int	nfds = epoll_wait(_epfd, _events, MAX_EVENT, _timeout);
+	if (nfds < 0) {
 		message("epoll_wait", "ERROR");
 		exit(EXIT_FAILURE);
-	} else if (num_fds == 0) {
+	}
+	if (nfds == 0) {
 		message("no connect/communication made or none of the fd's are ready", "INFO");
-	} else {
-		// Iterate over all the file descriptors ready for the requested I/O.
-		for (int i = 0; i < num_fds; i++) {
-			int fd = _all_events[i].data.fd;
+		return ;
+	}
+	for (int i = 0; i < nfds; ++i) 
+	{
+		int incoming_fd = _events[i].data.fd;
+		std::cout << "fd: " << incoming_fd << std::endl;
 
-			// new connection :
-			if (fd == _server_fd) {
-				// new_connection(fd);
-				struct sockaddr_in	new_addr;
-				int					_new_conn;
-				int					new_len = sizeof(new_addr);
-
-				while (1) {
-					int	_new_conn = accept(_server_fd, (struct sockaddr*)&new_addr, (socklen_t*)&new_len);
-					if (_new_conn < 0) {
-						// we have processed all incoming connections
-						if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
-							break;
-						}
-						else {
-							message("cannot accept socket", "WARNING");
-							break;
-						}
-					} else {
-						message("socket accepted", "INFO");
-					}
-
-					// Allow epoll to monitor new connection
-					if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, _new_conn, &_ev) == -1) {
-						message("epoll_ctl: conn_sock", "WARNING");
-						break;
-					} else {
-						message("connection added", "INFO");
-					}
+		if (incoming_fd == _sockfd)
+		{
+			connection	incoming(_sockfd);
+			if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
+				break ;
+			}
+			if (incoming.get_fd() < 0) {
+				message("cannot accept incoming connection on server socket fd", "WARNING");
+				break ;
+			}
+			if (epoll_ctl(_epfd, EPOLL_CTL_ADD, incoming.get_fd(), &_event) == -1) {
+				message("epoll_ctl: conn_sock", "WARNING");
+				break;
+			}
+			message("connection added to epoll", "INFO");
+			_cons.push_back(incoming);
+			std::string welcom = ":localhost 001 blabla :Welcome to the Internet Relay Network username@localhost\n";
+			send(incoming.get_fd(), welcom.c_str(), welcom.size(), 0);
+		} else if (_events[i].events & EPOLLERR) {
+			message("EPOLLERR received", "WARNING");
+			close(incoming_fd);
+		} else {
+			message("fd != server_fd", "INFO");
+			std::cout << "HELLO THIS IS HAPPENING!!!" << std::endl;
+			char buf[100000];
+			bzero(buf, sizeof(buf));
+				int n = read(_events[i].data.fd, buf,
+					sizeof(buf));
+				std::cout << "buf : " << std::endl;
+				if (n <= 0 /* || errno == EAGAIN */ ) {
+					break;
+				} else {
+					printf("[+] data: %s\n", buf);
+					write(_events[i].data.fd, buf,
+						strlen(buf));
 				}
-			}
-
-			// excisting connection with a problem
-			else if (_all_events[i].events & EPOLLERR) {
-				message("EPOLLERR received", "WARNING");
-				// close connection with client
-            	close(fd);
-       		}
-
-			// excisting connection sending or receiving data
-			else {
-				message("fd != server_fd", "INFO");
-				std::cout << "HELLO THIS IS HAPPENING!!!" << std::endl;
-
-			}
 		}
 	}
 
-
-	// socklen_t len = sizeof(this->_address);
+	// socklen_t len = sizeof(_address);
 
 	// begin loop? voor meerdere _connections
 	
-		// _connection = accept(_server_fd, (struct sockaddr *)&_address, &len);
+		// _connection = accept(_sockfd, (struct sockaddr *)&_address, &len);
 		// if (_connection < 0) {
 		// 	// std::cerr << "Cannot accept socket" << std::endl;
 		// 		(void)_connection;
 		// 	} else {
-		// 	std::cout << "socket " << _server_fd << " accepted" << std::endl;
+		// 	std::cout << "socket " << _sockfd << " accepted" << std::endl;
 
 		// 	// receive info
 		// 	char buf[40000];
