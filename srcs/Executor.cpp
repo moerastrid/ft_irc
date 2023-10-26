@@ -212,14 +212,14 @@ string Executor::run_WHOIS(env& env, vector<string> args, int fd) {
 	return finalmessage;
 }
 
-// Takes a comma-separated string of arguments, gives back a vector of said arguments. 
+// Takes a comma-separated string of arguments, gives back a vector of said arguments.
 vector<string> split_args(string args) {
 	std::istringstream nameStream(args);
 	std::vector<std::string> res;
 
-	std::string token;
-	while (std::getline(nameStream, token, ',')) {
-		res.push_back(token);
+	std::string buffer;
+	while (std::getline(nameStream, buffer, ',')) {
+		res.push_back(buffer);
 	}
 
 	return res;
@@ -258,7 +258,8 @@ string Executor::run_JOIN(env& env, vector<string> args, int fd) {
 
 	Client* client = getClientByFD(env, fd);
 	if (client == NULL) { // shit... this shouldn't happen. It means there is no registered client for the user sending the command.
-		return "SHIT'S FUCKED YO\n";
+		vector<string> quit_args = {"Screw you guys, I'm going home!"};
+		return run_QUIT(env, quit_args, fd);
 	}
 
 	string message = "";
