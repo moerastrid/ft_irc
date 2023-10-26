@@ -1,13 +1,25 @@
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include "Executor.hpp"
 
 #include <iostream>
 using std::cout;
 using std::endl;
 
+void test(env& env, string& incoming, int fd) {
+	static Executor ex;
+
+	Command cmd(incoming, fd);
+
+	string reply = ex.run(env, cmd, fd);
+
+	cout << "Processing Incoming message: [" + incoming + "]" << endl;
+	cout << "Reply received: " << endl;
+	cout << "[" << reply << "]" << endl;
+	cout << "===============================" << endl << endl;
+}
 
 int main() {
+	env env;
+	env.server_address = "localhost";
 
 	// Input:
 	int fd_user1 = 4;
@@ -20,33 +32,20 @@ int main() {
 
 	string message5 = "PING :localhost\n";
 	string message6 = "WHOIS neus astrid doofus\n";
-	env env;
 
-	env.server_address = "localhost";
+	string message7 = "JOIN #test,#test2,#test3,#test4 123,234,345\n";
+	string message8 = "JOIN #test3, qwerty\n";
+	string message9 = "JOIN #test4\n";
+	string message10 = "JOIN \n";
 
-	// setup
-	Executor ex;
-
-	// parse
-	Command cmd(message, fd_user1);
-	Command cmd2(message2, fd_user1);
-	Command cmd3(message3, fd_user2);
-	Command cmd4(message4, fd_user2);
-	Command cmd5(message5, fd_user1);
-	Command cmd6(message6, fd_user1);
-
-	// run
-	string received = ex.run(env, cmd, fd_user1);
-	string received2 = ex.run(env, cmd2, fd_user1);
-	string received3 = ex.run(env, cmd3, fd_user2);
-	string received4 = ex.run(env, cmd4, fd_user2);
-	string received5 = ex.run(env, cmd5, fd_user1);
-	string received6 = ex.run(env, cmd6, fd_user1);
-
-	cout << "Message_received: [" << received << "]" << endl;
-	cout << "Message_received: [" << received2 << "]" << endl;
-	cout << "Message_received: [" << received3 << "]" << endl;
-	cout << "Message_received: [" << received4 << "]" << endl;
-	cout << "Message_received: [" << received5 << "]" << endl;
-	cout << "Message_received: [" << received6 << "]" << endl;
+	test(env, message, fd_user1);
+	test(env, message2, fd_user1);
+	test(env, message3, fd_user2);
+	test(env, message4, fd_user2);
+	test(env, message5, fd_user1);
+	test(env, message6, fd_user1);
+	test(env, message7, fd_user1);
+	test(env, message8, fd_user1);
+	test(env, message9, fd_user1);
+	test(env, message10, fd_user1);
 }
