@@ -16,15 +16,15 @@ class server {
 	private :
 		const int			_opt = 1;
 		int					_port = -1;
-		int					_server_fd = 0;
-		int					_connection = 0;
+		int					_sockfd = -1;
+		int					_timeout = -1;
 		std::string			_password;
 		sockaddr_in			_address;
-		int					_epoll_fd;
-		struct epoll_event	_ev;
-		struct epoll_event	_all_events[MAX_CONNECT];
+		int					_epfd;
+		struct epoll_event	_event;
+		struct epoll_event	_events[MAX_CONN];
 		server();								//default constructor
-		std::deque<connection>	_all_cons;
+		std::deque<connection>	_cons;
 
 	public :
 		~server();								// default destructor
