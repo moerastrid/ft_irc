@@ -36,3 +36,10 @@ std::ostream& operator<<(std::ostream& os, const Client& client) {
 	os << str;
 	return os;
 }
+
+bool operator==(const Client &lhs, const Client &rhs)
+{
+	return 	lhs.fd == rhs.fd &&
+			lhs.nickname == rhs.nickname &&
+			lhs.username == rhs.username;
+}

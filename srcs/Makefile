@@ -12,7 +12,7 @@
 
 NAME := server_backend
 CXXFLAGS =  -Wall -Wextra -Werror
-# CXXFLAGS += -fsanitize=address -g
+CXXFLAGS += -fsanitize=address -g
 CXX = c++
 
 SRCS =	Channel.cpp \

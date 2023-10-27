@@ -38,14 +38,47 @@ int main() {
 	string message9 = "JOIN #test4\n";
 	string message10 = "JOIN \n";
 
+	string message11 = "KICK \n";
+	string message12 = "KICK #test neus :go away\n";
+	string message13 = "KICK #test neus :go away\n";
+
+	string message14 = "JOIN #test 123\n";
+	string message15 = "PART #test :you guys suck\n";
+
+
+	// NICK + USER for two users
 	test(env, message, fd_user1);
 	test(env, message2, fd_user1);
 	test(env, message3, fd_user2);
 	test(env, message4, fd_user2);
+
+	// PING
 	test(env, message5, fd_user1);
+
+	// WHOIS
 	test(env, message6, fd_user1);
+
+	// JOIN test
 	test(env, message7, fd_user1);
 	test(env, message8, fd_user1);
 	test(env, message9, fd_user1);
 	test(env, message10, fd_user1);
+
+	// KICK test
+	test(env, message11, fd_user1);
+	test(env, message12, fd_user1);
+	test(env, message13, fd_user1);
+
+	for (const auto& el : env.clients) {
+		cout << el << endl;
+	}
+	
+	// PART test
+	test(env, message14, fd_user1);
+	test(env, message14, fd_user2);
+	test(env, message15, fd_user1);
+
+	for (const auto& el : env.clients) {
+		cout << el << endl;
+	}
 }
