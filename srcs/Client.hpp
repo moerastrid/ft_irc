@@ -27,5 +27,6 @@ public:
 	Client& operator=(const Client& other);
 };
 
+bool operator==(const Client& lhs, const Client& rhs);
 std::ostream& operator<<(std::ostream& os, const Client& client);
 #endif /* end of include guard: CLIENT_HPP */

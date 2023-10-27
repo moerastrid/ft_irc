@@ -15,11 +15,13 @@ public:
 	string			name;
 	string			password;
 	vector<Client>	joined;
-	vector<Client>	operators;
 	Channel();
 	~Channel();
 	Channel(const Channel& other);
 	Channel& operator=(const Channel& other);
+
+	Client& getJoinedUser(string nickname);
+
 	// Channel(/*args go here*/);
 };
 

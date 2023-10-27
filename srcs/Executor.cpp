@@ -48,7 +48,9 @@ Executor::Executor() {
 	this->funcMap["PRIVMSG"] 	= &Executor::run_PRIVMSG;
 	this->funcMap["WHOIS"] 		= &Executor::run_WHOIS;
 	this->funcMap["JOIN"] 		= &Executor::run_JOIN;
+	this->funcMap["KICK"] 		= &Executor::run_KICK;
 	this->funcMap["QUIT"] 		= &Executor::run_QUIT;
+	this->funcMap["PART"] 		= &Executor::run_PART;
 }
 
 Executor::~Executor() {}
@@ -265,7 +267,7 @@ string Executor::run_JOIN(env& env, vector<string> args, int fd) {
 	string message = "";
 	for (const auto& pair : joininfo) {
 		Channel* ch = getChannelByName(env, pair.first);
-		message += ":" + env.server_address + " " + client->nickname + " JOIN " + pair.first + ":" + pair.second + "\n"; //#TODO remove password from message. its only there to debug. 
+		message += ":" + env.server_address + " " + client->nickname + " JOIN " + pair.first + "\n";
 		if (ch == NULL) { // Create new channel and have user join as the first member.
 			Channel c;
 			c.topic = "";
@@ -284,13 +286,105 @@ string Executor::run_JOIN(env& env, vector<string> args, int fd) {
 	return message;
 }
 
-// Operator client wants to kick a user from a channel.
+// Operator client wants to kick a user from a channel. #TODO check that the caller has the correct mode.
 string Executor::run_KICK(env& env, vector<string> args, int fd) {
-	(void)env;
-	(void)args;
-	(void)fd;
-	return "";
+	if (args.size() < 2 || !args[0].size() || !args[1].size())
+		return "461 ERR_NEEDMOREPARAMS JOIN :Not enough parameters\n";
+
+	Client* caller = getClientByFD(env, fd);
+	if (caller == NULL) { // This shouldn't happen yo.
+		vector<string> quit_args = {"Screw you guys, I'm going home!"};
+		return run_QUIT(env, quit_args, fd);
+	}
+
+	string message;
+	Channel* ch = getChannelByName(env, args[0]);
+	if (ch == NULL) {
+		return ":" + env.server_address + " 403 " + args[0] + " :No such channel\n";
+	}
+
+	vector<string>::iterator reason_it = std::find_if(args.begin(), args.end(), [](std::string& str) {
+		return !str.empty() && str[0] == ':';
+	});
+
+	for (vector<string>::iterator name_it = std::next(args.begin()); name_it != reason_it; name_it++) {
+		Client* client = getClientByNickname(env, *name_it);
+		
+		if (client == NULL) {
+			message += ":" + env.server_address + " 401 " + *name_it + " :No such nickname\n";
+			continue;
+		}
+		vector<Client>::iterator channel_user = std::find(ch->joined.begin(), ch->joined.end(), *client);
+		if (channel_user == ch->joined.end()) {
+			message += ":" + env.server_address + " 404 " + args[0] + " " + *name_it + ":Cannot kick user from channel they have not joined\n";
+			continue;
+		}
+
+		ch->joined.erase(channel_user);
+		message += ":" + env.server_address + " KICK " + args[0] + " " + *name_it + " ";
+		for (vector<string>::iterator it_reason = reason_it; it_reason != args.end(); it_reason++) {
+			message += *it_reason;
+			if (it_reason + 1 != args.end()) {
+				message += " ";
+			}
+		}
+		message += "\n";
+	}
+
+	return message;
 }
+
+string Executor::run_PART(env& env, vector<string> args, int fd) {
+	if (args.size() == 0) {
+		return "461 ERR_NEEDMOREPARAMS JOIN :Not enough parameters\n";
+	}
+
+	Client* caller = getClientByFD(env, fd);
+	if (caller == NULL) { // THis shouldn't happen yo.
+		vector<string> quit_args = {"Screw you guys, I'm going home!"};
+		return run_QUIT(env, quit_args, fd);
+	}
+
+	vector<string>::iterator reason_it = std::find_if(args.begin(), args.end(), [](std::string& str) {
+		return !str.empty() && str[0] == ':';
+	});
+
+	string message = "";
+	for (vector<string>::iterator it = args.begin(); it != reason_it; it++) {
+		Channel* ch = getChannelByName(env, *it);
+		if (ch == NULL) {
+			message += ":" + env.server_address + " 403 " + *it + " :No such channel\n";
+			continue;
+		}
+
+		vector<Client>::iterator caller_it = std::find(ch->joined.begin(), ch->joined.end(), *caller);
+		if (caller_it == ch->joined.end()) {
+			message += ":" + env.server_address + " 442 " + *it + " :You haven't joined that channel";
+			continue;
+		}
+
+		ch->joined.erase(caller_it);
+		message += ":" + env.server_address + " PART " + *it + "\n";
+		// If there's a reason: 
+		if (reason_it == args.end()) {
+			continue;
+		}
+		// Send reason to all other users in channel, to inform them why the user left. //#TODO PROBABLY SHOULD USE SEND DIRECTLY TO FD INSTEAD OF SENDING A REPLY TO THE CLIENT. 
+		for (const Client& user : ch->joined) {
+			message += ":" + caller->nickname + "!" + caller->username + "@" + caller->hostname + " PRIVMSG " + user.nickname + " ";
+			for (vector<string>::iterator it_reason = reason_it; it_reason != args.end(); it_reason++) {
+				message += *it_reason;
+				if (it_reason + 1 != args.end()) {
+					message += " ";
+				}
+			}
+			message += "\n";
+		}
+	}
+
+	return message;
+}
+
 
 // Client wants to disconnect from server
 string Executor::run_QUIT(env& env, vector<string> args, int fd) {
@@ -319,6 +413,15 @@ Client* Executor::getClientByNickname(env& env, string nickname) {
 	return NULL;
 }
 
+vector<Client>::iterator Executor::getItToClientByNickname(env& env, string nickname) {
+	vector<Client>& clients = env.clients;
+	for (vector<Client>::iterator it = clients.begin(); it != clients.end(); it++) {
+		if (it->nickname == nickname)
+			return it;
+	}
+	return env.clients.end();
+}
+
 Channel* Executor::getChannelByName(env& env, string name) {
 	for (Channel& ch : env.channels) {
 		if (ch.name == name) {
@@ -344,7 +447,6 @@ bool Executor::parseUserArguments(const vector<string>& args, string& username, 
 	username = args[0];
 	hostname = args[1];
 	servername = args[2];
-	// if(args[3].size() != 0 && args[3][0] == ':')
 	realname = args[3].substr(1);
 
 	for (size_t i = 4; i < args.size(); i++) {
