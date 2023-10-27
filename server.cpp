@@ -27,6 +27,8 @@ server &server::operator=(const server &src) {
 
 
 server::server(const unsigned int port, std::string password) : _port(port), _password(password) {
+	
+	
 	_sockfd = socket(AF_INET, SOCK_STREAM|SOCK_NONBLOCK, IPPROTO_TCP);
 	if (_sockfd < 0) {
 		message("cannot create socket", "ERROR");
