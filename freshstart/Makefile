@@ -1,13 +1,15 @@
 NAME := ircserver
-FLAGS =  -Wall -Wextra -Werror -std=c++20
+FLAGS =  -Wall -Wextra -Werror -std=c++20 -fsanitize=address
 CXX = c++
 
 HDR = ircserver.hpp \
 	Msg.hpp \
+	Server.hpp
 
 SRC = main.cpp \
 	parse.cpp \
 	Msg.cpp \
+	Server.cpp
 
 OBJ_DIR = obj
 

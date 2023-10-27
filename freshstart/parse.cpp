@@ -1,13 +1,14 @@
 #include "Msg.hpp"
 #include <iostream>
 #include <string>
+#include <sstream>
 #include <algorithm>
 
 static bool	isvalidpass(const std::string pass) {
 	if (pass.empty())
 		return (false);
 	for (int i(0); pass[i]; i++) {
-		if (isalnum(pass[i]) == false)
+		if (isprint(pass[i]) == false)
 			return (false);
 	}
 	return (true);
@@ -16,10 +17,16 @@ static bool	isvalidpass(const std::string pass) {
 static int get_port(std::string input) {
 	const std::string	WHITESPACE = " \n\r\t\f\v";
 	int port = -1;
+	int	place = 0;
 	std::string	first;
 	std::string	second;
 
-	first = &input[input.find_first_not_of(WHITESPACE)];
+	if (input.empty())
+		return (-1);
+	place = input.find_first_not_of(WHITESPACE);
+	if (place == -1)
+		return (-1);
+	first = &input[place];
 	reverse(first.begin(), first.end());
 	second = &first[first.find_first_not_of(WHITESPACE)];
 	reverse(second.begin(), second.end());
