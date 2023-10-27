@@ -24,6 +24,19 @@ int verify_realname(string arg) {
 	return true;
 }
 
+// Takes a comma-separated string of arguments, gives back a vector of said arguments.
+vector<string> split_args(string args) {
+	std::istringstream nameStream(args);
+	std::vector<std::string> res;
+
+	std::string buffer;
+	while (std::getline(nameStream, buffer, ',')) {
+		res.push_back(buffer);
+	}
+
+	return res;
+}
+
 // Executor class
 
 Executor::Executor() {
@@ -210,19 +223,6 @@ string Executor::run_WHOIS(env& env, vector<string> args, int fd) {
 	}
 
 	return finalmessage;
-}
-
-// Takes a comma-separated string of arguments, gives back a vector of said arguments.
-vector<string> split_args(string args) {
-	std::istringstream nameStream(args);
-	std::vector<std::string> res;
-
-	std::string buffer;
-	while (std::getline(nameStream, buffer, ',')) {
-		res.push_back(buffer);
-	}
-
-	return res;
 }
 
 string Executor::run_JOIN(env& env, vector<string> args, int fd) {
