@@ -1,6 +1,3 @@
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-
 #ifndef CHANNEL_HPP
 #define CHANNEL_HPP
 
@@ -13,10 +10,12 @@ class Client; // Forward declaration;
 
 class Channel {
 private:
-	string topic;
-	vector<Client> joined;
-	vector<Client> operators;
 public:
+	string			topic;
+	string			name;
+	string			password;
+	vector<Client>	joined;
+	vector<Client>	operators;
 	Channel();
 	~Channel();
 	Channel(const Channel& other);
