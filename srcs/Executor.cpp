@@ -2,6 +2,10 @@
 
 // some utilities #TODO move
 
+#include <iostream>
+using std::cout;
+using std::endl;
+
 int is_valid_nickname_character(char c) {
 	if (isalnum(c) || c == '_' || c == '-' || c == '[' || c == ']' || c == '\\' || c == '^' || c == '{' || c == '}')
 		return 1;
@@ -70,6 +74,8 @@ Executor::Executor(env& e) : e(e) {
 Executor::~Executor() {}
 
 void Executor::send_to_client(int fd, string message) {
+	cout << "Sending message to fd " << fd << ":" << endl;
+	cout << message << endl;
 	const char* c_message = message.c_str();
 	send(fd, c_message, sizeof c_message, 0);
 }
@@ -382,6 +388,10 @@ string Executor::run_KICK(vector<string> args, int fd) {
 	return message;
 }
 
+#include <iostream>
+using std::cout;
+using std::endl;
+
 string Executor::run_PART(vector<string> args, int fd) {
 	if (args.size() == 0) {
 		return "461 ERR_NEEDMOREPARAMS JOIN :Not enough parameters\n";
@@ -405,17 +415,21 @@ string Executor::run_PART(vector<string> args, int fd) {
 			continue;
 		}
 
+		vector<Client> ch_clients = ch->getClients();
+
 		if(ch->removeClient(*caller) == 1) {
 			message += ":" + this->e.server_address + " 442 " + *it + " :You haven't joined that channel";
 			continue;
 		}
 		message += ":" + this->e.server_address + " PART " + *it + "\n";
 		if (reason_start == args.end()) {
+			cout << "skipping reason" << endl;
 			continue;
 		}
+
 		// If there's a reason:
 		// Send reason to all other users in channel, to inform them why the user left. //#TODO PROBABLY SHOULD USE SEND DIRECTLY TO FD INSTEAD OF SENDING A REPLY TO THE CLIENT.
-		for (const Client& user : ch->getClients()) {
+		for (const Client& user : ch_clients) {
 			string reasonmessage = "";
 			reasonmessage += ":" + caller->getNickname() + "!" + caller->getUsername() + "@" + caller->getHostname() + " PRIVMSG " + user.getNickname();
 			if (reason_start != args.end()) {

@@ -95,7 +95,7 @@ void setup_test(env& env) {
 int main() {
 	env env;
 	int fd_user1 = 4;
-	int fd_user2 = 5;
+	// int fd_user2 = 5;
 	env.server_address = "localhost";
 
 	// Input:
@@ -135,9 +135,8 @@ int main() {
 	test(env, message13, fd_user1, ":localhost 404 #test neus :Cannot kick user from channel they have not joined\n");
 	
 	// PART test
-	test(env, message14, fd_user1, "");
-	test(env, message14, fd_user2, "");
-	test(env, message15, fd_user1, "");
+	test(env, message14, fd_user1, ":localhost neus JOIN #test\n");
+	test(env, message15, fd_user1, ":localhost PART #test\n");
 
 	for (const auto& el : env.clients) {
 		cout << el << endl;
