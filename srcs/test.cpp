@@ -18,20 +18,51 @@ void test(env& env, string& incoming, int fd) {
 	cout << "===============================" << endl << endl;
 }
 
+void setup_test(env& env) {
+	int fd_user1 = 4;
+	int fd_user2 = 5;
+
+	string capreq = "CAP LS\n";
+
+	string nick1 = "NICK neus\n";
+	string user1 = "USER thibauld thibauld_PC localhost :Thibauld WW Nuyten\n";
+	string mode1 = "MODE thibauld +i\n";
+	string ping1 = "PING localhost\n";
+
+
+	string nick2 = "NICK astrid\n";
+	string user2 = "USER astrid astrid_PC localhost :astrid geels\n";
+	string mode2 = "MODE astrid +i\n";
+	string ping2 = "PING localhost\n";
+
+
+	test(env, capreq, fd_user1);
+	test(env, nick1, fd_user1);
+	test(env, user1, fd_user1);
+	test(env, mode1, fd_user1);
+	test(env, ping1, fd_user1);
+
+
+	test(env, capreq, fd_user2);
+	test(env, nick2, fd_user2);
+	test(env, user2, fd_user2);
+	test(env, mode2, fd_user2);
+	test(env, ping2, fd_user2);
+
+}
+
 int main() {
 	env env;
+	int fd_user1 = 4;
+	int fd_user2 = 5;
 	env.server_address = "localhost";
 
 	// Input:
-	int fd_user1 = 4;
-	string message = "NICK neus\n";
-	string message2 = "USER thibauld thibauld_PC localhost :Thibauld WW Nuyten\n";
 
-	int fd_user2 = 5;
-	string message3 = "NICK astrid\n";
-	string message4 = "USER astrid astrid_PC localhost :astrid geels\n";
+	setup_test(env);
 
-	string message5 = "PING :localhost\n";
+	string message4 = "WHOIS";
+	string message5 = "WHOIS\n";
 	string message6 = "WHOIS neus astrid doofus\n";
 
 	string message7 = "JOIN #test,#test2,#test3,#test4 123,234,345\n";
@@ -46,17 +77,9 @@ int main() {
 	string message14 = "JOIN #test 123\n";
 	string message15 = "PART #test :you guys suck\n";
 
-
-	// NICK + USER for two users
-	test(env, message, fd_user1);
-	test(env, message2, fd_user1);
-	test(env, message3, fd_user2);
-	test(env, message4, fd_user2);
-
-	// PING
-	test(env, message5, fd_user1);
-
 	// WHOIS
+	test(env, message4, fd_user1);
+	test(env, message5, fd_user1);
 	test(env, message6, fd_user1);
 
 	// JOIN test

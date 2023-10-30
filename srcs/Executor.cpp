@@ -114,7 +114,7 @@ string Executor::run_NICK(vector<string> args, int fd) {
 		caller->setNickname(nickname);
 	} else { //first time connection.
 		addClient(nickname, "", "", "", "", fd);
-		message = ":" + this->e.server_address + " NOTICE " + nickname + ":Remember to set your username using the USER command.\n";
+		message = ":" + this->e.server_address + " NOTICE " + nickname + " :Remember to set your username using the USER command.\n";
 	}
 	return message;
 }
@@ -168,7 +168,7 @@ string Executor::run_USER(vector<string> args, int fd) {
 		if (client->getUsername().empty()) {// first time connec part 2
 			message = ":" + this->e.server_address + " 001 " + client->getNickname() + " :Welcome to Astrid's & Thibauld's IRC server, " + username + "!\n";
 		} else {
-			message = ":" + this->e.server_address + " 482 " + username + ": Your username has been updated to " + username + "\n";
+			message = ":" + this->e.server_address + " 482 " + username + " :Your username has been updated to " + username + "\n";
 		}
 		client->setUsername(username);
 		client->setHostname(hostname);
@@ -177,7 +177,7 @@ string Executor::run_USER(vector<string> args, int fd) {
 	}
 	else { //first time connection.
 		addClient("", username, hostname, servername, realname, fd);
-		message = ":" + this->e.server_address + " NOTICE " + username + ":Remember to set your nickname using the NICK command.\n";
+		message = ":" + this->e.server_address + " NOTICE " + username + " :Remember to set your nickname using the NICK command.\n";
 	}
 	return message;
 }
@@ -192,18 +192,28 @@ string Executor::run_MODE(vector<string> args, int fd) {
 		return "461 ERR_NEEDMOREPARAMS MODE :Not enough parameters\n";
 	}
 
-	string message = "";
 	Client* caller = getClientByFD(fd);
+	if (caller == NULL) {
+		return "CALLER NOT FOUND";
+	}
+
+	Channel* channel = getChannelByName(target);
+
+	if (channel == NULL) {
+		return ":" + this->e.server_address + " 403 " + caller->getNickname() + " " + target + " :No such channel";
+	}
+
+	string message = "";
 
 	if (target[0] == '#') { // target is a channel.
 		if (mode == "+i") {
 
 		}
 	} else {
-		message = ":" + this->e.server_address + " 472 " + caller->getNickname() + " " + mode + ":Unknown MODE.\n";
+		message = ":" + this->e.server_address + " 472 " + caller->getNickname() + " " + mode + " :Unknown MODE.\n";
 	}
 
-	message = ":" + this->e.server_address + " 472 " + caller->getNickname() + " " + mode + ":Unknown MODE.\n"; //temp
+	message = ":" + this->e.server_address + " 472 " + caller->getNickname() + " " + mode + " :Unknown MODE.\n"; //temp
 	return message;
 }
 
@@ -212,17 +222,44 @@ string Executor::run_PING([[maybe_unused]]vector<string> args, [[maybe_unused]]i
 }
 
 string Executor::run_PRIVMSG(vector<string> args, int fd) {
-	(void)args;
-	(void)fd;
+	if (args.size() < 2 || args[0].empty() || args[1].empty()) {
+		return "461 ERR_NEEDMOREPARAMS MODE :Not enough parameters\n";
+	}
+	Client* client = getClientByFD(fd);
+	if (client == NULL) {
+		return "USER NOT FOUND";
+	}
+
+	string message;
+	Client* recipient = getClientByNickname(args[0]);
+	if (recipient == NULL) {
+		return ":" + this->e.server_address + " 401 " + client->getNickname() + " " + args[0] + " :No such recipient";
+	}
+
+	stringstream ss;
+
+	for (vector<string>::iterator it = args.begin(); it != args.end(); it++) {
+		ss << *it;
+		if (std::next(it) != args.end())
+			ss << " ";
+	}
+	ss << "\n";
+
+	send_to_client(recipient->getFD(), ss.str());
 	return "";
 }
 
 // #TODO finish
 string Executor::run_WHOIS(vector<string> args, int fd) {
 	// Any number of parameters is valid.
-
-	vector<Client> clients = this->e.clients;
 	Client* caller = getClientByFD(fd);
+	if (caller == NULL) {
+		return "CALLER NOT FOUND\n";
+	}
+
+	if (args.empty() || args[0].empty()) {
+		return ":" + this->e.server_address + " 311 " + caller->getNickname() + " " + caller->getNickname() + " " +  caller->getUsername() + " " + caller->getHostname() + " * :" + caller->getRealname() + "\n";
+	}
 
 	string finalmessage = "";
 
@@ -232,7 +269,7 @@ string Executor::run_WHOIS(vector<string> args, int fd) {
 		if (requestee == NULL) {
 			message = ":" + this->e.server_address + " 401 " + *it + " :No such nickname\n";
 		} else {
-			message += requestee->getNickname() + " " + requestee->getUsername() + " " + requestee->getHostname() + " * :" + requestee->getRealname() + "\n";
+			message += requestee->getNickname() + " " + requestee->getUsername() + " " + requestee->getHostname() + " * :" + requestee->getRealname() + "\n"; //#TODO fix servername? (servername == *)
 		}
 		finalmessage += message;
 	}
@@ -292,7 +329,7 @@ string Executor::run_JOIN(vector<string> args, int fd) {
 			if (ch->getPassword().compare(channelpassword) == 0) {
 				ch->addClient(*client);
 			} else { //incorrect password.
-				message += ":" + e.server_address + " 475 " + client->getNickname() + " " + channelname + ":Bad channel key\n";
+				message += ":" + e.server_address + " 475 " + client->getNickname() + " " + channelname + " :Bad channel key\n";
 			}
 		}
 	}
@@ -330,7 +367,7 @@ string Executor::run_KICK(vector<string> args, int fd) {
 		}
 
 		else if (ch->removeClient(*client) == 1) {
-			message += ":" + this->e.server_address + " 404 " + args[0] + " " + *name_it + ":Cannot kick user from channel they have not joined\n";
+			message += ":" + this->e.server_address + " 404 " + args[0] + " " + *name_it + " :Cannot kick user from channel they have not joined\n";
 			continue;
 		}
 
@@ -378,7 +415,7 @@ string Executor::run_PART(vector<string> args, int fd) {
 		}
 		// If there's a reason:
 		// Send reason to all other users in channel, to inform them why the user left. //#TODO PROBABLY SHOULD USE SEND DIRECTLY TO FD INSTEAD OF SENDING A REPLY TO THE CLIENT.
-		for (const Client user : ch->getClients()) {
+		for (const Client& user : ch->getClients()) {
 			string reasonmessage = "";
 			reasonmessage += ":" + caller->getNickname() + "!" + caller->getUsername() + "@" + caller->getHostname() + " PRIVMSG " + user.getNickname();
 			if (reason_start != args.end()) {
@@ -393,17 +430,16 @@ string Executor::run_PART(vector<string> args, int fd) {
 	return message;
 }
 
+#include <unistd.h>
 
 // Client wants to disconnect from server
 string Executor::run_QUIT(vector<string> args, int fd) {
 	(void)args;
 	Client* client = getClientByFD(fd);
 	if (client == NULL) {
-		//Close the connection;
+		// close(fd);
 		return "";
 	}
-
-
 
 	return "";
 }
