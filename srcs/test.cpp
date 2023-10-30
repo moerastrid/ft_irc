@@ -5,14 +5,14 @@ using std::cout;
 using std::endl;
 
 void test(env& env, string& incoming, int fd) {
-	static Executor ex;
+	static Executor ex(env);
 
 	cout << "Processing Incoming message: [" + incoming + "]" << endl;
 
 	Command cmd(incoming, fd);
 
 	cout << "Reply received: " << endl;
-	string reply = ex.run(env, cmd, fd);
+	string reply = ex.run(cmd, fd);
 	cout << "[" << reply << "]" << endl;
 
 	cout << "===============================" << endl << endl;
