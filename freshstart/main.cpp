@@ -9,7 +9,7 @@ int main(int argc, char **argv) {
 	if (port < 0) {
 		return (EXIT_FAILURE);
 	}
-	std::cout << port << std::endl;
+	std::cout << "PORT : " << port << std::endl;
 	
 	Server ircServer(port, argv[2]);
 // 	while (1) {

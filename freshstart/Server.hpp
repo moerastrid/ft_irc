@@ -1,18 +1,26 @@
 #pragma once
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/param.h>
 #include <netdb.h>
+#include <arpa/inet.h>
 
+#include <unistd.h>
 #include <cstdlib>
 #include <string>
 #include <cstring>
 
-#define IP_ADDRESS "localhost"
+// #ifndef MAXHOSTNAMELEN
+// #define MAXHOSTNAMELEN 64
+// #endif
 
 class Server {
 	private :
-		struct addrinfo		*_ai;
-		struct sockaddr_in	_sin;
+		char				_hostname[MAXHOSTNAMELEN];
+		struct addrinfo		*_addrinfo;
+		struct sockaddr_in	_sockin;
+		char				ipv4[INET_ADDRSTRLEN];
+		int					_fd;
 
 		Server();								//default constructor
 		void			setaddrinfo(const int port);
