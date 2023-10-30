@@ -10,20 +10,20 @@
 #include <string>
 #include <cstring>
 
-// #ifndef MAXHOSTNAMELEN
-// #define MAXHOSTNAMELEN 64
-// #endif
-
 class Server {
 	private :
 		char				_hostname[MAXHOSTNAMELEN];
 		struct addrinfo		*_addrinfo;
 		struct sockaddr_in	_sockin;
-		char				ipv4[INET_ADDRSTRLEN];
-		int					_fd;
+		std::string			_ip;
+		int					_fd = -1;
+		int					_port;
+		std::string			_pass;
 
 		Server();								//default constructor
-		void			setaddrinfo(const int port);
+		void			setAddrInfo(const int port);
+		void			setHostInfo();
+		void			setUp();
 
 	public :
 		~Server();								// default destructor
@@ -32,4 +32,10 @@ class Server {
 		Server(const int port, const std::string pass);	// constructor (PORT, pass)
 		
 		void	run();
+		const std::string	getIP() const;
+		const std::string	getHostname() const;
+		int					getPort() const;
+
 };
+
+std::ostream& operator<<(std::ostream& os, const Server& server);

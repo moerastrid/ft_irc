@@ -22,85 +22,75 @@ Server &Server::operator=(const Server &src) {
 	return (*this);
 }
 
-Server::Server(const int port, const std::string pass) {
+Server::Server(const int port, const std::string pass) : _port(port), _pass(pass) {
 	Msg("Server constructor (PORT, pass)", "DEBUG");
-
-	Server::setaddrinfo(port);
-
-	//_fd = socket(_addrinfo->ai_family, _addrinfo->ai_socktype, _addrinfo->ai_protocol);
-	//std::cout << "fd : " << _fd << std::endl;
-
-
-	(void)pass;
+	Server::setHostInfo();
+	Server::setAddrInfo(port);
+	Server::setUp();
 }
 
 
-void	Server::setaddrinfo(const int port) {
-	// figure out the name of this computer
-	gethostname(_hostname, MAXHOSTNAMELEN);
-	std::cout << _hostname << std::endl;
 
-	// set what we want our socket to be like using "hints"
-	struct addrinfo hints;
+void	Server::setHostInfo() {
+	bzero(_hostname, sizeof(_hostname));
+	if (gethostname(_hostname, MAXHOSTNAMELEN) != 0) {
+		perror("Server::setHostInfo gethostname");
+    	exit(EXIT_FAILURE);
+	}
 
+	struct hostent *host_entry;
+	host_entry = gethostbyname(_hostname);
+   	if (host_entry == NULL) {
+    	perror("Server::setHostInfo gethostbyname");
+    	exit(EXIT_FAILURE);
+   	}
+	_ip = inet_ntoa(*((struct in_addr*)host_entry->h_addr_list[0]));
+}
+
+void	Server::setAddrInfo(const int port) {
+	struct addrinfo	hints;
 	bzero(&hints, sizeof(hints));
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_flags = AI_PASSIVE;
 
-	// get addr info using hings as a guide 
-	int rv = getaddrinfo(_hostname, std::to_string(port).c_str(), &hints, &_addrinfo);
-	if (rv != 0) {
-		Msg(gai_strerror(rv), "ERROR");
+	int status = getaddrinfo(_ip.c_str(), std::to_string(port).c_str(), &hints, &_addrinfo);
+	if (status != 0) {
+		Msg(gai_strerror(status), "ERROR");
 		exit(EXIT_FAILURE);
 	}
-
-	_sockin.sin_family = _addrinfo->ai_family;
-	_sockin.sin_port = port;
-	_sockin.sin_addr.s_addr = htons(port);
-
-	rv = inet_pton(_addrinfo->ai_family, _hostname, &(_sockin.sin_addr));
-	std::cout << "rv : " << rv << std::endl;
-	char* ip_str = inet_ntoa(_sockin.sin_addr);
-   	std::cout << "Your IP address is: " << ip_str << std::endl;
-
-	// inet_ntoa()
 }
 
+void	Server::setUp() {
+	_fd = socket(_addrinfo->ai_family, _addrinfo->ai_socktype, _addrinfo->ai_protocol);
+	if (_fd == -1) {
+		perror("Server::setUp socket()");
+    	exit(EXIT_FAILURE);
+	}
+	if (bind(_fd, _addrinfo->ai_addr, _addrinfo->ai_addrlen) == -1) {
+		if (_port < 1024)
+			Msg("If you're not superuser: no permission to use ports under 1024", "WARNING");
+    	perror("ERROR\tServer::setUp bind()");
+		exit(EXIT_FAILURE);
+	}
+	if (listen(_fd, SOMAXCONN) == -1) {
+		perror("ERROR\tServer::setUp listen()");
+		exit(EXIT_FAILURE);
+	}
+}
 
-// void	Server::setaddrinfo(const int port) {
-	
-	// struct addrinfo hints;
-	// memset(&hints, 0, sizeof(hints));
-	// memset(&ipv4, 0, sizeof(ipv4));
-	// memset(&_ai, 0, sizeof(_ai));
-	// memset(&_sin, 0, sizeof(_sin));
-	// hints.ai_family = AF_INET;
-	// hints.ai_socktype = SOCK_STREAM;
-	// hints.ai_flags = AI_PASSIVE;
-	// int a = getaddrinfo(NULL, std::to_string(port).c_str(), &hints, &_ai);
-	// if (a != 0) {
-	// 	Msg(gai_strerror(a), "ERROR");
-	// 	exit(EXIT_FAILURE);
-	// }
+const std::string	Server::getIP() const {
+	return this->_ip;
+}
 
-	// _sin.sin_family = _ai->ai_family;
-	// _sin.sin_port = port;
-	// _sin.sin_addr.s_addr = htons(port);
+const std::string	Server::getHostname() const {
+	return this->_hostname;
+}
 
-	// // switch (inet_pton(_ai->ai_family, "127.0.0.1", &(_sin.sin_addr))) {
-	// // 	case 1:
-	// // 		Msg("inet_pton success", "DEBUG");
-	// // 		break ;
-	// // 	case 0:
-	// // 		Msg("inet_pton 0?! (please use 127.0.0.1 instead of localhost)", "DEBUG");
-	// // 		break ;
-	// // 	case -1:
-	// // 		Msg("inet_pton error", "DEBUG");
-	// // 		perror("inet_pton");
-	// // 		exit(EXIT_FAILURE);
-	// // }
+int	Server::getPort() const {
+	return this->_port;
+}
 
-	// inet_ntop(_ai->ai_family, &(_sin.sin_addr), ipv4, INET_ADDRSTRLEN);
-	// std::cout << "ipv4 : " << ipv4 << std::endl;
-// }
+std::ostream& operator<<(std::ostream& os, const Server& serv) {
+	os << "Server(" << serv.getIP() << ", " << serv.getHostname() << ", " << serv.getPort() << ")";
+	return os;
+}
