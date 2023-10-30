@@ -243,15 +243,17 @@ string Executor::run_PRIVMSG(vector<string> args, int fd) {
 	if (args.size() < 2 || args[0].empty() || args[1].empty()) {
 		return build_reply(ERR_NEEDMOREPARAMS, "PRIVMSG", "PRIVMSG", "Not enough parameters");
 	}
+	string target = args[0];
+
 	Client* client = getClientByFD(fd);
 	if (client == NULL) {
 		return "USER NOT FOUND";
 	}
 
 	string message;
-	Client* recipient = getClientByNickname(args[0]);
+	Client* recipient = getClientByNickname(target);
 	if (recipient == NULL) {
-		return build_reply(ERR_NOSUCHNICK, client->getNickname(), args[0], "No such recipient");
+		return build_reply(ERR_NOSUCHNICK, client->getNickname(), target, "No such recipient");
 	}
 
 	stringstream ss;
@@ -303,10 +305,11 @@ string Executor::run_JOIN(vector<string> args, int fd) {
 		return build_reply(ERR_NEEDMOREPARAMS, "JOIN", "JOIN", "Not enough parameters");
 		// return "461 ERR_NEEDMOREPARAMS JOIN :Not enough parameters\n";
 	}
+	string target = args[0];
 	if (args.size() > 2) {
 		return build_reply(ERR_TOOMANYPARAMS, "JOIN", "JOIN", "Too many parameters");
 	}
-	if (args[0][0] == '0') { // /JOIN 0 = leave all joined channels.
+	if (target[0] == '0') { // /JOIN 0 = leave all joined channels.
 		//leave all channels;
 		return "";
 	}
@@ -317,7 +320,7 @@ string Executor::run_JOIN(vector<string> args, int fd) {
 	}
 
 	map<string, string> joininfo;
-	vector<string> channelnames = split_args(args[0]);
+	vector<string> channelnames = split_args(target);
 	vector<string> channelpasswords = split_args(pwds);
 	for (size_t i = 0; i < channelnames.size(); i++) {
 		string channelpassword = "";
