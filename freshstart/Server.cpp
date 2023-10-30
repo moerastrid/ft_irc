@@ -8,7 +8,7 @@ Server::Server() {
 Server::~Server() {
 	Msg("Server default destructor", "DEBUG");
 
-	freeaddrinfo(_addrinfo);
+	close(_sockfd.fd);
 }
 
 Server::Server(const Server &src) {
@@ -52,30 +52,65 @@ void	Server::setAddrInfo(const int port) {
 	bzero(&hints, sizeof(hints));
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = AI_PASSIVE;
 
-	int status = getaddrinfo(_ip.c_str(), std::to_string(port).c_str(), &hints, &_addrinfo);
+	int status = getaddrinfo(NULL, std::to_string(port).c_str(), &hints, &_addrinfo);
 	if (status != 0) {
 		Msg(gai_strerror(status), "ERROR");
 		exit(EXIT_FAILURE);
 	}
+	_sockin.sin_family = AF_INET;
+	_sockin.sin_port = htons(port);
+	_sockin.sin_addr.s_addr = INADDR_ANY;
 }
 
 void	Server::setUp() {
-	_fd = socket(_addrinfo->ai_family, _addrinfo->ai_socktype, _addrinfo->ai_protocol);
-	if (_fd == -1) {
+	_sockfd.fd = socket(AF_INET, SOCK_STREAM, 0);
+	if (_sockfd.fd == -1) {
 		perror("Server::setUp socket()");
     	exit(EXIT_FAILURE);
 	}
-	if (bind(_fd, _addrinfo->ai_addr, _addrinfo->ai_addrlen) == -1) {
+	fcntl(_sockfd.fd, F_SETFL, O_NONBLOCK);
+	int yes = 1;
+	if (setsockopt(_sockfd.fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1) {
+		perror("ERROR\tServer::setUp setsockopt()");
+		exit(EXIT_FAILURE);
+	}
+	if (bind(_sockfd.fd, (struct sockaddr *)&_sockin, sizeof(_sockin)) == -1) {
 		if (_port < 1024)
 			Msg("If you're not superuser: no permission to use ports under 1024", "WARNING");
     	perror("ERROR\tServer::setUp bind()");
 		exit(EXIT_FAILURE);
 	}
-	if (listen(_fd, SOMAXCONN) == -1) {
+	if (listen(_sockfd.fd, SOMAXCONN) == -1) {
 		perror("ERROR\tServer::setUp listen()");
 		exit(EXIT_FAILURE);
 	}
+	freeaddrinfo(_addrinfo);
+	Msg("server waiting for connections ... ", "INFO");
+}
+
+void	Server::run() {
+	socklen_t sin_size;
+	sin_size = sizeof(_their_addr);
+
+	poll(&_sockfd, 1, 0);
+
+	int new_fd = accept(_sockfd.fd, (struct sockaddr *)&_their_addr, (socklen_t*)&sin_size);
+	if (new_fd == -1) {
+		perror("accept");
+		exit(EXIT_FAILURE);
+	}
+
+	// int num_events = poll(_pollfds, _num_pollfds, _polltime);
+	// std::cout << "poll number of events : " << num_events << std::endl;
+	// if (num_events != 0) {
+	// 	int pollin_happened = _pollfds[0].revents & POLLIN;
+	// 	if (pollin_happened)
+	// 		Msg("Pollin", "DEBUG");
+	// 	else
+	// 		Msg("No Pollin :()", "DEBUG");
+	// }
 }
 
 const std::string	Server::getIP() const {

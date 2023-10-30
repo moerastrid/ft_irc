@@ -4,11 +4,12 @@
 #include <sys/param.h>
 #include <netdb.h>
 #include <arpa/inet.h>
-
+#include <fcntl.h>
 #include <unistd.h>
 #include <cstdlib>
 #include <string>
 #include <cstring>
+#include <poll.h>
 
 class Server {
 	private :
@@ -16,11 +17,15 @@ class Server {
 		struct addrinfo		*_addrinfo;
 		struct sockaddr_in	_sockin;
 		std::string			_ip;
-		int					_fd = -1;
+		struct pollfd		_sockfd;
 		int					_port;
 		std::string			_pass;
 
+		//temp
+		struct sockaddr_in	_their_addr; /*this will be client*/
+
 		Server();								//default constructor
+
 		void			setAddrInfo(const int port);
 		void			setHostInfo();
 		void			setUp();
@@ -31,7 +36,8 @@ class Server {
 		Server &operator=(const Server &src);	// = sign operator
 		Server(const int port, const std::string pass);	// constructor (PORT, pass)
 		
-		void	run();
+		void				run();
+
 		const std::string	getIP() const;
 		const std::string	getHostname() const;
 		int					getPort() const;
