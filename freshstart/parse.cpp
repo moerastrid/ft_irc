@@ -46,7 +46,7 @@ int	parse(int argc, char **argv) {
 		return (-1);
 	} 
 	if (isvalidpass(argv[2]) == false) {
-		Msg("invalid password, please enter (alphanumerical) chars.\nIRCserver usage:\t./ircserver <port> <password>", "ERROR");
+		Msg("invalid password, please enter (printable) characters.\nIRCserver usage:\t./ircserver <port> <password>", "ERROR");
 		return (-1);
 	}
 	port = get_port(argv[1]);
