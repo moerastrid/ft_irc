@@ -88,18 +88,18 @@ string Executor::run_NICK(env& env, vector<string> args, int fd) {
 		return "432 ERR_ERRONEOUSNICKNAME :Erroneous nickname\n";
 	}
 
-	Client* client = getClientByFD(env, fd);
+	Client* caller = getClientByFD(env, fd);
 	string message;
 
-	if (client != NULL) {
-		if (client->nickname.empty()) { //first time connection part 2: electric boogaloo. Accepting connection and sending welcome message.
-			message = env.server_address + " 001 " + nickname + " :Welcome to Astrid's & Thibauld's IRC server, " + client->username + "!\n";
+	if (caller != NULL) {
+		if (caller->getNickname().empty()) { //first time connection part 2: electric boogaloo. Accepting connection and sending welcome message.
+			message = env.server_address + " 001 " + nickname + " :Welcome to Astrid's & Thibauld's IRC server, " + caller->getUsername() + "!\n";
 		} else {			// send normal nickname change message.
-			message = client->nickname + " NICK :" + nickname + "\n";
+			message = caller->getNickname() + " NICK :" + nickname + "\n";
 		}
-		client->nickname = nickname;
+		caller->setNickname(nickname);
 	} else { //first time connection.
-		addClientToVector(env, nickname, "", "", "", "", fd);
+		addClient(env, nickname, "", "", "", "", fd);
 		message = ":" + env.server_address + " NOTICE " + nickname + ":Remember to set your username using the USER command.\n";
 	}
 	return message;
@@ -151,18 +151,18 @@ string Executor::run_USER(env& env, vector<string> args, int fd) {
 	string message;
 
 	if (client != NULL) { //Existing connection.
-		if (client->username.empty()) {// first time connec part 2
-			message = ":" + env.server_address + " 001 " + client->nickname + " :Welcome to Astrid's & Thibauld's IRC server, " + username + "!\n";
+		if (client->getUsername().empty()) {// first time connec part 2
+			message = ":" + env.server_address + " 001 " + client->getNickname() + " :Welcome to Astrid's & Thibauld's IRC server, " + username + "!\n";
 		} else {
 			message = ":" + env.server_address + " 482 " + username + ": Your username has been updated to " + username + "\n";
 		}
-		client->username = username;
-		client->hostname = hostname;
-		client->servername = servername;
-		client->realname = realname;
+		client->setUsername(username);
+		client->setHostname(hostname);
+		client->setServername(servername);
+		client->setRealname(realname);
 	}
 	else { //first time connection.
-		addClientToVector(env, "", username, hostname, servername, realname, fd);
+		addClient(env, "", username, hostname, servername, realname, fd);
 		message = ":" + env.server_address + " NOTICE " + username + ":Remember to set your nickname using the NICK command.\n";
 	}
 	return message;
@@ -186,10 +186,10 @@ string Executor::run_MODE(env& env, vector<string> args, int fd) {
 
 		}
 	} else {
-		message = ":" + env.server_address + " 472 " + caller->nickname + " " + mode + ":Unknown MODE.\n";
+		message = ":" + env.server_address + " 472 " + caller->getNickname() + " " + mode + ":Unknown MODE.\n";
 	}
 
-	message = ":" + env.server_address + " 472 " + caller->nickname + " " + mode + ":Unknown MODE.\n"; //temp
+	message = ":" + env.server_address + " 472 " + caller->getNickname() + " " + mode + ":Unknown MODE.\n"; //temp
 	return message;
 }
 
@@ -214,12 +214,12 @@ string Executor::run_WHOIS(env& env, vector<string> args, int fd) {
 	string finalmessage = "";
 
 	for (vector<string>::iterator it = args.begin(); it != args.end(); it++) {
-		string message = ":" + env.server_address + " 311 " + caller->nickname + " ";
+		string message = ":" + env.server_address + " 311 " + caller->getNickname() + " ";
 		Client* requestee = getClientByNickname(env, *it);
 		if (requestee == NULL) {
 			message = ":" + env.server_address + " 401 " + *it + " :No such nickname\n";
 		} else {
-			message += requestee->nickname + " " + requestee->username + " " + requestee->hostname + " * :" + requestee->realname + "\n";
+			message += requestee->getNickname() + " " + requestee->getUsername() + " " + requestee->getHostname() + " * :" + requestee->getRealname() + "\n";
 		}
 		finalmessage += message;
 	}
@@ -227,6 +227,9 @@ string Executor::run_WHOIS(env& env, vector<string> args, int fd) {
 	return finalmessage;
 }
 
+/*
+ * incoming message: JOIN [<channel> | <password>]+
+ */
 string Executor::run_JOIN(env& env, vector<string> args, int fd) {
 	if (args.size() == 0) {
 		return "461 ERR_NEEDMOREPARAMS JOIN :Not enough parameters\n";
@@ -234,7 +237,7 @@ string Executor::run_JOIN(env& env, vector<string> args, int fd) {
 	if (args.size() > 2) {
 		return "461 ERR_TOOMANYPARAMS JOIN :Too many parameters\n";
 	}
-	if(args[0].empty()) {
+	if (args[0].empty()) {
 		return "461 ERR_NEEDMOREPARAMS JOIN :Not enough parameters\n";
 	}
 	if (args[0][0] == '0') { // /JOIN 0 = leave all joined channels.
@@ -266,23 +269,22 @@ string Executor::run_JOIN(env& env, vector<string> args, int fd) {
 
 	string message = "";
 	for (const auto& pair : joininfo) {
-		Channel* ch = getChannelByName(env, pair.first);
-		message += ":" + env.server_address + " " + client->nickname + " JOIN " + pair.first + "\n";
+		const string& channelname = pair.first;
+		const string& channelpassword = pair.second;
+		Channel* ch = getChannelByName(env, channelname);
+		message += ":" + env.server_address + " " + client->getNickname() + " JOIN " + channelname + "\n";
 		if (ch == NULL) { // Create new channel and have user join as the first member.
-			Channel c;
-			c.topic = "";
-			c.name = pair.first;
-			c.password = pair.second;
-			c.joined.push_back(*client);
-			env.channels.push_back(c);
+			addChannel(env, channelname, channelpassword, client);
 		} else {
-			if (ch->password.compare(pair.second) == 0) {
-				ch->joined.push_back(*client);
+			if (ch->getPassword().compare(channelpassword) == 0) {
+				ch->addClient(*client);
 			} else { //incorrect password.
-				message += ":" + env.server_address + " 475 " + client->nickname + " " + pair.first + ":Bad channel key\n";
+				message += ":" + env.server_address + " 475 " + client->getNickname() + " " + channelname + ":Bad channel key\n";
 			}
 		}
 	}
+
+
 	return message;
 }
 
@@ -303,30 +305,26 @@ string Executor::run_KICK(env& env, vector<string> args, int fd) {
 		return ":" + env.server_address + " 403 " + args[0] + " :No such channel\n";
 	}
 
-	vector<string>::iterator reason_it = std::find_if(args.begin(), args.end(), [](std::string& str) {
+	vector<string>::iterator reason_start = std::find_if(args.begin(), args.end(), [](std::string& str) {
 		return !str.empty() && str[0] == ':';
 	});
 
-	for (vector<string>::iterator name_it = std::next(args.begin()); name_it != reason_it; name_it++) {
+	for (vector<string>::iterator name_it = std::next(args.begin()); name_it != reason_start; name_it++) {
 		Client* client = getClientByNickname(env, *name_it);
-		
 		if (client == NULL) {
 			message += ":" + env.server_address + " 401 " + *name_it + " :No such nickname\n";
 			continue;
 		}
-		vector<Client>::iterator channel_user = std::find(ch->joined.begin(), ch->joined.end(), *client);
-		if (channel_user == ch->joined.end()) {
+
+		else if (ch->removeClient(*client) == 1) {
 			message += ":" + env.server_address + " 404 " + args[0] + " " + *name_it + ":Cannot kick user from channel they have not joined\n";
 			continue;
 		}
 
-		ch->joined.erase(channel_user);
-		message += ":" + env.server_address + " KICK " + args[0] + " " + *name_it + " ";
-		for (vector<string>::iterator it_reason = reason_it; it_reason != args.end(); it_reason++) {
-			message += *it_reason;
-			if (it_reason + 1 != args.end()) {
-				message += " ";
-			}
+		message += ":" + env.server_address + " KICK " + args[0] + " " + *name_it;
+		if (reason_start != args.end()) {
+			message += " ";
+			message += format_reason(reason_start, args);
 		}
 		message += "\n";
 	}
@@ -345,40 +343,37 @@ string Executor::run_PART(env& env, vector<string> args, int fd) {
 		return run_QUIT(env, quit_args, fd);
 	}
 
-	vector<string>::iterator reason_it = std::find_if(args.begin(), args.end(), [](std::string& str) {
+	vector<string>::iterator reason_start = std::find_if(args.begin(), args.end(), [](std::string& str) {
 		return !str.empty() && str[0] == ':';
 	});
 
 	string message = "";
-	for (vector<string>::iterator it = args.begin(); it != reason_it; it++) {
+	for (vector<string>::iterator it = args.begin(); it != reason_start; it++) {
 		Channel* ch = getChannelByName(env, *it);
 		if (ch == NULL) {
 			message += ":" + env.server_address + " 403 " + *it + " :No such channel\n";
 			continue;
 		}
 
-		vector<Client>::iterator caller_it = std::find(ch->joined.begin(), ch->joined.end(), *caller);
-		if (caller_it == ch->joined.end()) {
+		if(ch->removeClient(*caller) == 1) {
 			message += ":" + env.server_address + " 442 " + *it + " :You haven't joined that channel";
 			continue;
 		}
-
-		ch->joined.erase(caller_it);
 		message += ":" + env.server_address + " PART " + *it + "\n";
-		// If there's a reason: 
-		if (reason_it == args.end()) {
+		if (reason_start == args.end()) {
 			continue;
 		}
-		// Send reason to all other users in channel, to inform them why the user left. //#TODO PROBABLY SHOULD USE SEND DIRECTLY TO FD INSTEAD OF SENDING A REPLY TO THE CLIENT. 
-		for (const Client& user : ch->joined) {
-			message += ":" + caller->nickname + "!" + caller->username + "@" + caller->hostname + " PRIVMSG " + user.nickname + " ";
-			for (vector<string>::iterator it_reason = reason_it; it_reason != args.end(); it_reason++) {
-				message += *it_reason;
-				if (it_reason + 1 != args.end()) {
-					message += " ";
-				}
+		// If there's a reason:
+		// Send reason to all other users in channel, to inform them why the user left. //#TODO PROBABLY SHOULD USE SEND DIRECTLY TO FD INSTEAD OF SENDING A REPLY TO THE CLIENT.
+		for (const Client user : ch->getClients()) {
+			string reasonmessage = "";
+			reasonmessage += ":" + caller->getNickname() + "!" + caller->getUsername() + "@" + caller->getHostname() + " PRIVMSG " + user.getNickname();
+			if (reason_start != args.end()) {
+				reasonmessage += " ";
+				reasonmessage += format_reason(reason_start, args);
 			}
-			message += "\n";
+			reasonmessage += "\n";
+			send_to_client(fd, reasonmessage);
 		}
 	}
 
@@ -388,16 +383,22 @@ string Executor::run_PART(env& env, vector<string> args, int fd) {
 
 // Client wants to disconnect from server
 string Executor::run_QUIT(env& env, vector<string> args, int fd) {
-	(void)env;
 	(void)args;
-	(void)fd;
+	Client* client = getClientByFD(env, fd);
+	if (client == NULL) {
+		//Close the connection;
+		return "";
+	}
+
+
+
 	return "";
 }
 
 Client* Executor::getClientByFD(env& env, int fd) {
 	vector<Client>& clients = env.clients;
 	for (vector<Client>::iterator it = clients.begin(); it != clients.end(); it++) {
-		if (it->fd == fd)
+		if (it->getFD() == fd)
 			return &(*it);
 	}
 
@@ -407,7 +408,7 @@ Client* Executor::getClientByFD(env& env, int fd) {
 Client* Executor::getClientByNickname(env& env, string nickname) {
 	vector<Client>& clients = env.clients;
 	for (vector<Client>::iterator it = clients.begin(); it != clients.end(); it++) {
-		if (it->nickname == nickname)
+		if (it->getNickname() == nickname)
 			return &(*it);
 	}
 	return NULL;
@@ -416,7 +417,7 @@ Client* Executor::getClientByNickname(env& env, string nickname) {
 vector<Client>::iterator Executor::getItToClientByNickname(env& env, string nickname) {
 	vector<Client>& clients = env.clients;
 	for (vector<Client>::iterator it = clients.begin(); it != clients.end(); it++) {
-		if (it->nickname == nickname)
+		if (it->getNickname() == nickname)
 			return it;
 	}
 	return env.clients.end();
@@ -424,21 +425,20 @@ vector<Client>::iterator Executor::getItToClientByNickname(env& env, string nick
 
 Channel* Executor::getChannelByName(env& env, string name) {
 	for (Channel& ch : env.channels) {
-		if (ch.name == name) {
+		if (ch.getName() == name) {
 			return &(ch);
 		}
 	}
 	return NULL;
 }
 
-void Executor::addClientToVector(env& env, string nickname, string username, string hostname, string servername, string realname, int fd) {
-	Client new_client;
-	new_client.fd = fd;
-	new_client.nickname = nickname;
-	new_client.username = username;
-	new_client.hostname = hostname;
-	new_client.servername = servername;
-	new_client.realname = realname;
+void Executor::addClient(env& env, string nickname, string username, string hostname, string servername, string realname, int fd) {
+	Client new_client(fd);
+	new_client.setNickname(nickname);
+	new_client.setUsername(username);
+	new_client.setHostname(hostname);
+	new_client.setServername(servername);
+	new_client.setRealname(realname);
 
 	env.clients.push_back(new_client);
 }
@@ -454,4 +454,21 @@ bool Executor::parseUserArguments(const vector<string>& args, string& username, 
 	}
 
 	return !username.empty() && verify_name(username) && !hostname.empty() && !servername.empty() && (!realname.empty() || args[3] != ":");
+}
+
+void Executor::addChannel(env& env, string name, string password, Client* client) {
+	Channel c(name, password);
+	c.addClient(*client);
+	env.channels.push_back(c);
+}
+
+string Executor::format_reason(vector<string>::iterator& reason_start, vector<string>& args) {
+	string message = "";
+	for (vector<string>::iterator it = reason_start; it != args.end(); it++) {
+		message += *it;
+		if (std::next(it) != args.end()) {
+			message += " ";
+		}
+	}
+	return message;
 }

@@ -7,13 +7,14 @@ using std::endl;
 void test(env& env, string& incoming, int fd) {
 	static Executor ex;
 
+	cout << "Processing Incoming message: [" + incoming + "]" << endl;
+
 	Command cmd(incoming, fd);
 
-	string reply = ex.run(env, cmd, fd);
-
-	cout << "Processing Incoming message: [" + incoming + "]" << endl;
 	cout << "Reply received: " << endl;
+	string reply = ex.run(env, cmd, fd);
 	cout << "[" << reply << "]" << endl;
+
 	cout << "===============================" << endl << endl;
 }
 

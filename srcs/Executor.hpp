@@ -48,9 +48,14 @@ class Executor {
 		Client* getClientByNickname(env& env, string nickname);
 		vector<Client>::iterator getItToClientByNickname(env& env, string nickname);
 
-		void addClientToVector(env& env, string username, string nickname, string hostname, string servername, string realname, int fd);
+		void addClient(env& env, string username, string nickname, string hostname, string servername, string realname, int fd);
 		bool parseUserArguments(const vector<string>& args, string& username,
 				string& hostname, string& servername, string& realname);
+		void addChannel(env& env, string name, string password, Client* client);
+
+		string format_reason(vector<string>::iterator& reason_it, vector<string>& args);
+		string error_message(int error_code, string a, string b);
+
 };
 
 #endif /* end of include guard: EXECUTOR_HPP */
