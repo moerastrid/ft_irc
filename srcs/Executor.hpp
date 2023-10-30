@@ -6,6 +6,7 @@
 #define RPL_WELCOME 001
 
 #define RPL_WHOISUSER 311
+#define RPL_TOPIC 332
 
 #define ERR_NOSUCHNICK 401
 #define ERR_NOSUCHCHANNEL 403
@@ -13,8 +14,12 @@
 #define ERR_NONICKNAMEGIVEN 431
 #define ERR_ERRONEOUSNICKNAME 432
 #define ERR_NICKNAMEINUSE 433
+#define ERR_USERNOTINCHANNEL 441
+#define ERR_USERONCHANNEL 443
 #define ERR_NEEDMOREPARAMS 461
+#define ERR_TOOMANYPARAMS 461
 #define ERR_UNKNOWNMODE 472
+#define ERR_BADCHANNELKEY 475
 
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -73,6 +78,7 @@ class Executor {
 		string format_reason(vector<string>::iterator& reason_it, vector<string>& args);
 		string build_reply(int response_code, string callername, string target, string message);
 		string build_notice_reply(string target, string callername, string message);
+		string build_channel_reply(int response_code, string target, string callername, string channel, string message);
 		string error_message(int error_code, string a, string b);
 };
 

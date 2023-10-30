@@ -213,7 +213,7 @@ string Executor::run_MODE(vector<string> args, int fd) {
 
 	Client* caller = getClientByFD(fd);
 	if (caller == NULL) {
-		return "CALLER NOT FOUND";
+		return "USER NOT FOUND";
 	}
 
 	Channel* channel = getChannelByName(target);
@@ -272,45 +272,39 @@ string Executor::run_WHOIS(vector<string> args, int fd) {
 	// Any number of parameters is valid.
 	Client* caller = getClientByFD(fd);
 	if (caller == NULL) {
-		return "CALLER NOT FOUND\n";
+		return "USER NOT FOUND\n";
 	}
 
-	if (args.empty() || args[0].empty()) {
+	if (args.empty() || args[0].empty()) { // No args queries the caller.
 		string userinfo = caller->getNickname() + " " + caller->getUsername() + " " + caller->getHostname() + " * " + caller->getRealname();
 		return build_reply(RPL_WHOISUSER, caller->getNickname(), caller->getNickname(), userinfo);
-		// return ":" + this->e.server_address + " 311 " + caller->getNickname() + " " + caller->getNickname() + " " +  caller->getUsername() + " " + caller->getHostname() + " * :" + caller->getRealname() + "\n";
 	}
 
-	string finalmessage = "";
+	string message;
 
 	for (vector<string>::iterator it = args.begin(); it != args.end(); it++) {
-		string message = ":" + this->e.server_address + " 311 " + caller->getNickname() + " ";
-
 		Client* requestee = getClientByNickname(*it);
 		if (requestee == NULL) {
-			// message = ":" + this->e.server_address + " 401 " + *it + " :No such nickname\n";
 			message = build_reply(ERR_NOSUCHNICK, caller->getNickname(), *it, "No such nickname");
 		} else {
-			message += requestee->getNickname() + " " + requestee->getUsername() + " " + requestee->getHostname() + " * :" + requestee->getRealname() + "\n"; //#TODO fix servername? (servername == *)
+			string userinfo = requestee->getNickname() + " " + requestee->getUsername() + " " + requestee->getHostname() + " * :" + requestee->getRealname() + "\n"; //#TODO fix servername? (servername == *)
+			message = build_reply(RPL_WHOISUSER, caller->getNickname(), *it, userinfo);
 		}
-		finalmessage += message;
 	}
 
-	return finalmessage;
+	return message;
 }
 
 /*
  * incoming message: JOIN [<channel> | <password>]+
  */
 string Executor::run_JOIN(vector<string> args, int fd) {
-	if (args.size() == 0) {
-		return "461 ERR_NEEDMOREPARAMS JOIN :Not enough parameters\n";
+	if (args.size() <= 0 || args[0].empty()) {
+		return build_reply(ERR_NEEDMOREPARAMS, "JOIN", "JOIN", "Not enough parameters");
+		// return "461 ERR_NEEDMOREPARAMS JOIN :Not enough parameters\n";
 	}
 	if (args.size() > 2) {
-		return "461 ERR_TOOMANYPARAMS JOIN :Too many parameters\n";
-	}
-	if (args[0].empty()) {
-		return "461 ERR_NEEDMOREPARAMS JOIN :Not enough parameters\n";
+		return build_reply(ERR_TOOMANYPARAMS, "JOIN", "JOIN", "Too many parameters");
 	}
 	if (args[0][0] == '0') { // /JOIN 0 = leave all joined channels.
 		//leave all channels;
@@ -335,48 +329,47 @@ string Executor::run_JOIN(vector<string> args, int fd) {
 
 	Client* client = getClientByFD(fd);
 	if (client == NULL) { // shit... this shouldn't happen. It means there is no registered client for the user sending the command.
-		vector<string> quit_args = {"Screw you guys, I'm going home!"};
-		return run_QUIT(quit_args, fd);
+		return "USER NOT FOUND\n";
 	}
 
-	string finalmessage;
+	string message;
 	for (const auto& pair : joininfo) {
-		string message;
 		const string& channelname = pair.first;
 		const string& channelpassword = pair.second;
 		Channel* ch = getChannelByName(channelname);
-		message = ":" + this->e.server_address + " " + client->getNickname() + " JOIN " + channelname + "\n";
+
 		if (ch == NULL) { // Create new channel and have user join as the first member.
 			addChannel(channelname, channelpassword, client);
+			message = build_reply(RPL_TOPIC, client->getNickname(), channelname, "Welcome to channel " + channelname); //if succesfull, reply with channel topic.
 		} else {
+			message = build_reply(RPL_TOPIC, client->getNickname(), channelname, ch->getTopic()); //if succesfull, reply with channel topic.
 			const vector<Client>& clients = ch->getClients();
 			if (find(clients.begin(), clients.end(), *client) != clients.end())
-				message = ": " + e.server_address + " 479 " + client->getNickname() + " " + ch->getName() + " :Cannot join channel - you are already on the channel\n";
+				message = build_reply(ERR_USERONCHANNEL, client->getNickname(), ch->getName(), "Cannot join channel - you are already on the channel");
 			else if (ch->getPassword().compare(channelpassword) == 0)
 				ch->addClient(*client);
 			else //incorrect password.
-				message = ":" + e.server_address + " 475 " + client->getNickname() + " " + channelname + " :Bad channel key\n";
+				message = build_reply(ERR_BADCHANNELKEY, client->getNickname(), channelname, "Bad channel key");
 		}
-		finalmessage += message;
 	}
-	return finalmessage;
+	return message;
 }
 
 // Operator client wants to kick a user from a channel. #TODO check that the caller has the correct mode.
 string Executor::run_KICK(vector<string> args, int fd) {
 	if (args.size() < 2 || !args[0].size() || !args[1].size())
-		return "461 ERR_NEEDMOREPARAMS JOIN :Not enough parameters\n";
+		return build_reply(ERR_TOOMANYPARAMS, "JOIN", "JOIN", "Not enough parameters");
 
 	Client* caller = getClientByFD(fd);
 	if (caller == NULL) { // This shouldn't happen yo.
-		vector<string> quit_args = {"Screw you guys, I'm going home!"};
-		return run_QUIT(quit_args, fd);
+		return "USER NOT FOUND";
 	}
 
 	string message;
-	Channel* ch = getChannelByName(args[0]);
+	string channelname = args[0];
+	Channel* ch = getChannelByName(channelname);
 	if (ch == NULL) {
-		return ":" + this->e.server_address + " 403 " + args[0] + " :No such channel\n";
+		return build_reply(ERR_NOSUCHCHANNEL, caller->getNickname(), channelname, "No such channel");
 	}
 
 	vector<string>::iterator reason_start = std::find_if(args.begin(), args.end(), [](std::string& str) {
@@ -386,16 +379,16 @@ string Executor::run_KICK(vector<string> args, int fd) {
 	for (vector<string>::iterator name_it = std::next(args.begin()); name_it != reason_start; name_it++) {
 		Client* client = getClientByNickname(*name_it);
 		if (client == NULL) {
-			message += ":" + this->e.server_address + " 401 " + *name_it + " :No such nickname\n";
+			message += build_reply(ERR_NOSUCHNICK, caller->getNickname(), *name_it, "No such nickname");
 			continue;
 		}
 
 		else if (ch->removeClient(*client) == 1) {
-			message += ":" + this->e.server_address + " 404 " + args[0] + " " + *name_it + " :Cannot kick user from channel they have not joined\n";
+			message += build_channel_reply(ERR_USERNOTINCHANNEL, caller->getNickname(), *name_it, channelname, "Cannot kick user from a channel that they have not joined");
 			continue;
 		}
 
-		message += ":" + this->e.server_address + " KICK " + args[0] + " " + *name_it;
+		message += ":" + this->e.server_address + " KICK " + channelname + " " + *name_it;
 		if (reason_start != args.end()) {
 			message += " ";
 			message += format_reason(reason_start, args);
@@ -412,14 +405,14 @@ using std::endl;
 
 string Executor::run_PART(vector<string> args, int fd) {
 	if (args.size() == 0 || args[0].empty()) {
-		return "461 ERR_NEEDMOREPARAMS JOIN :Not enough parameters\n";
+		return build_reply(ERR_NEEDMOREPARAMS, "JOIN", "JOIN", "Not enough parameters");
 	}
 
 	vector<string> channelnames = split_args(args[0]);
 
 	Client* caller = getClientByFD(fd);
 	if (caller == NULL) { // THis shouldn't happen yo.
-		return "CALLER NOT FOUND\n";
+		return "USER NOT FOUND\n";
 	}
 
 	vector<string>::iterator reason_start = std::find_if(args.begin(), args.end(), [](std::string& str) {
@@ -430,14 +423,14 @@ string Executor::run_PART(vector<string> args, int fd) {
 	for (vector<string>::iterator it = channelnames.begin(); it != channelnames.end(); it++) {
 		Channel* ch = getChannelByName(*it);
 		if (ch == NULL) {
-			message += ":" + this->e.server_address + " 403 " + *it + " :No such channel\n";
+			message += build_reply(ERR_NOSUCHCHANNEL, caller->getNickname(), *it, "No such channel");
 			continue;
 		}
 
 		vector<Client> clients = ch->getClients();
 
 		if(ch->removeClient(*caller) == 1) {
-			message += ":" + this->e.server_address + " 442 " + *it + " :You haven't joined that channel";
+			message += build_reply(ERR_USERNOTINCHANNEL, caller->getNickname(), *it, "You haven't joined that channel");
 			continue;
 		}
 		message += ":" + this->e.server_address + " PART " + *it + "\n";
@@ -562,11 +555,22 @@ string Executor::build_reply(int response_code, string callername, string target
 	if (response_code == NOTICE) {
 		return build_notice_reply(target, callername, message);
 	}
-	stringstream ss;
-	ss << std::setw(3) << std::setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
-	return ":" + this->e.server_address + " " + ss.str() + " " + callername + " " + target + " :" + message + "\n";
+	stringstream response;
+	response << std::setw(3) << std::setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
+
+	return ":" + this->e.server_address + " " + response.str() + " " + callername + " " + target + " :" + message + "\n";
 }
 
 string Executor::build_notice_reply(string target, string callername, string message) {
 	return ":" + this->e.server_address + " NOTICE " + callername + " " + target + " :" + message + "\n";
+}
+
+string Executor::build_channel_reply(int response_code, string callername, string target, string channel, string message) {
+	if (response_code == NOTICE) {
+		return build_notice_reply(target, callername, message);
+	}
+	stringstream response;
+	response << std::setw(3) << std::setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
+
+	return ":" + this->e.server_address + " " + response.str() + " " + callername + " " + target + " " + channel + " :" + message + "\n";
 }
