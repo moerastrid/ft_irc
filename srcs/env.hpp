@@ -10,7 +10,6 @@ using std::string;
 class env {
 	public:
 		string				server_address;
-		string				server_name;
 		vector<Client>		clients;
 		vector<Channel>		channels;
 };

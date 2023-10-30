@@ -233,22 +233,22 @@ void register_nickname(s_env* env, int fd, char** args) {
 
 // }
 
-						// Now the server should respond to the NICK and USER messages.
-						/*
-							The server should respond with one of the following responses:
-							NICK response:
-							NICKNAME in use: If the chosen nickname is already in use,
-								the server will typically respond with an error message like
-								433 ERR_NICKNAMEINUSE.
-								Example: [:server-name 433 * chosen-nickname :Nickname is already in use.]
-							Nickname changed: If the nickname change is successful, the server
-								will respond with a confirmation message, indicating that the
-								nickname has been changed.
-								Example: [:server-name 001 your-nickname :Welcome to the IRC Network your-nickname!user@hostname]
-							USER response:
-							USER Command: Similarly, when the client sends the USER command to register user information,
-								the server should acknowledge this by responding with a confirmation message.
-								Example: [:server-name 001 your-nickname :Welcome to the IRC Network your-nickname!user@hostname
+	// Now the server should respond to the NICK and USER messages.
+	/*
+		The server should respond with one of the following responses:
+		NICK response:
+		NICKNAME in use: If the chosen nickname is already in use,
+			the server will typically respond with an error message like
+			433 ERR_NICKNAMEINUSE.
+			Example: [:server-name 433 * chosen-nickname :Nickname is already in use.]
+		Nickname changed: If the nickname change is successful, the server
+			will respond with a confirmation message, indicating that the
+			nickname has been changed.
+			Example: [:server-name 001 your-nickname :Welcome to the IRC Network your-nickname!user@hostname]
+		USER response:
+		USER Command: Similarly, when the client sends the USER command to register user information,
+			the server should acknowledge this by responding with a confirmation message.
+			Example: [:server-name 001 your-nickname :Welcome to the IRC Network your-nickname!user@hostname
 						*/
 void parse_incoming_message(s_env* env, char* message, int fd, int nbytes) {
 	static char* expected[] = {"CAP", "NICK"};// "USER", "MODE", "PING", "PRIVMSG", "WHOIS", "JOIN", "KICK", "QUIT" };

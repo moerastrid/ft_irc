@@ -53,9 +53,6 @@ void test(env& env, string& incoming, int fd, string expected) {
 	} else {
 		customOut << COLOR_RED << "[" << reply << "]" << COLOR_RESET << endl;
 	}
-
-
-
 	cout << "===============================" << endl << endl;
 }
 
@@ -78,7 +75,7 @@ void setup_test(env& env) {
 
 
 	test(env, capreq, fd_user1, "localhost CAP NAK :-\n");
-	test(env, nick1, fd_user1, ":localhost NOTICE neus :Remember to set your username using the USER command.\n");
+	test(env, nick1, fd_user1, ":localhost NOTICE neus :Remember to set your username using the USER command\n");
 	test(env, user1, fd_user1, ":localhost 001 neus :Welcome to Astrid's & Thibauld's IRC server, thibauld!\n");
 	test(env, mode1, fd_user1, ":localhost 403 neus thibauld :No such channel");
 	test(env, ping1, fd_user1, "PONG localhost");
@@ -107,7 +104,7 @@ int main() {
 	string message6 = "WHOIS neus astrid doofus\n";
 
 	string message7 = "JOIN #test,#test2,#test3,#test4 123,234,345\n";
-	string message8 = "JOIN #test3, qwerty\n";
+	string message8 = "JOIN #test3 qwerty\n";
 	string message9 = "JOIN #test4\n";
 	string message10 = "JOIN \n";
 
@@ -125,7 +122,7 @@ int main() {
 
 	// JOIN test
 	test(env, message7, fd_user1, ":localhost neus JOIN #test\n:localhost neus JOIN #test2\n:localhost neus JOIN #test3\n:localhost neus JOIN #test4\n");
-	test(env, message8, fd_user1, ":localhost neus JOIN #test3\n:localhost 475 neus #test3 :Bad channel key\n");
+	test(env, message8, fd_user1, ":localhost 475 neus #test3 :Bad channel key\n");
 	test(env, message9, fd_user1, ":localhost neus JOIN #test4\n");
 	test(env, message10, fd_user1, "461 ERR_NEEDMOREPARAMS JOIN :Not enough parameters\n");
 
@@ -135,8 +132,13 @@ int main() {
 	test(env, message13, fd_user1, ":localhost 404 #test neus :Cannot kick user from channel they have not joined\n");
 	
 	// PART test
-	test(env, message14, fd_user1, ":localhost neus JOIN #test\n");
-	test(env, message15, fd_user1, ":localhost PART #test\n");
+	string partmessage0 = "JOIN #test,#test2,#test3 123,234,345\n";
+	string partmessage1 = "PART #test :you guys suck\n";
+	string partmessage2 = "PART #test2,#test3 :screw you guys, I'm going home";
+
+	test(env, partmessage0, fd_user1, ":localhost neus JOIN #test\n:localhost neus JOIN #test2\n:localhost neus JOIN #test3\n");
+	test(env, partmessage1, fd_user1, ":localhost PART #test\n");
+	test(env, partmessage2, fd_user1, ":localhost PART #\n");
 
 	for (const auto& el : env.clients) {
 		cout << el << endl;

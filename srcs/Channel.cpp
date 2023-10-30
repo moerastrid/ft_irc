@@ -58,12 +58,14 @@ int Channel::removeClient(Client client) {
 	if (it == clients.end()) {
 		return 1;
 	}
-	clients.erase(it);
+	this->clients.erase(it);
 	return 0;
 }
 
 void Channel::addClient(Client client) {
-	clients.push_back(client);
+	if (find(this->clients.begin(), this->clients.end(), client) == this->clients.end()) {
+		this->clients.push_back(client);
+	}
 }
 
 std::ostream& operator<<(std::ostream& os, const Channel& channel) {

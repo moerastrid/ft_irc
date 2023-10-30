@@ -46,7 +46,6 @@ void Client::setRealname(string& realname) {
 int Client::getFD() const {
 	return this->fd;
 }
-
 const string& Client::getNickname() const {
 	return this->nickname;
 }
