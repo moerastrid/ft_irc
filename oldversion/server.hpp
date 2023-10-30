@@ -31,6 +31,5 @@ class server {
 		server(const server &src);				//copy constructor
 		server &operator=(const server &src);	// = sign operator
 		server(const unsigned int port, const std::string password);		// constructor (PORT)
-		
 		void	run();
 };
