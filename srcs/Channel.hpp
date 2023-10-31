@@ -16,6 +16,8 @@ private:
 	string			topic;
 	string			name;
 	string			password;
+	bool			inviteOnly;
+
 public:
 	Channel();
 	~Channel();
@@ -34,6 +36,7 @@ public:
 
 	int removeClient(Client client);
 	void addClient(Client client);
+
 
 	// Channel(/*args go here*/);
 };

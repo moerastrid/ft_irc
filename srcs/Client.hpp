@@ -16,9 +16,9 @@ private:
 	string			hostname;
 	string			servername;
 	string			realname;
+	bool			operatorStatus;
 
 public:
-
 	~Client();
 	Client(int fd);
 	Client(const Client& other);
@@ -29,6 +29,7 @@ public:
 	void setHostname(string& hostname);
 	void setServername(string& servername);
 	void setRealname(string& realname);
+
 
 	int getFD() const;
 	const string& getNickname() const;

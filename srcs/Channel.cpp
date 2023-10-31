@@ -26,9 +26,9 @@ Channel& Channel::operator=(const Channel& other) {
 }
 
 Channel::Channel(string name, string password) {
-	this->topic = "";
 	this->name = name;
 	this->password = password;
+	this->topic = "Welcome to channel " + name;
 }
 
 const string& Channel::getTopic() const {

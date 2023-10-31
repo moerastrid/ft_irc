@@ -67,17 +67,49 @@ Executor::Executor(env& e) : e(e) {
 	this->funcMap["WHOIS"] 		= &Executor::run_WHOIS;
 	this->funcMap["JOIN"] 		= &Executor::run_JOIN;
 	this->funcMap["KICK"] 		= &Executor::run_KICK;
-	this->funcMap["QUIT"] 		= &Executor::run_QUIT;
 	this->funcMap["PART"] 		= &Executor::run_PART;
+	this->funcMap["INVITE"] 	= &Executor::run_INVITE;
+	this->funcMap["TOPIC"] 		= &Executor::run_TOPIC;
+	this->funcMap["QUIT"] 		= &Executor::run_QUIT;
+
+	this->argCount["CAP"] 		= {0, 1};
+	this->argCount["NICK"] 		= {1, 1};
+	this->argCount["USER"] 		= {4, -1};
+	this->argCount["MODE"] 		= {1, 3};
+	this->argCount["PING"] 		= {1, 1};
+	this->argCount["PRIVMSG"] 	= {2, -1};
+	this->argCount["WHOIS"] 	= {0, -1};
+	this->argCount["JOIN"] 		= {1, 2};
+	this->argCount["KICK"] 		= {1, -1};
+	this->argCount["PART"] 		= {1, -1};
+	this->argCount["INVITE"] 	= {1, 2};
+	this->argCount["TOPIC"] 	= {1, -1};
+	this->argCount["QUIT"] 		= {0, -1};
 }
 
 Executor::~Executor() {}
 
 void Executor::send_to_client(int fd, string message) {
-	cout << "Sending message to fd " << fd << ":" << endl;
-	cout << message << endl;
 	const char* c_message = message.c_str();
 	send(fd, c_message, sizeof c_message, 0);
+}
+
+int Executor::validateArguments(const std::string& command, int numArgs) {
+    if (this->argCount.find(command) != this->argCount.end()) {
+        std::pair<int, int> argCounts = this->argCount[command];
+        int minArgs = argCounts.first;
+        int maxArgs = argCounts.second;
+
+        // Check if the number of arguments falls within the specified range.
+        if (numArgs < minArgs) {
+            return -1;
+        }
+        if (maxArgs != -1 && numArgs > maxArgs) {
+        	return 1;
+        }
+    }
+
+    return 0; // Argument count is valid.
 }
 
 string Executor::run(Command& cmd, int fd) {
@@ -93,6 +125,18 @@ string Executor::run(Command& cmd, int fd) {
 	catch (std::out_of_range& e) {
 		return build_reply(ERR_UNKNOWNCOMMAND, command, command, "Unknown command from client");
 	}
+
+	 int numArgs = cmd.getArgs().size();
+
+	// Validate the number of arguments for the command.
+	 //#TODO add client nickname.
+	int res = validateArguments(command, numArgs);
+	if (res == -1) {
+		return build_reply(ERR_NEEDMOREPARAMS, command, command, "Not enough parameters");
+	} else if (res == 1) {
+		return build_reply(ERR_TOOMANYPARAMS, command, command, "Too many parameters");
+	}
+
 	string message = (this->*ptr)(cmd.getArgs(), fd);
 
 	// Prints all channels and a list of their connected clients.
@@ -108,15 +152,13 @@ string Executor::run(Command& cmd, int fd) {
 	return message;
 }
 
+
+
 string Executor::run_CAP([[maybe_unused]]vector<string> args, [[maybe_unused]]int fd) {
 	return this->e.server_address + " CAP NAK :-\n";
 }
 
 string Executor::run_NICK(vector<string> args, int fd) {
-	if (args.size() != 1) {
-		return build_reply(ERR_NEEDMOREPARAMS, "NICK", "NICK", "Not enough parameters");
-	}
-
 	string& nickname = args[0];
 
 	if (nickname.empty() || !verify_name(nickname)) {
@@ -173,14 +215,13 @@ RFC 1459
 */
 
 string Executor::run_USER(vector<string> args, int fd) {
-	if (args.size() < 4) {
-		return build_reply(ERR_NEEDMOREPARAMS, "USER", "USER", "Not enough parameters");
-	}
-
 	Client* client = getClientByFD(fd);
 
 	string username, hostname, servername, realname;
 	if (!parseUserArguments(args, username, hostname, servername, realname)) {
+		if (client == NULL || client->getNickname().empty()) {
+			return build_reply(ERR_ERRONEOUSNICKNAME, "USER", "USER", "Invalid user arguments");
+		}
 		return build_reply(ERR_ERRONEOUSNICKNAME, client->getNickname(), "USER", "Invalid user arguments");
 	}
 
@@ -199,15 +240,12 @@ string Executor::run_USER(vector<string> args, int fd) {
 	}
 	else { //first time connection.
 		addClient("", username, hostname, servername, realname, fd);
-		message = build_reply(NOTICE, client->getNickname(), username, "Remember to set your nickname using the NICK command");
+		message = build_reply(NOTICE, username, username, "Remember to set your nickname using the NICK command");
 	}
 	return message;
 }
 
 string Executor::run_MODE(vector<string> args, int fd) {
-	if (args.size() < 2 || args[0].empty() || args[1].empty())
-		return build_reply(ERR_NEEDMOREPARAMS, "MODE", "MODE", "Not enough parameters");
-	
 	string target = args[0];
 	string mode = args[1];
 
@@ -236,13 +274,10 @@ string Executor::run_MODE(vector<string> args, int fd) {
 }
 
 string Executor::run_PING([[maybe_unused]]vector<string> args, [[maybe_unused]]int fd) {
-	return "PONG " + this->e.server_address;
+	return "PONG " + this->e.server_address + "\n";
 }
 
 string Executor::run_PRIVMSG(vector<string> args, int fd) {
-	if (args.size() < 2 || args[0].empty() || args[1].empty()) {
-		return build_reply(ERR_NEEDMOREPARAMS, "PRIVMSG", "PRIVMSG", "Not enough parameters");
-	}
 	string target = args[0];
 
 	Client* client = getClientByFD(fd);
@@ -277,9 +312,15 @@ string Executor::run_WHOIS(vector<string> args, int fd) {
 		return "USER NOT FOUND\n";
 	}
 
+
 	if (args.empty() || args[0].empty()) { // No args queries the caller.
-		string userinfo = caller->getNickname() + " " + caller->getUsername() + " " + caller->getHostname() + " * " + caller->getRealname();
-		return build_reply(RPL_WHOISUSER, caller->getNickname(), caller->getNickname(), userinfo);
+		string userinfo = caller->getUsername() + " " + caller->getHostname() + " * :" + caller->getRealname();
+		return build_WHOIS_reply(RPL_WHOISUSER, caller->getNickname(), caller->getNickname(), userinfo);
+	}
+	if (args[0] == "123") {
+		for (vector<string>::iterator it = args.begin(); it != args.end(); it++) {
+			cout << *it << endl;
+		}
 	}
 
 	string message;
@@ -287,10 +328,10 @@ string Executor::run_WHOIS(vector<string> args, int fd) {
 	for (vector<string>::iterator it = args.begin(); it != args.end(); it++) {
 		Client* requestee = getClientByNickname(*it);
 		if (requestee == NULL) {
-			message = build_reply(ERR_NOSUCHNICK, caller->getNickname(), *it, "No such nickname");
+			message += build_reply(ERR_NOSUCHNICK, caller->getNickname(), *it, "No such nickname");
 		} else {
-			string userinfo = requestee->getNickname() + " " + requestee->getUsername() + " " + requestee->getHostname() + " * :" + requestee->getRealname() + "\n"; //#TODO fix servername? (servername == *)
-			message = build_reply(RPL_WHOISUSER, caller->getNickname(), *it, userinfo);
+			string userinfo = requestee->getUsername() + " " + requestee->getHostname() + " * :" + requestee->getRealname(); //#TODO fix servername? (servername == *)
+			message += build_WHOIS_reply(RPL_WHOISUSER, caller->getNickname(), *it, userinfo);
 		}
 	}
 
@@ -301,19 +342,15 @@ string Executor::run_WHOIS(vector<string> args, int fd) {
  * incoming message: JOIN [<channel> | <password>]+
  */
 string Executor::run_JOIN(vector<string> args, int fd) {
-	if (args.size() <= 0 || args[0].empty()) {
-		return build_reply(ERR_NEEDMOREPARAMS, "JOIN", "JOIN", "Not enough parameters");
-		// return "461 ERR_NEEDMOREPARAMS JOIN :Not enough parameters\n";
+	Client* client = getClientByFD(fd);
+	if (client == NULL) { // shit... this shouldn't happen. It means there is no registered client for the user sending the command.
+		return "USER NOT FOUND\n";
 	}
 	string target = args[0];
-	if (args.size() > 2) {
-		return build_reply(ERR_TOOMANYPARAMS, "JOIN", "JOIN", "Too many parameters");
-	}
 	if (target[0] == '0') { // /JOIN 0 = leave all joined channels.
 		//leave all channels;
 		return "";
 	}
-
 	string pwds = "";
 	if (args.size() == 2) {
 		pwds = args[1];
@@ -330,11 +367,6 @@ string Executor::run_JOIN(vector<string> args, int fd) {
 		joininfo[channelnames[i]] = channelpassword;
 	}
 
-	Client* client = getClientByFD(fd);
-	if (client == NULL) { // shit... this shouldn't happen. It means there is no registered client for the user sending the command.
-		return "USER NOT FOUND\n";
-	}
-
 	string message;
 	for (const auto& pair : joininfo) {
 		const string& channelname = pair.first;
@@ -343,16 +375,28 @@ string Executor::run_JOIN(vector<string> args, int fd) {
 
 		if (ch == NULL) { // Create new channel and have user join as the first member.
 			addChannel(channelname, channelpassword, client);
-			message = build_reply(RPL_TOPIC, client->getNickname(), channelname, "Welcome to channel " + channelname); //if succesfull, reply with channel topic.
+			message += build_reply(RPL_TOPIC, client->getNickname(), channelname, "Welcome to channel " + channelname); //if succesfull, reply with channel topic.
 		} else {
-			message = build_reply(RPL_TOPIC, client->getNickname(), channelname, ch->getTopic()); //if succesfull, reply with channel topic.
+			string password = ch->getPassword();
 			const vector<Client>& clients = ch->getClients();
-			if (find(clients.begin(), clients.end(), *client) != clients.end())
-				message = build_reply(ERR_USERONCHANNEL, client->getNickname(), ch->getName(), "Cannot join channel - you are already on the channel");
-			else if (ch->getPassword().compare(channelpassword) == 0)
+
+			if (find(clients.begin(), clients.end(), *client) != clients.end()) {
+				message += build_reply(ERR_USERONCHANNEL, client->getNickname(), ch->getName(), "Cannot join channel - you are already on the channel");
+				continue;
+			}
+
+			if (password.empty()) {
 				ch->addClient(*client);
-			else //incorrect password.
-				message = build_reply(ERR_BADCHANNELKEY, client->getNickname(), channelname, "Bad channel key");
+				message += build_reply(RPL_TOPIC, client->getNickname(), channelname, ch->getTopic()); //if succesfull, reply with channel topic.
+				continue;
+			}
+
+			if (password.compare(channelpassword) != 0) {
+				message += build_reply(ERR_BADCHANNELKEY, client->getNickname(), channelname, "Bad channel key");
+				continue;
+			}
+			ch->addClient(*client);
+			message += build_reply(RPL_TOPIC, client->getNickname(), channelname, ch->getTopic()); //if succesfull, reply with channel topic.
 		}
 	}
 	return message;
@@ -360,9 +404,6 @@ string Executor::run_JOIN(vector<string> args, int fd) {
 
 // Operator client wants to kick a user from a channel. #TODO check that the caller has the correct mode.
 string Executor::run_KICK(vector<string> args, int fd) {
-	if (args.size() < 2 || !args[0].size() || !args[1].size())
-		return build_reply(ERR_TOOMANYPARAMS, "JOIN", "JOIN", "Not enough parameters");
-
 	Client* caller = getClientByFD(fd);
 	if (caller == NULL) { // This shouldn't happen yo.
 		return "USER NOT FOUND";
@@ -407,16 +448,13 @@ using std::cout;
 using std::endl;
 
 string Executor::run_PART(vector<string> args, int fd) {
-	if (args.size() == 0 || args[0].empty()) {
-		return build_reply(ERR_NEEDMOREPARAMS, "JOIN", "JOIN", "Not enough parameters");
-	}
-
-	vector<string> channelnames = split_args(args[0]);
-
 	Client* caller = getClientByFD(fd);
 	if (caller == NULL) { // THis shouldn't happen yo.
 		return "USER NOT FOUND\n";
 	}
+
+	vector<string> channelnames = split_args(args[0]);
+
 
 	vector<string>::iterator reason_start = std::find_if(args.begin(), args.end(), [](std::string& str) {
 		return !str.empty() && str[0] == ':';
@@ -457,6 +495,21 @@ string Executor::run_PART(vector<string> args, int fd) {
 	}
 
 	return message;
+}
+
+string Executor::run_INVITE(vector<string> args, int fd) {
+	Client* client = getClientByFD(fd);
+	(void) client;
+	(void)args;
+
+
+	return "";
+}
+string Executor::run_TOPIC(vector<string> args, int fd) {
+	Client* client = getClientByFD(fd);
+	(void) client;
+	(void)args;
+	return "";
 }
 
 #include <unistd.h>
@@ -564,7 +617,7 @@ string Executor::build_reply(int response_code, string callername, string target
 	return ":" + this->e.server_address + " " + response.str() + " " + callername + " " + target + " :" + message + "\n";
 }
 
-string Executor::build_notice_reply(string target, string callername, string message) {
+string Executor::build_notice_reply(string callername, string target, string message) {
 	return ":" + this->e.server_address + " NOTICE " + callername + " " + target + " :" + message + "\n";
 }
 
@@ -576,4 +629,11 @@ string Executor::build_channel_reply(int response_code, string callername, strin
 	response << std::setw(3) << std::setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
 
 	return ":" + this->e.server_address + " " + response.str() + " " + callername + " " + target + " " + channel + " :" + message + "\n";
+}
+
+string Executor::build_WHOIS_reply(int response_code, string callername, string target, string userinfo) {
+	stringstream response;
+	response << std::setw(3) << std::setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
+
+	return ":" + this->e.server_address + " " + response.str() + " " + callername + " " + target + " " + userinfo + "\n";
 }
