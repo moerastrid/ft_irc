@@ -14,7 +14,7 @@
 class Server {
 	private :
 		char				_hostname[MAXHOSTNAMELEN];
-		struct addrinfo		*_addrinfo;
+		// struct addrinfo		*_addrinfo;
 		struct sockaddr_in	_sockin;
 		std::string			_ip;
 		struct pollfd		_sockfd;
