@@ -10,6 +10,7 @@
 #include <string>
 #include <cstring>
 #include <poll.h>
+#include <vector>
 
 class Server {
 	private :

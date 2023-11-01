@@ -98,9 +98,16 @@ void	Server::setUp() {
 void	Server::run() {
 	socklen_t sin_size;
 	sin_size = sizeof(_their_addr);
+	std::vector<struct pollfd>	pollFds;
+	pollFds.push_back(_sockfd);
 
-	// poll(&_sockfd, 1, 0);
+
+	poll(&_sockfd, 1, 0);
 	
+	for (int i(0); i < int(pollFds.size()); i++)
+	{
+		
+	}
 	socklen_t	tempSize = sizeof(_sockin);
 	int new_fd = accept(_sockfd.fd, (struct sockaddr *)&_sockin, (socklen_t *)&tempSize);
 	if (new_fd == -1) {
