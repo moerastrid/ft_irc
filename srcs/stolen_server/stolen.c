@@ -250,10 +250,17 @@ void register_nickname(s_env* env, int fd, char** args) {
 			the server should acknowledge this by responding with a confirmation message.
 			Example: [:server-name 001 your-nickname :Welcome to the IRC Network your-nickname!user@hostname
 						*/
+
+void do_kick(s_env* env, int fd, char **args) {
+	char* message = ":localhost KICK #test neus :go away";
+	printf("Sending message [%s] to: %d\n", message, fd);
+	send(fd, message, sizeof message, 0);
+}
+
 void parse_incoming_message(s_env* env, char* message, int fd, int nbytes) {
-	static char* expected[] = {"CAP", "NICK"};// "USER", "MODE", "PING", "PRIVMSG", "WHOIS", "JOIN", "KICK", "QUIT" };
-	size_t EXPECTED_LEN = 2;
-	void (*functions[])(s_env*, int, char**) = {send_CAP_response, register_nickname}; //#TODO add rest of functions
+	static char* commands[] = {"CAP", "NICK", "KICK"};// "USER", "MODE", "PING", "PRIVMSG", "WHOIS", "JOIN", "KICK", "QUIT" };
+	size_t commands_len = 3;
+	void (*functions[])(s_env*, int, char**) = {send_CAP_response, register_nickname, do_kick}; //#TODO add rest of functions
 
 	char** lines = split_lines(message);
 
@@ -275,9 +282,11 @@ void parse_incoming_message(s_env* env, char* message, int fd, int nbytes) {
 				dprintf(2, "[%s]\n", args[i]);
 		}
 
-		for (size_t i = 0; i < EXPECTED_LEN; i++) {
-			if (strcmp(expected[i], command) == 0) {
+		for (size_t i = 0; i < commands_len; i++) {
+			if (strcmp(commands[i], command) == 0) {
 				functions[i](env, fd, args);
+			} else {
+				dprintf(2, "%s: [%s] - [%s]\n", "not doing func", command, commands[i]);
 			}
 		}
 

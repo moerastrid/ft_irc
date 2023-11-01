@@ -4,7 +4,6 @@
 #define NOTICE 999
 
 #define RPL_WELCOME 001
-
 #define RPL_WHOISUSER 311
 #define RPL_TOPIC 332
 
@@ -18,13 +17,12 @@
 #define ERR_USERONCHANNEL 443
 #define ERR_NEEDMOREPARAMS 461
 #define ERR_TOOMANYPARAMS 461
+#define ERR_CHANNELISFULL 471
 #define ERR_UNKNOWNMODE 472
 #define ERR_BADCHANNELKEY 475
 
-#include <sys/socket.h>
-#include <sys/types.h>
-
-#include <algorithm>
+#include <utility>
+using std::pair;
 
 #include <string>
 using std::string;
@@ -32,10 +30,14 @@ using std::string;
 #include <map>
 using std::map;
 
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <algorithm>
 #include <stdexcept>
 
 #include "Command.hpp"
 #include "env.hpp"
+
 
 class Executor; // Forward declaration
 
@@ -43,18 +45,19 @@ typedef string (Executor::*mbrFuncPtr)(vector<string>, int fd);
 
 class Executor {
 	private:
-		std::map<string, mbrFuncPtr> funcMap;
-	    std::map<std::string, std::pair<int, int>> argCount;
+		map<string, mbrFuncPtr> funcMap;
+		map<string, pair<int, int>> argCount;
 		env& e;
 	public:
 //		Executor();
 		Executor(env& e);
 		~Executor();
 
-	    int validateArguments(const std::string& command, int numArgs);
+		int validateArguments(const string& command, int numArgs);
 		string run(Command& cmd, int fd);
 
 		string run_CAP(vector<string> args, int fd);
+		string run_PASS(vector<string> args, int fd);
 		string run_NICK(vector<string> args, int fd);
 		string run_USER(vector<string> args, int fd);
 		string run_MODE(vector<string> args, int fd);
@@ -77,7 +80,7 @@ class Executor {
 		vector<Client>::iterator getItToClientByNickname(string nickname);
 
 		bool parseUserArguments(const vector<string>& args, string& username,
-				string& hostname, string& servername, string& realname);
+								string& hostname, string& servername, string& realname);
 
 		string format_reason(vector<string>::iterator& reason_it, vector<string>& args);
 		string build_reply(int response_code, string callername, string target, string message);

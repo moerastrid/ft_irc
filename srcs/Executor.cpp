@@ -43,22 +43,9 @@ vector<string> split_args(string args) {
 
 // Executor class
 
-//Executor::Executor() {
-//	this->funcMap["CAP"] 		= &Executor::run_CAP;
-//	this->funcMap["NICK"] 		= &Executor::run_NICK;
-//	this->funcMap["USER"] 		= &Executor::run_USER;
-//	this->funcMap["MODE"] 		= &Executor::run_MODE;
-//	this->funcMap["PING"] 		= &Executor::run_PING;
-//	this->funcMap["PRIVMSG"] 	= &Executor::run_PRIVMSG;
-//	this->funcMap["WHOIS"] 		= &Executor::run_WHOIS;
-//	this->funcMap["JOIN"] 		= &Executor::run_JOIN;
-//	this->funcMap["KICK"] 		= &Executor::run_KICK;
-//	this->funcMap["QUIT"] 		= &Executor::run_QUIT;
-//	this->funcMap["PART"] 		= &Executor::run_PART;
-//}
-
 Executor::Executor(env& e) : e(e) {
 	this->funcMap["CAP"] 		= &Executor::run_CAP;
+	this->funcMap["PASS"] 		= &Executor::run_PASS;
 	this->funcMap["NICK"] 		= &Executor::run_NICK;
 	this->funcMap["USER"] 		= &Executor::run_USER;
 	this->funcMap["MODE"] 		= &Executor::run_MODE;
@@ -72,7 +59,8 @@ Executor::Executor(env& e) : e(e) {
 	this->funcMap["TOPIC"] 		= &Executor::run_TOPIC;
 	this->funcMap["QUIT"] 		= &Executor::run_QUIT;
 
-	this->argCount["CAP"] 		= {0, 1};
+	this->argCount["CAP"] 		= {1, 1};
+	this->argCount["PASS"] 		= {1, 1};
 	this->argCount["NICK"] 		= {1, 1};
 	this->argCount["USER"] 		= {4, -1};
 	this->argCount["MODE"] 		= {1, 3};
@@ -90,26 +78,27 @@ Executor::Executor(env& e) : e(e) {
 Executor::~Executor() {}
 
 void Executor::send_to_client(int fd, string message) {
+	cout << endl << "Sending [" << message << "] to client" << endl;
 	const char* c_message = message.c_str();
 	send(fd, c_message, sizeof c_message, 0);
 }
 
 int Executor::validateArguments(const std::string& command, int numArgs) {
-    if (this->argCount.find(command) != this->argCount.end()) {
-        std::pair<int, int> argCounts = this->argCount[command];
-        int minArgs = argCounts.first;
-        int maxArgs = argCounts.second;
+	if (this->argCount.find(command) != this->argCount.end()) {
+		std::pair<int, int> argCounts = this->argCount[command];
+		int minArgs = argCounts.first;
+		int maxArgs = argCounts.second;
 
-        // Check if the number of arguments falls within the specified range.
-        if (numArgs < minArgs) {
-            return -1;
-        }
-        if (maxArgs != -1 && numArgs > maxArgs) {
-        	return 1;
-        }
-    }
+		// Check if the number of arguments falls within the specified range.
+		if (numArgs < minArgs) {
+			return -1;
+		}
+		if (maxArgs >= 0 && numArgs > maxArgs) {
+			return 1;
+		}
+	}
 
-    return 0; // Argument count is valid.
+	return 0; // Argument count is valid.
 }
 
 string Executor::run(Command& cmd, int fd) {
@@ -139,7 +128,7 @@ string Executor::run(Command& cmd, int fd) {
 
 	string message = (this->*ptr)(cmd.getArgs(), fd);
 
-	// Prints all channels and a list of their connected clients.
+	// // Prints all channels and a list of their connected clients.
 	// for (auto& ch : this->e.channels) {
 	// 	vector<Client> clients = ch.getClients();
 	// 	cout << endl << ch.getName() << ": " << endl;
@@ -152,12 +141,49 @@ string Executor::run(Command& cmd, int fd) {
 	return message;
 }
 
-
-
+/*
+ * Incoming message: CAP LS
+ * Possible replies: :<server=localhost> CAP NAK :<list of capabilities=->
+ * 
+ * Responses handled:
+ * :<server=localhost> CAP NAK :-
+ * 
+ * Responses not (yet) handled:
+ */
 string Executor::run_CAP([[maybe_unused]]vector<string> args, [[maybe_unused]]int fd) {
 	return this->e.server_address + " CAP NAK :-\n";
 }
 
+/*
+ * Incoming message: PASS <password> (not a user command, sent by the server if a password is supplied)
+ * Possible replies: ???
+ * 
+ * Responses handled:
+ * ERR_NEEDMOREPARAMS
+ * 
+ * Responses not (yet) handled:
+ * ERR_ALREADYREGISTRED
+ */
+string Executor::run_PASS(vector<string> args, int fd) {
+	(void)args;
+	(void)fd;
+	return "";
+}
+
+/*
+ * Incoming message: NICK <nickname>
+ * Parameters: Your new nickname.
+ * Description: Changes your nickname on the active server.
+ * Possible replies:
+ * 
+ * Responses handled:
+ * ERR_NONICKNAMEGIVEN (override by ERR_NEEDMOREPARAMS... #TODO fix?)
+ * ERR_ERRONEUSNICKNAME
+ * 
+ * Responses not (yet) handled:
+ * ERR_NICKNAMEINUSE
+ * ERR_NICKCOLLISION
+ */
 string Executor::run_NICK(vector<string> args, int fd) {
 	string& nickname = args[0];
 
@@ -186,34 +212,45 @@ string Executor::run_NICK(vector<string> args, int fd) {
 RFC 1459
 4.1.3 User message
 
-      Command: USER
-   Parameters: <username> <hostname|ignored> <servername|ignored> <realname>
+	Command: USER
+	Parameters: <username> <hostname|ignored> <servername|ignored> <realname>
 
-   The USER message is used at the beginning of connection to specify
-   the username, hostname, servername and realname of s new user.  It is
-   also used in communication between servers to indicate new user
-   arriving on IRC, since only after both USER and NICK have been
-   received from a client does a user become registered.
+	The USER message is used at the beginning of connection to specify
+	the username, hostname, servername and realname of s new user.  It is
+	also used in communication between servers to indicate new user
+	arriving on IRC, since only after both USER and NICK have been
+	received from a client does a user become registered.
 
-   Between servers USER must to be prefixed with client's NICKname.
-   Note that hostname and servername are normally ignored by the IRC
-   server when the USER command comes from a directly connected client
-   (for security reasons), but they are used in server to server
-   communication.  This means that a NICK must always be sent to a
-   remote server when a new user is being introduced to the rest of the
-   network before the accompanying USER is sent.
+	Between servers USER must to be prefixed with client's NICKname.
+	Note that hostname and servername are normally ignored by the IRC
+	server when the USER command comes from a directly connected client
+	(for security reasons), but they are used in server to server
+	communication.  This means that a NICK must always be sent to a
+	remote server when a new user is being introduced to the rest of the
+	network before the accompanying USER is sent.
 
-   It must be noted that realname parameter must be the last parameter,
-   because it may contain space characters and must be prefixed with a
-   colon (':') to make sure this is recognised as such.
+	It must be noted that realname parameter must be the last parameter,
+	because it may contain space characters and must be prefixed with a
+	colon (':') to make sure this is recognised as such.
 
-   Since it is easy for a client to lie about its username by relying
-   solely on the USER message, the use of an "Identity Server" is
-   recommended.  If the host which a user connects from has such a
-   server enabled the username is set to that as in the reply from the
-   "Identity Server".
+	Since it is easy for a client to lie about its username by relying
+	solely on the USER message, the use of an "Identity Server" is
+	recommended.  If the host which a user connects from has such a
+	server enabled the username is set to that as in the reply from the
+	"Identity Server".
 */
 
+/*
+ * Incoming message: USER <username> <hostname> <servername> :<realname> (Not a user command, but automatically sent by the client on a new connection.)
+ * Possible replies:
+ * 
+ * Responses handled:
+ * ERR_NEEDMOREPARAMS
+ * ERR_ALREADYREGISTRED
+ * 
+ * Responses not (yet) handled:
+ * 
+ */
 string Executor::run_USER(vector<string> args, int fd) {
 	Client* client = getClientByFD(fd);
 
@@ -245,6 +282,38 @@ string Executor::run_USER(vector<string> args, int fd) {
 	return message;
 }
 
+/*
+ * Incoming message: MODE <channel> [<mode> [<mode parameters>]]
+ * Mode arguments: (set with +<mode> or -<mode>)
+ * 		i				: invite only
+ * 		t				: Topic change only by operator
+ * 		k <key>			: Adds/removes password
+ * 		o <nickname>	: Give <nickname> operator status.
+ * 		l <count>		: Set max number of users for channel (0 = unlimited).
+ * Parameters: The target nickname or channel and the modes with their parameters to set or remove. If the target nickname or channel is omitted, the active nickname or channel will be used.
+ * Description: Modifies the channel modes for which you are privileged to modify. You can specify multiple modes in one command and prepend them by using the ‘+’ sign to set or ‘-’ sign to unset; modes that require a parameter will be retrieved from the argument list.
+ * 
+ * Possible replies: ???
+ *
+ * Responses handled:
+ * ERR_NEEDMOREPARAMS
+ * ERR_UNKNOWNMODE
+ * ERR_NOSUCHCHANNEL
+ *
+ * Responses not yet handled:
+ * RPL_CHANNELMODEIS (Response to mode status request) "<channel> <mode> <mode params>"
+ * RPL_UMODEIS (- To answer a query about a client's own mode, RPL_UMODEIS is sent back.)
+ * ERR_CHANOPRIVSNEEDED (User without operator status request mode change that requires OP)
+ * ERR_NOSUCHNICK (Used to indicate the nickname parameter supplied to a command is currently unused.)
+ * ERR_NOTONCHANNEL (Returned by the server whenever a client tries to perform a channel effecting command for which the client isn't a member.)
+ * ERR_KEYSET (User joins channel with wrong key. Not sent if no key is set for the channel)
+ * ERR_USERSDONTMATCH (Error sent to any user trying to view or change the user mode for a user other than themselves.)
+ * ERR_UMODEUNKNOWNFLAG (Returned by the server to indicate that a MODE message was sent with a nickname parameter and that the a mode flag sent was not recognized.)
+ * 
+ * Responses not handled:
+ * RPL_BANLIST
+ * RPL_ENDOFBANLIS
+ */
 string Executor::run_MODE(vector<string> args, int fd) {
 	string target = args[0];
 	string mode = args[1];
@@ -273,10 +342,47 @@ string Executor::run_MODE(vector<string> args, int fd) {
 	return message;
 }
 
+/*
+ * Incoming message: PING {no args} (not a user command, just a reply to the automatic PING request from the server to indicate the connection is alive)
+ * Possible replies: PONG <server=:localhost>
+ * 
+ * Responses handled:
+ * PONG <server=:localhost>
+ * 
+ * Responses not (yet) handled:
+ */
 string Executor::run_PING([[maybe_unused]]vector<string> args, [[maybe_unused]]int fd) {
 	return "PONG " + this->e.server_address + "\n";
 }
 
+/*
+ * Incoming message: PRIVMSG [-channel | -nick] *|<targets> <message>
+ * Parameters: The target nickname or channel and the message to send.
+ * -channel: Indicates that the target or targets is a channel.
+ * -nick: Indicates that the target or targets is a nickname.
+ * The target can be a comma delimited list of targets, ie nick1,nick2 or #chan1,#chan2
+ * Or one of the following special targets:
+ * `*` : Use the active nickname or channel
+ * `,` : Last person who sent you a /msg
+ * `.` : Last person you sent a /msg to
+ * Description: Sends a message to a nickname or channel.
+ *
+ * Possible replies: ???
+ *
+ * Responses handled:
+ * ERR_NOSUCHNICK
+ *
+ * Responses not yet handled:
+ * ERR_NORECIPIENT
+ * ERR_NOTEXTTOSEND
+ * ERR_CANNOTSENDTOCHAN
+ * ERR_TOOMANYTARGETS
+ * RPL_AWAY
+ * 
+ * Responses not handled:
+ * ERR_NOTOPLEVEL
+ * ERR_WILDTOPLEVEL
+ */
 string Executor::run_PRIVMSG(vector<string> args, int fd) {
 	string target = args[0];
 
@@ -305,6 +411,27 @@ string Executor::run_PRIVMSG(vector<string> args, int fd) {
 }
 
 // #TODO finish
+/*
+ * Incoming message: WHOIS [<nick>[,<nick>]*]
+ * Parameters: The nicknames to query. If no nickname is given, you will query yourself.
+ * Description: Displays information about users in the specified channel.
+ *
+ * Possible replies: ???
+ *
+ * Responses handled:
+ * ERR_NOSUCHNICK (Used to indicate the nickname parameter supplied to a command is currently unused.)
+ *
+ * Responses not yet handled:
+ * 
+ * Responses not handled:
+ * ERR_TOOMANYTARGETS 	(Returned to a client which is attempting to send a PRIVMSG/NOTICE using the user@host destination format and for a user@host which has several occurrences.)
+ * RPL_AWAY 			(Sent as a reply to a PRIVMSG when the client has set themselves to AWAY)
+ * ERR_CANNOTSENDTOCHAN (Sent to a user who is either (a) not on a channel which is mode +n or (b) not a chanop (or mode +v) on a channel which has mode +m set and is trying to send a PRIVMSG message to that channel.)
+ * ERR_NORECIPIENT 		(More specific than ERR_NEEDMOREPARAMS, but effectively identical on a server that doesn't do server-server communication)
+ * ERR_NOTEXTTOSEND 	(More specific than ERR_NOSUCHNICK, but effectively identical)
+ * ERR_NOTOPLEVEL		(412 - 414 are returned by PRIVMSG to indicate that the message wasn't delivered for some reason. ERR_NOTOPLEVEL and ERR_WILDTOPLEVEL are errors that are returned when an invalid use of "PRIVMSG $<server>" or "PRIVMSG #<host>" is attempted.)
+ * ERR_WILDTOPLEVEL 	(412 - 414 are returned by PRIVMSG to indicate that the message wasn't delivered for some reason. ERR_NOTOPLEVEL and ERR_WILDTOPLEVEL are errors that are returned when an invalid use of "PRIVMSG $<server>" or "PRIVMSG #<host>" is attempted.)
+ */
 string Executor::run_WHOIS(vector<string> args, int fd) {
 	// Any number of parameters is valid.
 	Client* caller = getClientByFD(fd);
@@ -312,15 +439,9 @@ string Executor::run_WHOIS(vector<string> args, int fd) {
 		return "USER NOT FOUND\n";
 	}
 
-
 	if (args.empty() || args[0].empty()) { // No args queries the caller.
 		string userinfo = caller->getUsername() + " " + caller->getHostname() + " * :" + caller->getRealname();
 		return build_WHOIS_reply(RPL_WHOISUSER, caller->getNickname(), caller->getNickname(), userinfo);
-	}
-	if (args[0] == "123") {
-		for (vector<string>::iterator it = args.begin(); it != args.end(); it++) {
-			cout << *it << endl;
-		}
 	}
 
 	string message;
@@ -339,7 +460,25 @@ string Executor::run_WHOIS(vector<string> args, int fd) {
 }
 
 /*
- * incoming message: JOIN [<channel> | <password>]+
+ * Incoming message: JOIN [<channel> | <password>]+
+ * Parameters: The channel names, separated by a comma, to join and the channel key.
+ * Description: Joins the given channels.
+ *
+ * Possible replies:
+ * Handled:
+ * RPL_TOPIC			(When sending a TOPIC message to determine the channel topic, one of two replies is sent. If the topic is set, RPL_TOPIC is sent back else RPL_NOTOPIC.)
+ * ERR_NEEDMOREPARAMS	()
+ * ERR_BADCHANNELKEY	()
+ * ERR_CHANNELISFULL	()
+ * ERR_NOSUCHCHANNEL	()
+ * 
+ * Not yet handled:
+ * ERR_INVITEONLYCHAN	("<channel> :Cannot join channel (+i)"  Any command requiring operator privileges to operate must return this error to indicate the attempt was unsuccessful.)
+ * ERR_TOOMANYCHANNELS	(Sent to a user when they have joined the maximum number of allowed channels and they try to join another channel.)
+ * 
+ * Not handled:
+ * ERR_BADCHANMASK		(???)
+ * ERR_BANNEDFROMCHAN	()
  */
 string Executor::run_JOIN(vector<string> args, int fd) {
 	Client* client = getClientByFD(fd);
@@ -380,8 +519,12 @@ string Executor::run_JOIN(vector<string> args, int fd) {
 			string password = ch->getPassword();
 			const vector<Client>& clients = ch->getClients();
 
+			if (clients.size() >= ch->getUserLimit()) {
+				message += build_reply(ERR_CHANNELISFULL, client->getNickname(), ch->getName(), "Cannot join channel (+l)");
+			}
+
 			if (find(clients.begin(), clients.end(), *client) != clients.end()) {
-				message += build_reply(ERR_USERONCHANNEL, client->getNickname(), ch->getName(), "Cannot join channel - you are already on the channel");
+				message += build_reply(ERR_USERONCHANNEL, client->getNickname(), ch->getName(), "is already on channel");
 				continue;
 			}
 
@@ -392,7 +535,7 @@ string Executor::run_JOIN(vector<string> args, int fd) {
 			}
 
 			if (password.compare(channelpassword) != 0) {
-				message += build_reply(ERR_BADCHANNELKEY, client->getNickname(), channelname, "Bad channel key");
+				message += build_reply(ERR_BADCHANNELKEY, client->getNickname(), channelname, "Cannot join channel (+k)");
 				continue;
 			}
 			ch->addClient(*client);
@@ -403,6 +546,23 @@ string Executor::run_JOIN(vector<string> args, int fd) {
 }
 
 // Operator client wants to kick a user from a channel. #TODO check that the caller has the correct mode.
+/*
+ * Incoming message: KICK [<channel>] <nick>[,<nick>] [<reason>]
+ * Parameters: The channel and the nicknames, separated by a comma, to kick from the channel and the reason thereof; if no channel is given, the active channel will be used.
+ * Description: Removes the given nicknames from the specified channel; this command is typically used to remove troublemakers, flooders or people otherwise making a nuisance of themselves.
+ * 
+ * Possible replies:
+ * Handled:
+ *
+ * Not yet handled:
+ * ERR_NEEDMOREPARAMS	()
+ * ERR_NOSUCHCHANNEL	(Used to indicate the given channel name is invalid.)
+ * ERR_CHANOPRIVSNEEDED (Any command requiring 'chanop' privileges (such as MODE messages) must return this error if the client making the attempt is not a chanop on the specified channel.)
+ * ERR_NOTONCHANNEL		(Returned by the server whenever a client tries to perform a channel effecting command for which the client isn't a member.)
+ * 
+ * Not handled:
+ * ERR_BADCHANMASK		(???)
+ */
 string Executor::run_KICK(vector<string> args, int fd) {
 	Client* caller = getClientByFD(fd);
 	if (caller == NULL) { // This shouldn't happen yo.
@@ -416,9 +576,7 @@ string Executor::run_KICK(vector<string> args, int fd) {
 		return build_reply(ERR_NOSUCHCHANNEL, caller->getNickname(), channelname, "No such channel");
 	}
 
-	vector<string>::iterator reason_start = std::find_if(args.begin(), args.end(), [](std::string& str) {
-		return !str.empty() && str[0] == ':';
-	});
+	vector<string>::iterator reason_start = std::find_if(args.begin(), args.end(), find_reason);
 
 	for (vector<string>::iterator name_it = std::next(args.begin()); name_it != reason_start; name_it++) {
 		Client* client = getClientByNickname(*name_it);
@@ -432,21 +590,27 @@ string Executor::run_KICK(vector<string> args, int fd) {
 			continue;
 		}
 
-		message += ":" + this->e.server_address + " KICK " + channelname + " " + *name_it;
-		if (reason_start != args.end()) {
-			message += " ";
-			message += format_reason(reason_start, args);
-		}
-		message += "\n";
+		message += ":" + this->e.server_address + " KICK " + channelname + " " + *name_it + " " + *reason_start + "\n";
 	}
 
 	return message;
 }
 
-#include <iostream>
-using std::cout;
-using std::endl;
-
+/*
+ * Incoming message: PART [<channel>[,<channel>]] [<message>] 
+ * Parameters: The channels, separated by a comma, to leave and the message to advertise.
+ * Description: Leaves the given channels.
+ * 
+ * Possible replies:
+ * Handled:
+ *
+ * Not yet handled:
+ * ERR_NEEDMOREPARAMS	()
+ * ERR_NOSUCHCHANNEL	(Used to indicate the given channel name is invalid.)
+ * ERR_NOTONCHANNEL		(Returned by the server whenever a client tries to perform a channel effecting command for which the client isn't a member.)
+ *
+ * Not handled:
+ */
 string Executor::run_PART(vector<string> args, int fd) {
 	Client* caller = getClientByFD(fd);
 	if (caller == NULL) { // THis shouldn't happen yo.
@@ -454,13 +618,9 @@ string Executor::run_PART(vector<string> args, int fd) {
 	}
 
 	vector<string> channelnames = split_args(args[0]);
-
-
-	vector<string>::iterator reason_start = std::find_if(args.begin(), args.end(), [](std::string& str) {
-		return !str.empty() && str[0] == ':';
-	});
-
+	vector<string>::iterator reason_it = std::find_if(args.begin(), args.end(), find_reason);
 	string message = "";
+
 	for (vector<string>::iterator it = channelnames.begin(); it != channelnames.end(); it++) {
 		Channel* ch = getChannelByName(*it);
 		if (ch == NULL) {
@@ -468,14 +628,13 @@ string Executor::run_PART(vector<string> args, int fd) {
 			continue;
 		}
 
-		vector<Client> clients = ch->getClients();
-
-		if(ch->removeClient(*caller) == 1) {
+		if (ch->removeClient(*caller) == 1) {
 			message += build_reply(ERR_USERNOTINCHANNEL, caller->getNickname(), *it, "You haven't joined that channel");
 			continue;
 		}
+
 		message += ":" + this->e.server_address + " PART " + *it + "\n";
-		if (reason_start == args.end()) {
+		if (reason_it == args.end()) {
 			cout << "skipping reason (#TODO change to default message)" << endl;
 			continue;
 		}
@@ -483,13 +642,10 @@ string Executor::run_PART(vector<string> args, int fd) {
 		// If there's a reason:
 		// Send reason to all other users in channel, to inform them why the user left. //#TODO PROBABLY SHOULD USE SEND DIRECTLY TO FD INSTEAD OF SENDING A REPLY TO THE CLIENT.
 		for (const Client& user : ch->getClients()) {
-			string reasonmessage = "";
-			reasonmessage += ":" + caller->getNickname() + "!" + caller->getUsername() + "@" + caller->getHostname() + " PRIVMSG " + user.getNickname();
-			if (reason_start != args.end()) {
-				reasonmessage += " ";
-				reasonmessage += format_reason(reason_start, args);
-			}
-			reasonmessage += "\n";
+			if (user.getFD() == caller->getFD())
+				continue;
+			string 	reasonmessage  = ":" + caller->getNickname() + "!" + caller->getUsername() + "@" + caller->getHostname() + " ";
+					reasonmessage += "PRIVMSG " + user.getNickname() + " " + *reason_it + "\n";
 			send_to_client(fd, reasonmessage);
 		}
 	}
@@ -497,24 +653,74 @@ string Executor::run_PART(vector<string> args, int fd) {
 	return message;
 }
 
+/*
+ * Incoming message: INVITE <nick> [<channel>]
+ * Parameters: The nickname to invite and the channel to invite him or her to; if no channel is given, the active channel will be used.
+ * Description: Invites the specified nick to a channel.
+ *
+ * Possible replies:
+ * Handled:
+ *
+ * Not yet handled:
+ * ERR_NEEDMOREPARAMS	()
+ * ERR_NOSUCHCHANNEL	(Used to indicate the given channel name is invalid.)
+ * ERR_NOTONCHANNEL		(Returned by the server whenever a client tries to perform a channel effecting command for which the client isn't a member.)
+ *
+ * Not handled:
+ */
 string Executor::run_INVITE(vector<string> args, int fd) {
 	Client* client = getClientByFD(fd);
 	(void) client;
 	(void)args;
 
-
 	return "";
 }
+
+/*
+ * Incoming message: TOPIC [-delete] [<channel>] [<topic>]
+ * Parameters: The channel and topic; if no channel is given, the active channel will be used. If no argument is given, the current topic will be displayed.
+ * Description: Displays or modifies the topic of a channel.
+ *
+ * Possible replies:
+ *
+ * Handled:
+ *
+ * Not yet handled:
+ * RPL_TOPIC			()
+ * RPL_NOTOPIC			()
+ * ERR_NEEDMOREPARAMS	()
+ * ERR_NOTONCHANNEL		()
+ * ERR_CHANOPRIVSNEEDED	()
+ *
+ * Not handled:
+ */
 string Executor::run_TOPIC(vector<string> args, int fd) {
 	Client* client = getClientByFD(fd);
 	(void) client;
 	(void)args;
+
 	return "";
 }
 
 #include <unistd.h>
 
 // Client wants to disconnect from server
+/*
+ * Incoming message: QUIT [<message>]
+ * Parameters: The message to advertise.
+ * Description: Terminates the application and advertises the given message on all the networks you are connected to.
+ * Extra info: A client session is ended with a quit message. The server must close
+ *		the connection to a client which sends a QUIT message. If a "Quit
+ *		Message" is given, this will be sent instead of the default message,
+ *		the nickname. 
+ *		If, for some other reason, a client connection is closed without the
+ *		client issuing a QUIT command (e.g. client dies and EOF occurs
+ *		on socket), the server is required to fill in the quit message with
+ *		some sort of message reflecting the nature of the event which
+ *		caused it to happen.
+ *
+ * Possible replies: NONE
+ */
 string Executor::run_QUIT(vector<string> args, int fd) {
 	(void)args;
 	Client* client = getClientByFD(fd);

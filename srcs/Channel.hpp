@@ -12,11 +12,12 @@ class Client; // Forward declaration;
 
 class Channel {
 private:
-	vector<Client>	clients;
-	string			topic;
 	string			name;
 	string			password;
+	string			topic;
 	bool			inviteOnly;
+	vector<Client>	clients;
+	size_t			userLimit;
 
 public:
 	Channel();
@@ -28,17 +29,20 @@ public:
 
 	Client& getJoinedUser(string nickname);
 
-	const string& getTopic() const;
 	const string& getName() const;
 	const string& getPassword() const;
+	const string& getTopic() const;
+	bool getInviteStatus() const;
 	const vector<Client>& getClients() const;
+	size_t getUserLimit() const;
+
 	void setTopic(string& topic);
+	void makeInviteOnly();
+	void takeInviteOnly();
+	void setUserLimit(size_t limit);
 
 	int removeClient(Client client);
 	void addClient(Client client);
-
-
-	// Channel(/*args go here*/);
 };
 
 std::ostream& operator<<(std::ostream& os, const Channel& channel);
