@@ -30,6 +30,8 @@ public:
 	void setServername(string& servername);
 	void setRealname(string& realname);
 
+	void makeOperator();
+	void takeOperator();
 
 	int getFD() const;
 	const string& getNickname() const;
@@ -37,6 +39,7 @@ public:
 	const string& getHostname() const;
 	const string& getServername() const;
 	const string& getRealname() const;
+	bool isOperator() const;
 };
 
 bool operator==(const Client& lhs, const Client& rhs);

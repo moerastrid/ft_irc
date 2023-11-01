@@ -25,6 +25,10 @@ public:
 	string getCommand();
 	string getArg(size_t idx);
 	vector<string> getArgs();
+
+	void combine_reason();
 };
+
+bool find_reason(const string& str);
 
 #endif /* end of include guard: COMMAND_HPP */

@@ -12,6 +12,8 @@ Command::Command(const string& client_message_string, int client_fd) {
 		this->addArg(arg);
 	}
 
+	this->combine_reason();
+
 	this->client_fd = client_fd;
 }
 
@@ -48,4 +50,32 @@ string Command::getArg(size_t idx) {
 
 vector<string> Command::getArgs() {
 	return this->args;
+}
+
+bool find_reason(const string& str) {
+	auto it = str.begin();
+
+	while (it != str.end() && std::isspace(*it))
+		it++;
+
+	return (it != str.end() && *it == ':');
+}
+
+void Command::combine_reason() {
+	vector<string>::iterator it = std::find_if(this->args.begin(), this->args.end(), find_reason);
+	if (it == args.end())
+		return ;
+
+	vector<string>::iterator itc = it;
+
+	string newstring;
+	while (itc != this->args.end()) {
+		newstring += *itc;
+		itc++;
+		if (itc != args.end())
+			newstring += " ";
+	}
+
+	args.erase(it, args.end());
+	args.push_back(newstring);
 }

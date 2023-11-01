@@ -37,7 +37,7 @@ private:
 	std::ostream& output_stream;
 };
 
-void test(env& env, string& incoming, int fd, string expected) {
+void test(env& env, string& incoming, int& fd, string expected) {
 	static int i = 0;
 	CustomOutputStream customOut(std::cout);
 	static Executor ex(env);
@@ -116,15 +116,15 @@ int main() {
 
 	// JOIN test.
 	string joinmessage1 = "JOIN #test,#test2,#test3 123,234\n"; // RPL_TOPIC
-	string joinmessage2 = "JOIN #test2 qwerty\n"; 				// ERR_BADCHANNELKEY
-	string joinmessage3 = "JOIN #test2 234\n"; 					// ERR_USERONCHANNEL
-	string joinmessage4 = "JOIN #test3 234\n"; 					// Success with superfluous password.
+	string joinmessage2 = "JOIN #test3 234\n"; 					// RPL_TOPIC Success with superfluous password.
+	string joinmessage3 = "JOIN #test2 qwerty\n"; 				// ERR_BADCHANNELKEY
+	string joinmessage4 = "JOIN #test2 234\n"; 					// ERR_USERONCHANNEL
 	string joinmessage5 = "JOIN \n"; 							// ERR_NEEDMOREPARAMS
 	string joinmessage6 = "JOIN 1 1 1 1 1 1 1 1\n"; 			// ERR_TOOMANYPARAMS
 	test(env, joinmessage1, fd_user1, ":localhost 332 neus #test :Welcome to channel #test\n:localhost 332 neus #test2 :Welcome to channel #test2\n:localhost 332 neus #test3 :Welcome to channel #test3\n");
-	test(env, joinmessage2, fd_user2, ":localhost 475 astrid #test2 :Bad channel key\n");
-	test(env, joinmessage3, fd_user1, ":localhost 443 neus #test2 :Cannot join channel - you are already on the channel\n");
-	test(env, joinmessage4, fd_user2, ":localhost 332 astrid #test3 :Welcome to channel #test3\n");
+	test(env, joinmessage2, fd_user2, ":localhost 332 astrid #test3 :Welcome to channel #test3\n");
+	test(env, joinmessage3, fd_user2, ":localhost 475 astrid #test2 :Bad channel key\n");
+	test(env, joinmessage4, fd_user1, ":localhost 443 neus #test2 :Cannot join channel - you are already on the channel\n");
 	test(env, joinmessage5, fd_user1, ":localhost 461 neus JOIN :Not enough parameters\n");
 	test(env, joinmessage6, fd_user1, ":localhost 461 neus JOIN :Too many parameters\n");
 
@@ -139,7 +139,7 @@ int main() {
 	// PART test
 	string partmessage0 = "PART\n";
 	string partmessage1 = "PART #test2 :you guys suck\n";
-	string partmessage2 = "PART #test2,#test3 :screw you guys, I'm going home";
+	string partmessage2 = "PART #test2,#test3 :screw you guys, I'm going home\n";
 	test(env, partmessage0, fd_user1, ":localhost 461 neus PART :Not enough parameters\n");
 	test(env, partmessage1, fd_user1, ":localhost neus PART #test2\n");
 	test(env, partmessage2, fd_user1, ":localhost PART #\n");
