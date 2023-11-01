@@ -286,7 +286,7 @@ void parse_incoming_message(s_env* env, char* message, int fd, int nbytes) {
 			if (strcmp(commands[i], command) == 0) {
 				functions[i](env, fd, args);
 			} else {
-				dprintf(2, "%s: [%s] - [%s]\n", "not doing func", command, commands[i]);
+				// dprintf(2, "%s: [%s] - [%s]\n", "not doing func", command, commands[i]);
 			}
 		}
 

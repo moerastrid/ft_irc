@@ -521,6 +521,7 @@ string Executor::run_JOIN(vector<string> args, int fd) {
 
 			if (clients.size() >= ch->getUserLimit()) {
 				message += build_reply(ERR_CHANNELISFULL, client->getNickname(), ch->getName(), "Cannot join channel (+l)");
+				continue;
 			}
 
 			if (find(clients.begin(), clients.end(), *client) != clients.end()) {
