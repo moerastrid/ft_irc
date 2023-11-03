@@ -5,6 +5,7 @@ Channel::Channel() {
 	this->password = "";
 	this->topic = "";
 	this->inviteOnly = false;
+	this->operatorOnly = false;
 	this->userLimit = 0;
 };
 
@@ -16,6 +17,7 @@ Channel::Channel(const Channel& other) {
 	this->topic = other.topic;
 	this->clients = other.clients;
 	this->inviteOnly = other.inviteOnly;
+	this->operatorOnly = other.operatorOnly;
 	this->userLimit = other.userLimit;
 }
 
@@ -26,6 +28,7 @@ Channel& Channel::operator=(const Channel& other) {
 		this->topic = other.topic;
 		this->clients = other.clients;
 		this->inviteOnly = other.inviteOnly;
+		this->operatorOnly = other.operatorOnly;
 		this->userLimit = other.userLimit;
 	}
 	return *this;
@@ -36,6 +39,7 @@ Channel::Channel(string name, string password) {
 	this->password = password;
 	this->topic = "Welcome to channel " + name;
 	this->inviteOnly = false;
+	this->operatorOnly = false;
 	this->userLimit = 0;
 }
 
@@ -52,11 +56,63 @@ const string& Channel::getTopic() const {
 bool Channel::getInviteStatus() const {
 	return this->inviteOnly;
 }
+bool Channel::getTopicOperatorStatus() const {
+	return this->operatorOnly;
+}
 const vector<Client>& Channel::getClients() const {
 	return this->clients;
 }
 size_t Channel::getUserLimit() const {
 	return this->userLimit;
+}
+
+// modes: i t k l (o not shown here)
+string Channel::getModes() const {
+	string set;
+	string unset;
+	if (this->getInviteStatus())
+		set += "i";
+	else 
+		unset += "i";
+	if (this->getTopicOperatorStatus())
+		set += "t";
+	else
+		unset += "t";
+	if (this->password.size() > 0)
+		set += "k";
+	else
+		unset += "k";
+	if (this->userLimit == 0)
+		set += "l";
+	else
+		unset += "l";
+
+	return "+" + set + "-" + unset + " " + std::to_string(this->userLimit);
+}
+bool Channel::hasMode(char mode) const {
+	if (mode == 'i') {
+		return this->getInviteStatus();
+	}
+	if (mode == 't') {
+		return this->getTopicOperatorStatus();
+	}
+	if (mode == 'k') {
+		return this->password.size() == 0;
+	}
+	if (mode == 'l') {
+		return this->userLimit != 0;
+	}
+	return false;
+}
+
+bool Channel::isOperator(const Client &client) const {
+	if (std::find(this->operators.begin(), this->operators.end(), client) != this->operators.end()) {
+		return true;
+	}
+	return false;
+}
+bool Channel::isFounder(const Client &client) const {
+	return client.getFD() == this->founder;
 }
 
 void Channel::setTopic(string& topic) {
@@ -68,14 +124,69 @@ void Channel::makeInviteOnly() {
 void Channel::takeInviteOnly() {
 	this->inviteOnly = false;
 }
+void Channel::makeTopicOperatorOnly() {
+	this->operatorOnly = true;
+}
+void Channel::takeTopicOperatorOnly() {
+	this->operatorOnly = false;
+}
 void Channel::setUserLimit(size_t limit) {
 	this->userLimit = limit;
+}
+void Channel::addMode(char mode, string password, size_t userLimit) {
+	if (mode == 'i') {
+		this->makeInviteOnly();
+	}
+	if (mode == 't') {
+		this->makeTopicOperatorOnly();
+	}
+	if (mode == 'k') {
+		this->password = password;
+	}
+	if (mode == 'l') {
+		this->userLimit = userLimit;
+	}
+}
+
+void Channel::removeMode(char mode) {
+	if (mode == 'i') {
+		this->takeInviteOnly();
+	}
+	if (mode == 't') {
+		this->takeTopicOperatorOnly();
+	}
+	if (mode == 'k') {
+		this->password = "";
+	}
+	if (mode == 'l') {
+		this->userLimit = 0;
+	}
+}
+
+void Channel::addOperator(const Client &client) {
+	if (find(this->operators.begin(), this->operators.end(), client) == this->operators.end()) {
+		this->operators.push_back(client);
+	}
+}
+
+void Channel::removeOperator(const Client &client) {
+	vector<Client>::iterator it = std::find(operators.begin(), operators.end(), client);
+	if (it != operators.end()) {
+		this->operators.erase(it);
+	}
+	return;
 }
 
 #include <iostream>
 
-int Channel::removeClient(Client client) {
-	auto it = std::find(clients.begin(), clients.end(), client);
+void Channel::addClient(const Client& client) {
+	if (find(this->clients.begin(), this->clients.end(), client) == this->clients.end()) {
+		this->clients.push_back(client);
+	}
+}
+
+int Channel::removeClient(const Client& client) {
+	vector<Client>::iterator it = std::find(clients.begin(), clients.end(), client);
 	if (it == clients.end()) {
 		return 1;
 	}
@@ -83,16 +194,10 @@ int Channel::removeClient(Client client) {
 	return 0;
 }
 
-void Channel::addClient(Client client) {
-	if (find(this->clients.begin(), this->clients.end(), client) == this->clients.end()) {
-		this->clients.push_back(client);
-	}
-}
-
 std::ostream& operator<<(std::ostream& os, const Channel& channel) {
 	os << "Channel(" << channel.getName() << ", [";
 	const vector<Client>& clients = channel.getClients();
-	for (auto it = clients.begin(); it != clients.end(); it++) {
+	for (vector<Client>::const_iterator it = clients.begin(); it != clients.end(); it++) {
 		os << *it;
 		if (it + 1 != clients.end()) {
 			os << ", ";

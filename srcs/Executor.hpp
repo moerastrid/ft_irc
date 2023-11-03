@@ -4,7 +4,9 @@
 #define NOTICE 999
 
 #define RPL_WELCOME 001
+#define RPL_UMODEIS 221
 #define RPL_WHOISUSER 311
+#define RPL_CHANNELMODEIS 324
 #define RPL_TOPIC 332
 
 #define ERR_NOSUCHNICK 401
@@ -13,13 +15,20 @@
 #define ERR_NONICKNAMEGIVEN 431
 #define ERR_ERRONEOUSNICKNAME 432
 #define ERR_NICKNAMEINUSE 433
+#define ERR_NICKCOLLISION 436
 #define ERR_USERNOTINCHANNEL 441
+#define ERR_NOTONCHANNEL 442 		//(Returned by the server whenever a client tries to perform a channel effecting command for which the client isn't a member.)
 #define ERR_USERONCHANNEL 443
 #define ERR_NEEDMOREPARAMS 461
 #define ERR_TOOMANYPARAMS 461
+#define ERR_ALREADYREGISTRED 462
+#define ERR_KEYSET 467				// "<channel> :Channel key already set"
 #define ERR_CHANNELISFULL 471
 #define ERR_UNKNOWNMODE 472
 #define ERR_BADCHANNELKEY 475
+#define ERR_CHANOPRIVSNEEDED 482 
+
+#define ERR_USERSDONTMATCH 502 // Cant change mode for other users
 
 #include <utility>
 using std::pair;

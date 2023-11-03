@@ -4,7 +4,7 @@
 using std::cout;
 using std::endl;
 
-Client::Client(int fd) : fd(fd), operatorStatus(0) {};
+Client::Client(int fd) : fd(fd) {};
 
 Client::~Client() {}
 
@@ -14,7 +14,6 @@ Client::Client(const Client& other) : fd(other.fd) {
 	this->hostname = other.hostname;
 	this->servername = other.servername;
 	this->realname = other.realname;
-	this->operatorStatus = 0;
 }
 
 Client& Client::operator=(const Client& other) {
@@ -24,7 +23,6 @@ Client& Client::operator=(const Client& other) {
 		this->hostname = other.hostname;
 		this->servername = other.servername;
 		this->realname = other.realname;
-		this->operatorStatus = other.operatorStatus;
 	}
 	return *this;
 }
@@ -44,11 +42,11 @@ void Client::setServername(string& servername) {
 void Client::setRealname(string& realname) {
 	this->realname = realname;
 }
-void Client::makeOperator() {
-	this->operatorStatus = 1;
+void Client::makeOperator(Channel& c) {
+	c.addOperator(*this);
 }
-void Client::takeOperator() {
-	this->operatorStatus = 0;
+void Client::takeOperator(Channel& c) {
+	c.removeOperator(*this);
 }
 
 int Client::getFD() const {
@@ -69,18 +67,20 @@ const string& Client::getServername() const {
 const string& Client::getRealname() const {
 	return this->realname;
 }
-bool Client::isOperator() const {
-	return this->operatorStatus;
+bool Client::isOperator(Channel& c) const {
+	return c.isOperator(*this);
+}
+bool Client::isFounder(Channel& c) const {
+	return c.isFounder(*this);
 }
 
 std::ostream& operator<<(std::ostream& os, const Client& client) {
-	string str = string("Client(") + std::to_string(client.isOperator()) + std::to_string(client.getFD()) + ", " + client.getNickname() + ", " + client.getUsername() + ", " + client.getHostname() + ", " + client.getServername() + ", " + client.getRealname() + ")";
+	string str = string("Client(") + std::to_string(client.getFD()) + ", " + client.getNickname() + ", " + client.getUsername() + ", " + client.getHostname() + ", " + client.getServername() + ", " + client.getRealname() + ")";
 	os << str;
 	return os;
 }
 
-bool operator==(const Client &lhs, const Client &rhs)
-{
+bool operator==(const Client &lhs, const Client &rhs) {
 	return 	lhs.getFD() == rhs.getFD() &&
 			lhs.getNickname() == rhs.getNickname() &&
 			lhs.getUsername() == rhs.getUsername();

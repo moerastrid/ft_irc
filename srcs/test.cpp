@@ -60,7 +60,6 @@ void test(env& env, string& incoming, int& fd, string expected) {
 		customOut << "[" << expected << "]" << COLOR_RESET << endl;
 	}
 
-
 	cout << "===============================" << endl << endl;
 }
 

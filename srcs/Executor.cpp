@@ -6,13 +6,24 @@
 using std::cout;
 using std::endl;
 
-int is_valid_nickname_character(char c) {
-	if (isalnum(c) || c == '_' || c == '-' || c == '[' || c == ']' || c == '\\' || c == '^' || c == '{' || c == '}')
-		return 1;
-	return 0;
+bool is_channel(string name) {
+	for (char c : name) {
+		if(!isspace(c)) {
+			if (c == '#')
+				return true;
+			break;
+		}
+	}
+	return false;
 }
 
-int verify_name(string arg) {
+bool is_valid_nickname_character(char c) {
+	if (isalnum(c) || c == '_' || c == '-' || c == '[' || c == ']' || c == '\\' || c == '^' || c == '{' || c == '}')
+		return true;
+	return false;
+}
+
+bool verify_name(string arg) {
 	for (string::const_iterator it = arg.begin(); it != arg.end(); ++it) {
 		if (!is_valid_nickname_character(*it))
 			return false;
@@ -20,7 +31,7 @@ int verify_name(string arg) {
 	return true;
 }
 
-int verify_realname(string arg) {
+bool verify_realname(string arg) {
 	for (string::const_iterator it = arg.begin(); it != arg.end(); ++it) {
 		if (!is_valid_nickname_character(*it) && !std::isspace(*it))
 			return false;
@@ -282,62 +293,94 @@ string Executor::run_USER(vector<string> args, int fd) {
 	return message;
 }
 
+bool check_privileges(Client* caller, Channel* target, string modestring) {
+	bool res = true;
+	if (modestring.find('i') != string::npos) {
+		res = res && caller->isOperator(*target);
+	}
+	if (modestring.find('t') != string::npos) {
+		if (target->getTopicOperatorStatus())
+			res = res && caller->isOperator(*target);
+	}
+	if (modestring.find('k') != string::npos)
+		res = res && caller->isOperator(*target);
+	if (modestring.find('o') != string::npos)
+		res = res && (caller->isFounder(*target) || caller->isOperator(*target));
+	if (modestring.find('l') != string::npos)
+		res = res && caller->isOperator(*target);
+	return res;
+}
+
 /*
- * Incoming message: MODE <channel> [<mode> [<mode parameters>]]
- * Mode arguments: (set with +<mode> or -<mode>)
+ * Incoming message		: MODE <channel> [<mode> [<mode parameters>]]
+ * Mode arguments		: (set with +<mode> or -<mode>)
  * 		i				: invite only
  * 		t				: Topic change only by operator
  * 		k <key>			: Adds/removes password
  * 		o <nickname>	: Give <nickname> operator status.
  * 		l <count>		: Set max number of users for channel (0 = unlimited).
- * Parameters: The target nickname or channel and the modes with their parameters to set or remove. If the target nickname or channel is omitted, the active nickname or channel will be used.
- * Description: Modifies the channel modes for which you are privileged to modify. You can specify multiple modes in one command and prepend them by using the ‘+’ sign to set or ‘-’ sign to unset; modes that require a parameter will be retrieved from the argument list.
+ * Parameters			: The target nickname or channel and the modes with their parameters to set or remove. If the target nickname or channel is omitted, the active nickname or channel will be used.
+ * Description			: Modifies the channel modes for which you are privileged to modify. You can specify multiple modes in one command and prepend them by using the ‘+’ sign to set or ‘-’ sign to unset; modes that require a parameter will be retrieved from the argument list.
  * 
- * Possible replies: ???
+ * Possible replies		: ???
  *
  * Responses handled:
  * ERR_NEEDMOREPARAMS
- * ERR_UNKNOWNMODE
- * ERR_NOSUCHCHANNEL
+ * ERR_NOSUCHNICK 		(Used to indicate the nickname parameter supplied to a command is currently unused.)
+ * ERR_USERSDONTMATCH 	(Error sent to any user trying to view or change the user mode for a user other than themselves.)
  *
  * Responses not yet handled:
- * RPL_CHANNELMODEIS (Response to mode status request) "<channel> <mode> <mode params>"
- * RPL_UMODEIS (- To answer a query about a client's own mode, RPL_UMODEIS is sent back.)
- * ERR_CHANOPRIVSNEEDED (User without operator status request mode change that requires OP)
- * ERR_NOSUCHNICK (Used to indicate the nickname parameter supplied to a command is currently unused.)
- * ERR_NOTONCHANNEL (Returned by the server whenever a client tries to perform a channel effecting command for which the client isn't a member.)
- * ERR_KEYSET (User joins channel with wrong key. Not sent if no key is set for the channel)
- * ERR_USERSDONTMATCH (Error sent to any user trying to view or change the user mode for a user other than themselves.)
- * ERR_UMODEUNKNOWNFLAG (Returned by the server to indicate that a MODE message was sent with a nickname parameter and that the a mode flag sent was not recognized.)
+ * ERR_NOSUCHCHANNEL 	(Requested channel is unknown)
+ * ERR_UNKNOWNMODE		(Requested mode is unknown)
+ * RPL_UMODEIS 			(To answer a query about a client's own mode, RPL_UMODEIS is sent back.)
+ * RPL_CHANNELMODEIS 	(Response to mode status request) "<channel> <mode> <mode params>"
+ * ERR_CHANOPRIVSNEEDED	(User without operator status request mode change that requires OP)
+ * ERR_NOTONCHANNEL 	(Returned by the server whenever a client tries to perform a channel effecting command for which the client isn't a member.)
+ * ERR_KEYSET 			(Format: "<channel> Channel key already set")
+ * ERR_UMODEUNKNOWNFLAG	(Returned by the server to indicate that a MODE message was sent with a nickname parameter and that the a mode flag sent was not recognized.)
  * 
  * Responses not handled:
- * RPL_BANLIST
- * RPL_ENDOFBANLIS
+ * RPL_BANLIST 			(We don't support a banlist)
+ * RPL_ENDOFBANLIS 		(We don't support a banlist)
  */
 string Executor::run_MODE(vector<string> args, int fd) {
-	string target = args[0];
-	string mode = args[1];
-
 	Client* caller = getClientByFD(fd);
 	if (caller == NULL) {
 		return "USER NOT FOUND";
 	}
 
+	string target = args[0];
+	// Client* target_client = getClientByNickname(target);
 	Channel* channel = getChannelByName(target);
+	bool target_is_channel = is_channel(target);
 
-	if (channel == NULL) {
+	if (!target_is_channel) { // If target is a user. (Commented code checks properly, but we don't support modes on users, only channels)
+		return build_reply(ERR_NOSUCHCHANNEL, caller->getNickname(), target, "No such channel (we don't support changing modes for users)");
+		// if (target_client == NULL) // if target doesn't exist
+		// 	return build_reply(ERR_NOSUCHNICK, caller->getNickname(), target, "No such nick/channel");
+		// else if (caller->getNickname().compare(target) != 0) // if target doesn't match caller.
+		// 	return build_reply(ERR_USERSDONTMATCH, caller->getNickname(), target, "Cant change mode for other users");
+	}
+	if (channel == NULL) { // If target is a channel and it doesn't exist.
 		return build_reply(ERR_NOSUCHCHANNEL, caller->getNickname(), target, "No such channel");
+	}
+	if (args.size() == 1) { // No modestring
+		return build_reply(RPL_CHANNELMODEIS, caller->getNickname(), target, channel->getModes());
+	}
+
+	string modestring = args[1];
+	string modeargs = "";
+	if (args.size() == 3) {
+		modeargs = args[2];
+	}
+
+	if (check_privileges(caller, channel, modestring) == false) {
+		return build_reply(ERR_CHANOPRIVSNEEDED, caller->getNickname(), target, "You're not a channel operator");
 	}
 
 	string message = "";
 
-	if (target[0] == '#') { // target is a channel.
-		if (mode == "+i") {
-
-		}
-	} else {
-		message = build_reply(ERR_UNKNOWNMODE, caller->getNickname(), mode, "Unknown mode");
-	}
+	message = build_reply(ERR_UNKNOWNMODE, caller->getNickname(), "mode", "Unknown mode");
 
 	return message;
 }
