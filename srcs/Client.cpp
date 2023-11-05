@@ -42,6 +42,9 @@ void Client::setServername(string& servername) {
 void Client::setRealname(string& realname) {
 	this->realname = realname;
 }
+void Client::setPassword(string& password) {
+	this->password = password;
+}
 void Client::makeOperator(Channel& c) {
 	c.addOperator(*this);
 }

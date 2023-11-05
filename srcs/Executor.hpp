@@ -23,7 +23,8 @@
 #define ERR_USERONCHANNEL 443
 #define ERR_NEEDMOREPARAMS 461
 #define ERR_TOOMANYPARAMS 461
-#define ERR_ALREADYREGISTRED 462
+#define ERR_ALREADYREGISTERED 462
+#define ERR_PASSWDMISMATCH 464
 #define ERR_KEYSET 467				// "<channel> :Channel key already set"
 #define ERR_CHANNELISFULL 471
 #define ERR_UNKNOWNMODE 472
@@ -86,6 +87,7 @@ class Executor {
 		void addChannel(string name, string password, Client* client);
 
 		Client* getClientByFD(int fd);
+		string getServerPassword();
 		Channel* getChannelByName(string name);
 		Client* getClientByNickname(string nickname);
 		vector<Client>::iterator getItToClientByNickname(string nickname);

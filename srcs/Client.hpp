@@ -16,6 +16,7 @@ private:
 	string			hostname;
 	string			servername;
 	string			realname;
+	string			password;
 
 public:
 	~Client();
@@ -29,6 +30,7 @@ public:
 	const string& getHostname() const;
 	const string& getServername() const;
 	const string& getRealname() const;
+	const string& getPassword() const;
 	bool isOperator(Channel& c) const;
 	bool isFounder(Channel& c) const;
 
@@ -37,6 +39,7 @@ public:
 	void setHostname(string& hostname);
 	void setServername(string& servername);
 	void setRealname(string& realname);
+	void setPassword(string& password);
 	void makeOperator(Channel& c);
 	void takeOperator(Channel& c);
 };

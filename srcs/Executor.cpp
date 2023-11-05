@@ -173,14 +173,30 @@ string Executor::run_CAP([[maybe_unused]]vector<string> args, [[maybe_unused]]in
  * 
  * Responses handled:
  * ERR_NEEDMOREPARAMS
+ * ERR_ALREADYREGISTRED
+ * ERR_PASSWDMISMATCH
  * 
  * Responses not (yet) handled:
- * ERR_ALREADYREGISTRED
  */
 string Executor::run_PASS(vector<string> args, int fd) {
-	(void)args;
-	(void)fd;
-	return "";
+	Client* caller = getClientByFD(fd);
+	if (caller == NULL)
+		return "HELP";
+
+	if (!caller->getNickname().empty() || !caller->getUsername().empty()) {
+		return build_reply(ERR_ALREADYREGISTERED, caller->getNickname(), caller->getNickname(), "You may not reregister");
+	}
+
+	string newpassword = args[0];
+
+	if (getServerPassword().compare(newpassword) != 0) {
+		// #TODO close connection? and send ERROR
+		return build_reply(ERR_PASSWDMISMATCH, "PASS", "PASS", "Password incorrect"); //# TODO FIX MESSAGE FORMAT
+	}
+
+	caller->setPassword(newpassword);
+
+	return build_reply(0, "", "", "");
 }
 
 /*
@@ -190,34 +206,43 @@ string Executor::run_PASS(vector<string> args, int fd) {
  * Possible replies:
  * 
  * Responses handled:
- * ERR_NONICKNAMEGIVEN (override by ERR_NEEDMOREPARAMS... #TODO fix?)
+ * ERR_NICKCOLLISION
  * ERR_ERRONEUSNICKNAME
  * 
- * Responses not (yet) handled:
- * ERR_NICKNAMEINUSE
- * ERR_NICKCOLLISION
+ * Responses not yet handled:
+ *
+ * Responses not handled:
+ * ERR_NICKNAMEINUSE (override by ERR_NICKCOLLISION)
+ * ERR_NONICKNAMEGIVEN (override by ERR_NEEDMOREPARAMS)
+ *
  */
 string Executor::run_NICK(vector<string> args, int fd) {
 	string& nickname = args[0];
+
+	Client* caller = getClientByFD(fd);
+
+	if (caller != NULL && fd != caller->getFD()) {
+		return build_reply(ERR_NICKCOLLISION, "NICK", nickname, "Nickname collision KILL from "+ caller->getUsername() + "@" + caller->getHostname());
+	}
 
 	if (nickname.empty() || !verify_name(nickname)) {
 		return build_reply(ERR_ERRONEOUSNICKNAME, "NICK", nickname, "Erroneous nickname");
 	}
 
-	Client* caller = getClientByFD(fd);
+	if (caller == NULL) {
+		addClient(nickname, "", "", "", "", fd);
+		return build_reply(NOTICE, nickname, nickname, "Remember to set your username using the USER command");
+	}
+
 	string message;
 
-	if (caller != NULL) {
-		if (caller->getNickname().empty()) { //first time connection part 2: electric boogaloo. Accepting connection and sending welcome message.
-			message = build_reply(RPL_WELCOME, nickname, nickname, "Welcome to Astrid's & Thibauld's IRC server, " + caller->getUsername() + "!");
-		} else {
-			message = build_reply(RPL_WELCOME, nickname, nickname, "Nickname changed to " + nickname);
-		}
-		caller->setNickname(nickname);
-	} else { //first time connection.
-		addClient(nickname, "", "", "", "", fd);
-		message = build_reply(NOTICE, nickname, nickname, "Remember to set your username using the USER command");
+	if (caller->getNickname().empty()) { //first time connection part 2: electric boogaloo. Accepting connection and sending welcome message.
+		message = build_reply(RPL_WELCOME, nickname, nickname, "Welcome to Astrid's & Thibauld's IRC server, " + caller->getUsername() + "!");
+	} else {
+		message = build_reply(RPL_WELCOME, nickname, nickname, "Nickname changed to " + nickname);
 	}
+
+	caller->setNickname(nickname);
 	return message;
 }
 
@@ -953,6 +978,10 @@ string Executor::build_channel_reply(int response_code, string callername, strin
 	response << std::setw(3) << std::setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
 
 	return ":" + this->e.server_address + " " + response.str() + " " + callername + " " + target + " " + channel + " :" + message + "\n";
+}
+
+string Executor::getServerPassword() {
+	return this->e.server_password;
 }
 
 string Executor::build_WHOIS_reply(int response_code, string callername, string target, string userinfo) {

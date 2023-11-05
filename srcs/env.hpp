@@ -12,6 +12,7 @@ class env {
 		string				server_address;
 		vector<Client>		clients;
 		vector<Channel>		channels;
+		string				server_password;
 };
 
 #endif /* end of include guard: ENV_HPP */
