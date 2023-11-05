@@ -63,7 +63,70 @@ void test(env& env, string& incoming, int& fd, string expected) {
 	cout << "===============================" << endl << endl;
 }
 
-void setup_test(env& env) {
+
+void CAP_test(env& env) {
+	int fd_user1 = 4;
+//	int fd_user2 = 5;
+
+	string capreq = "CAP LS\n";
+	test(env, capreq, fd_user1, ":localhost CAP NAK :-\n");
+}
+
+void PASS_test(env& env) {
+(void)env;
+}
+
+void NICK_test(env& env) {
+	(void)env;
+}
+
+void USER_test(env& env) {
+	(void)env;
+}
+
+void MODE_test(env& env) {
+	(void)env;
+}
+
+void PING_test(env& env) {
+	(void)env;
+}
+
+void PRIVMSG_test(env& env) {
+	(void)env;
+}
+
+void WHOIS_test(env& env) {
+	(void)env;
+}
+
+void JOIN_test(env& env) {
+	(void)env;
+}
+
+void KICK_test(env& env) {
+	(void)env;
+}
+
+void PART_test(env& env) {
+	(void)env;
+}
+
+void INVITE_test(env& env) {
+	(void)env;
+}
+
+void TOPIC_test(env& env) {
+	(void)env;
+}
+
+void QUIT_test(env& env) {
+	(void)env;
+}
+
+
+
+void connect_two_clients(env& env) {
 	int fd_user1 = 4;
 	int fd_user2 = 5;
 
@@ -72,28 +135,30 @@ void setup_test(env& env) {
 	string nick1 = "NICK neus\n";
 	string user1 = "USER Thibauld Thibauld_PC localhost :Thibauld WW Nuyten\n";
 	string mode1 = "MODE neus +i\n";
+	string whois1 = "WHOIS neus\n";
 	string ping1 = "PING localhost\n";
-
 
 	string nick2 = "NICK astrid\n";
 	string user2 = "USER Astrid Astrid_PC localhost :Astrid Geels\n";
 	string mode2 = "MODE astrid +i\n";
+	string whois2 = "WHOIS astrid\n";
 	string ping2 = "PING localhost\n";
 
 	// Reply format: :<server> <response_code | command> <caller> <target> [#<channel>] :<message>
-	test(env, capreq, fd_user1, "localhost CAP NAK :-\n");
+	test(env, capreq, fd_user1, ":localhost CAP NAK :-\n");
 	test(env, nick1, fd_user1, ":localhost NOTICE neus neus :Remember to set your username using the USER command\n");
 	test(env, user1, fd_user1, ":localhost 001 neus Thibauld :Welcome to Astrid's & Thibauld's IRC server, Thibauld!\n");
 	test(env, mode1, fd_user1, ":localhost 403 neus neus :No such channel\n");
+	test(env, whois1, fd_user1, ":localhost \n");
 	test(env, ping1, fd_user1, "PONG localhost\n");
 
 
-	test(env, capreq, fd_user2, "localhost CAP NAK :-\n");
+	test(env, capreq, fd_user2, ":localhost CAP NAK :-\n");
 	test(env, user2, fd_user2, ":localhost NOTICE Astrid Astrid :Remember to set your nickname using the NICK command\n");
 	test(env, nick2, fd_user2, ":localhost 001 astrid astrid :Welcome to Astrid's & Thibauld's IRC server, Astrid!\n");
 	test(env, mode2, fd_user2, ":localhost 403 astrid astrid :No such channel\n");
+	test(env, whois2, fd_user2, ":localhost \n");
 	test(env, ping2, fd_user2, "PONG localhost\n");
-
 }
 
 int main() {
@@ -103,7 +168,7 @@ int main() {
 	env.server_address = "localhost";
 
 	// Input:
-	setup_test(env);
+	connect_two_clients(env);
 
 	// WHOIS
 	string message4 = "WHOIS\n";

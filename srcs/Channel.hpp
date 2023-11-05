@@ -20,11 +20,12 @@ private:
 	string			topic;
 	vector<Client>	clients;
 	vector<Client>	operators;
+	vector<Client>	invited;
 
 	bool			inviteOnly;
 	bool			operatorOnly;
 	size_t			userLimit;
-	int				founder; // Stores FD;
+	int				founderFD; // Stores FD;
 	
 
 public:
@@ -32,22 +33,23 @@ public:
 	~Channel();
 	Channel(const Channel& other);
 	Channel& operator=(const Channel& other);
-	Channel(string name, string password);
-
+	Channel(string name, string password, int founderFD);
 
 	Client& getJoinedUser(string nickname);
 
 	const string& getName() const;
 	const string& getPassword() const;
 	const string& getTopic() const;
-	bool getInviteStatus() const;
-	bool getTopicOperatorStatus() const;
+	bool isInviteOnly() const;
+	bool hasTopicRestricted() const;
 	const vector<Client>& getClients() const;
 	size_t getUserLimit() const;
 	string getModes() const;
 	bool hasMode(char mode) const;
-	bool isOperator(const Client& client) const;
-	bool isFounder(const Client& client) const;
+	bool hasOperator(const Client& client) const;
+	bool hasFounder(const Client& client) const;
+	bool hasUser(const Client& client) const;
+	int getFounderFD() const;
 
 	void setTopic(string& topic);
 	void makeInviteOnly();
@@ -62,6 +64,7 @@ public:
 	void removeOperator(const Client& client);
 	void addClient(const Client& client);
 	int removeClient(const Client& client);
+
 };
 
 std::ostream& operator<<(std::ostream& os, const Channel& channel);

@@ -7,6 +7,7 @@ Channel::Channel() {
 	this->inviteOnly = false;
 	this->operatorOnly = false;
 	this->userLimit = 0;
+	this->founderFD = -1;
 };
 
 Channel::~Channel() {};
@@ -19,6 +20,7 @@ Channel::Channel(const Channel& other) {
 	this->inviteOnly = other.inviteOnly;
 	this->operatorOnly = other.operatorOnly;
 	this->userLimit = other.userLimit;
+	this->founderFD = other.founderFD;
 }
 
 Channel& Channel::operator=(const Channel& other) {
@@ -30,17 +32,19 @@ Channel& Channel::operator=(const Channel& other) {
 		this->inviteOnly = other.inviteOnly;
 		this->operatorOnly = other.operatorOnly;
 		this->userLimit = other.userLimit;
+		this->founderFD = other.founderFD;
 	}
 	return *this;
 }
 
-Channel::Channel(string name, string password) {
+Channel::Channel(string name, string password, int founderFD) {
 	this->name = name;
 	this->password = password;
 	this->topic = "Welcome to channel " + name;
 	this->inviteOnly = false;
 	this->operatorOnly = false;
 	this->userLimit = 0;
+	this->founderFD = founderFD;
 }
 
 
@@ -53,10 +57,10 @@ const string& Channel::getPassword() const {
 const string& Channel::getTopic() const {
 	return this->topic;
 }
-bool Channel::getInviteStatus() const {
+bool Channel::isInviteOnly() const {
 	return this->inviteOnly;
 }
-bool Channel::getTopicOperatorStatus() const {
+bool Channel::hasTopicRestricted() const {
 	return this->operatorOnly;
 }
 const vector<Client>& Channel::getClients() const {
@@ -66,15 +70,16 @@ size_t Channel::getUserLimit() const {
 	return this->userLimit;
 }
 
+
 // modes: i t k l (o not shown here)
 string Channel::getModes() const {
 	string set;
 	string unset;
-	if (this->getInviteStatus())
+	if (this->isInviteOnly())
 		set += "i";
 	else 
 		unset += "i";
-	if (this->getTopicOperatorStatus())
+	if (this->hasTopicRestricted())
 		set += "t";
 	else
 		unset += "t";
@@ -91,10 +96,10 @@ string Channel::getModes() const {
 }
 bool Channel::hasMode(char mode) const {
 	if (mode == 'i') {
-		return this->getInviteStatus();
+		return this->isInviteOnly();
 	}
 	if (mode == 't') {
-		return this->getTopicOperatorStatus();
+		return this->hasTopicRestricted();
 	}
 	if (mode == 'k') {
 		return this->password.size() == 0;
@@ -105,14 +110,25 @@ bool Channel::hasMode(char mode) const {
 	return false;
 }
 
-bool Channel::isOperator(const Client &client) const {
+bool Channel::hasOperator(const Client &client) const {
 	if (std::find(this->operators.begin(), this->operators.end(), client) != this->operators.end()) {
 		return true;
 	}
 	return false;
 }
-bool Channel::isFounder(const Client &client) const {
-	return client.getFD() == this->founder;
+bool Channel::hasFounder(const Client &client) const {
+	return client.getFD() == this->founderFD;
+}
+
+bool Channel::hasUser(const Client& client) const {
+	if (find(clients.begin(), clients.end(), client) != clients.end()) {
+		return true;
+	}
+	return false;
+}
+
+int Channel::getFounderFD() const {
+	return this->founderFD;
 }
 
 void Channel::setTopic(string& topic) {

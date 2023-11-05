@@ -68,10 +68,10 @@ const string& Client::getRealname() const {
 	return this->realname;
 }
 bool Client::isOperator(Channel& c) const {
-	return c.isOperator(*this);
+	return c.hasOperator(*this);
 }
 bool Client::isFounder(Channel& c) const {
-	return c.isFounder(*this);
+	return c.hasFounder(*this);
 }
 
 std::ostream& operator<<(std::ostream& os, const Client& client) {

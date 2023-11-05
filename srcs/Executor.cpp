@@ -2,6 +2,8 @@
 
 // some utilities #TODO move
 
+//https://modern.ircdocs.horse/#invite-message
+
 #include <iostream>
 using std::cout;
 using std::endl;
@@ -113,9 +115,9 @@ int Executor::validateArguments(const std::string& command, int numArgs) {
 }
 
 string Executor::run(Command& cmd, int fd) {
-	// Client* client = getClientByFD(fd); //Will not work until clients are added before this function is called.
-	// if (client == NULL)
-	// 	return "USER NOT FOUND\n"; // HELP
+//	 Client* client = getClientByFD(fd); //Will not work until clients are added before this function is called.
+//	 if (client == NULL)
+//	 	return "USER NOT FOUND\n"; // HELP
 
 	string command = cmd.getCommand();
 	mbrFuncPtr ptr;
@@ -299,7 +301,7 @@ bool check_privileges(Client* caller, Channel* target, string modestring) {
 		res = res && caller->isOperator(*target);
 	}
 	if (modestring.find('t') != string::npos) {
-		if (target->getTopicOperatorStatus())
+		if (target->hasTopicRestricted())
 			res = res && caller->isOperator(*target);
 	}
 	if (modestring.find('k') != string::npos)
@@ -704,20 +706,59 @@ string Executor::run_PART(vector<string> args, int fd) {
  *
  * Possible replies:
  * Handled:
- *
- * Not yet handled:
  * ERR_NEEDMOREPARAMS	()
  * ERR_NOSUCHCHANNEL	(Used to indicate the given channel name is invalid.)
  * ERR_NOTONCHANNEL		(Returned by the server whenever a client tries to perform a channel effecting command for which the client isn't a member.)
+ * ERR_CHANOPRIVSNEEDED	()
+ * ERR_NOSUCHNICK		()
+ * ERR_USERONCHANNEL	()
+ *
+ * RPL_INVITING         ()
+ *
+ * Not yet handled:
  *
  * Not handled:
+ * RPL_AWAY				()
  */
 string Executor::run_INVITE(vector<string> args, int fd) {
-	Client* client = getClientByFD(fd);
-	(void) client;
-	(void)args;
+	Client* caller = getClientByFD(fd);
+	if (caller == NULL)
+		return "HELP";
 
-	return "";
+	string target_client = args[0];
+	string target_channel = args[1];
+	Channel* channel = this->getChannelByName(target_channel);
+	if (channel == NULL) {
+		return build_reply(ERR_NOSUCHCHANNEL, caller->getNickname(), target_channel, "No such channel");
+	}
+
+	if (!channel->hasUser(*caller)) {
+		return build_reply(ERR_NOTONCHANNEL, caller->getNickname(), target_channel, "Not on channel");
+	}
+
+	if (channel->isInviteOnly() && !channel->hasOperator(*caller)) {
+		return build_reply(ERR_CHANOPRIVSNEEDED, caller->getNickname(), target_channel, "You're not a channel operator");
+	}
+
+	Client* target = this->getClientByNickname(target_client);
+	if (target == NULL) {
+		return build_reply(ERR_NOSUCHNICK, caller->getNickname(), target_client, "No such client");
+	}
+
+	if (channel->hasUser(*target)) {
+		return build_channel_reply(ERR_USERONCHANNEL, caller->getNickname(), target_client, target_channel, "is already on channel");
+	}
+
+	// #TODO send private message to invitee in in :nick!user@host form.
+	/*
+	 * Message Examples:
+
+  	  	  :dan-!d@localhost INVITE Wiz #test    ; dan- has invited Wiz
+                                        to the channel #test
+	 *
+	 */
+
+	return build_channel_reply(RPL_INVITING, caller->getNickname(), target_client, target_channel, ""); // #TODO if message is empty, dont send the message part.
 }
 
 /*
@@ -739,9 +780,42 @@ string Executor::run_INVITE(vector<string> args, int fd) {
  * Not handled:
  */
 string Executor::run_TOPIC(vector<string> args, int fd) {
-	Client* client = getClientByFD(fd);
-	(void) client;
-	(void)args;
+	Client* caller = getClientByFD(fd);
+	if (caller == NULL)
+		return "HELP";
+
+	string deleteflag =  args[0];
+	string target_channel;
+	string newtopic = "";
+
+	if (deleteflag.compare("-delete")) {
+		target_channel = args[1];
+	} else {
+		target_channel = args[0];
+		newtopic = args[1];
+	}
+
+	Channel* channel = getChannelByName(target_channel);
+
+	string oldtopic = channel->getTopic();
+
+	if (!channel->hasUser(*caller)) {
+		return build_reply(ERR_NOTONCHANNEL, caller->getNickname(), target_channel, "You're not on that channel");
+	}
+
+	if (newtopic.empty()) {
+		if (oldtopic.empty()) {
+			return build_reply(RPL_NOTOPIC, caller->getNickname(), target_channel, "No topic is set");
+		}
+		return build_reply(RPL_TOPIC, caller->getNickname(), target_channel, oldtopic);
+	}
+
+	if (channel->hasTopicRestricted() && !channel->hasOperator(*caller)) {
+		return build_reply(ERR_CHANOPRIVSNEEDED, caller->getNickname(), target_channel, "You're not a channel operator");
+	}
+
+	// #TODO send message to all clients on the channel informing them of the topic change.
+
 
 	return "";
 }
@@ -838,7 +912,7 @@ bool Executor::parseUserArguments(const vector<string>& args, string& username, 
 }
 
 void Executor::addChannel(string name, string password, Client* client) {
-	Channel c(name, password);
+	Channel c(name, password, client->getFD());
 	c.addClient(*client);
 	this->e.channels.push_back(c);
 }
