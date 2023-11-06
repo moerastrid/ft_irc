@@ -10,9 +10,8 @@ int main(int argc, char **argv) {
 		return (EXIT_FAILURE);
 	}
 	
-	
 	Server ircServer(port, argv[2]);
-	// std::cout << "Welcome to our IRC " << ircServer << " \\^.^/" << std::endl;
+	std::cout << "Successfully booted our IRC " << ircServer << " \\^.^/" << std::endl;
 	while (1) {
 		ircServer.run();
 	}

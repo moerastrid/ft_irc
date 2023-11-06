@@ -7,38 +7,46 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <cstdlib>
-#include <string>
 #include <cstring>
 #include <poll.h>
-#include <deque>
+
+#include <string>
+using std::string;
+
 #include <vector>
+using std::vector;
+
+#include "Client.hpp"
+
+#define BUFSIZE 512
 
 class Server {
 	private :
 		Server();										//default constructor
-		char				_hostname[MAXHOSTNAMELEN];
-		struct sockaddr_in	_sockin;
-		std::string			_ip;
-		struct pollfd		_sockfd;
-		int					_port;
-		std::string			_pass;
-		std::vector<struct pollfd>	_pollFds;
+		struct sockaddr_in		_sockin;
+		struct pollfd			_sockfd;
 
-		void			setAddrInfo(const int port);
-		void			setHostInfo();
-		void			setUp();
+		int						_port;
+		string					_pass;
+		vector<struct pollfd>	_pollFds;
+
+		void	setUp();
+		int		setPoll();
+		void	addConnection();
+		void	closeConnection(const int i);
+		void	receive(int fd);
 
 	public :
 		~Server();										// default destructor
 		Server(const Server &src);						//copy constructor
 		Server &operator=(const Server &src);			// = sign operator
-		Server(const int port, const std::string pass);	// constructor (PORT, pass)
+		Server(const int port, const string pass);		// constructor (PORT, pass)
 		
 		void				run();
 
-		const std::string	getIP() const;
-		const std::string	getHostname() const;
+		const string		getIP() const;
 		int					getPort() const;
+
 
 };
 
