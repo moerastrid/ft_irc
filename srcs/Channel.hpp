@@ -4,10 +4,17 @@
 #include <vector>
 using std::vector;
 
+#include <ostream>
+using std::ostream;
+
 #include <algorithm>
+using std::find;
 
 #include <utility>
 using std::pair;
+
+#include <string>
+using std::to_string;
 
 #include "Client.hpp"
 

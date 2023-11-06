@@ -7,7 +7,7 @@ Command::Command(const string& client_message_string, int client_fd) {
 	ss >> cmd_str;
 	this->setCmd(cmd_str);
 
-	std::string arg;
+	string arg;
 	while (ss >> arg) {
 		this->addArg(arg);
 	}
@@ -55,14 +55,14 @@ vector<string> Command::getArgs() {
 bool find_reason(const string& str) {
 	auto it = str.begin();
 
-	while (it != str.end() && std::isspace(*it))
+	while (it != str.end() && isspace(*it))
 		it++;
 
 	return (it != str.end() && *it == ':');
 }
 
 void Command::combine_reason() {
-	vector<string>::iterator it = std::find_if(this->args.begin(), this->args.end(), find_reason);
+	vector<string>::iterator it = find_if(this->args.begin(), this->args.end(), find_reason);
 	if (it == args.end())
 		return ;
 

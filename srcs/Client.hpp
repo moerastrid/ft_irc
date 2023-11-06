@@ -4,6 +4,12 @@
 #include <string>
 using std::string;
 
+#include <ostream>
+using std::ostream;
+
+#include <string>
+using std::to_string;
+
 #include "Channel.hpp"
 
 class Channel; // Forward declaration
