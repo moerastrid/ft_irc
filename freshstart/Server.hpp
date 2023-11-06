@@ -10,17 +10,19 @@
 #include <string>
 #include <cstring>
 #include <poll.h>
+#include <deque>
 #include <vector>
 
 class Server {
 	private :
 		char				_hostname[MAXHOSTNAMELEN];
-		// struct addrinfo		*_addrinfo;
 		struct sockaddr_in	_sockin;
 		std::string			_ip;
 		struct pollfd		_sockfd;
 		int					_port;
 		std::string			_pass;
+		std::vector<struct pollfd>	_pollFds;
+		// struct pollfd		_pollFds[200];
 
 		//temp
 		struct sockaddr_in	_their_addr; /*this will be client*/

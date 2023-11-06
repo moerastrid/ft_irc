@@ -66,6 +66,7 @@ void	Server::setUp() {
 	memset(&_sockfd, 0, sizeof(_sockfd));
 	memset(&_hostname, 0, sizeof(_hostname));
 	_sockfd.fd = socket(AF_INET, SOCK_STREAM|SOCK_NONBLOCK, 0);
+	_sockfd.events = POLLIN|POLLOUT|POLLHUP;
 	if (_sockfd.fd == -1) {
 		perror("ERROR\tServer::setUp socket()");
     	exit(EXIT_FAILURE);
@@ -91,39 +92,48 @@ void	Server::setUp() {
 		perror("ERROR\tServer::setUp listen()");
 		exit(EXIT_FAILURE);
 	}
-	// freeaddrinfo(_addrinfo);
 	Msg("server waiting for connections ... ", "INFO");
+	
+	_pollFds.push_back(_sockfd);
 }
 
 void	Server::run() {
-	socklen_t sin_size;
-	sin_size = sizeof(_their_addr);
-	std::vector<struct pollfd>	pollFds;
-	pollFds.push_back(_sockfd);
-
-
-	poll(&_sockfd, 1, 0);
-	
-	for (int i(0); i < int(pollFds.size()); i++)
-	{
-		
+	int ret = poll(_pollFds.data(), _pollFds.size(), -1);
+	if (ret < 0) {
+		perror("ERROR\tpoll :");
+		exit(EXIT_FAILURE);
+	} else if (ret == 0) {
+		Msg("None of the FD's are ready", "INFO");
+		return ;
 	}
-	socklen_t	tempSize = sizeof(_sockin);
-	int new_fd = accept(_sockfd.fd, (struct sockaddr *)&_sockin, (socklen_t *)&tempSize);
-	if (new_fd == -1) {
-		if (errno == EWOULDBLOCK) {
-			Msg("No pending connections", "INFO");
-			sleep (1);
-		} else {
-			perror("accept");
-			exit(EXIT_FAILURE);
+	Msg("poll succes!", "DEBUG");
+
+	for (unsigned i(0); i < _pollFds.size(); i++) {
+		if (_pollFds[i].fd == _sockfd.fd) {
+			socklen_t	tempSize = sizeof(_sockin);
+			struct pollfd new_fd;
+			new_fd.fd = accept(_sockfd.fd, (struct sockaddr *)&_sockin, (socklen_t *)&tempSize);
+			if (new_fd.fd == -1) {
+				if (errno == EWOULDBLOCK) {
+					Msg("No pending connections", "INFO");
+					sleep (1);
+				} else {
+					perror("accept");
+					exit(EXIT_FAILURE);
+				}
+			} else {
+				std::cout << "accepted on " << new_fd.fd << std::endl;
+				char hey[] = "hey\n";
+				send(new_fd.fd, hey, sizeof(hey), 0);
+				new_fd.events = POLLIN|POLLOUT|POLLHUP;
+				_pollFds.push_back(new_fd);
+			}
 		}
-	} else {
-		std::cout << "accepted on " << new_fd << std::endl;
-		char hey[] = "hey\n";
-		send(new_fd, hey, sizeof(hey), 0);
-		close(new_fd);
+		else {
+			Msg("existing connection", "DEBUG");
+		}
 	}
+	
 
 	// int num_events = poll(_pollfds, _num_pollfds, _polltime);
 	// std::cout << "poll number of events : " << num_events << std::endl;
