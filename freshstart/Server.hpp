@@ -15,6 +15,7 @@
 
 class Server {
 	private :
+		Server();										//default constructor
 		char				_hostname[MAXHOSTNAMELEN];
 		struct sockaddr_in	_sockin;
 		std::string			_ip;
@@ -22,21 +23,15 @@ class Server {
 		int					_port;
 		std::string			_pass;
 		std::vector<struct pollfd>	_pollFds;
-		// struct pollfd		_pollFds[200];
-
-		//temp
-		struct sockaddr_in	_their_addr; /*this will be client*/
-
-		Server();								//default constructor
 
 		void			setAddrInfo(const int port);
 		void			setHostInfo();
 		void			setUp();
 
 	public :
-		~Server();								// default destructor
-		Server(const Server &src);				//copy constructor
-		Server &operator=(const Server &src);	// = sign operator
+		~Server();										// default destructor
+		Server(const Server &src);						//copy constructor
+		Server &operator=(const Server &src);			// = sign operator
 		Server(const int port, const std::string pass);	// constructor (PORT, pass)
 		
 		void				run();

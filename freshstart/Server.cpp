@@ -123,27 +123,30 @@ void	Server::run() {
 				}
 			} else {
 				std::cout << "accepted on " << new_fd.fd << std::endl;
-				char hey[] = "hey\n";
-				send(new_fd.fd, hey, sizeof(hey), 0);
-				new_fd.events = POLLIN|POLLOUT|POLLHUP;
+				new_fd.events = POLLIN|POLLOUT|POLLHUP|POLLRDHUP;
 				_pollFds.push_back(new_fd);
 			}
 		}
 		else {
-			Msg("existing connection", "DEBUG");
+			Msg("existing connection!", "DEBUG");
+			if (_pollFds[i].revents == 0) {
+				continue ;
+			} else if (_pollFds[i].revents == POLLIN) {
+				Msg("POLLIN", "DEBUG");
+				char hey[] = "hey\n";
+				send(_pollFds[i].fd, hey, sizeof(hey), 0);
+			} else if (_pollFds[i].revents == POLLOUT) {
+				Msg("POLLOUT", "DEBUG");
+				char 	buff[256];
+				bzero(buff, 256);
+				int nbytes = recv(_pollFds[i].fd, buff, sizeof buff, 0);
+				dprintf(2, "Incoming message: [%s] on fd %d of %d bytes\n", buff, i, nbytes);
+			} else if (_pollFds[i].revents == POLLHUP||POLLRDHUP) {
+				Msg("POLLHUP or POLLRDHUP", "DEBUG");
+				_pollFds.erase(_pollFds.begin() + i );
+			}
 		}
 	}
-	
-
-	// int num_events = poll(_pollfds, _num_pollfds, _polltime);
-	// std::cout << "poll number of events : " << num_events << std::endl;
-	// if (num_events != 0) {
-	// 	int pollin_happened = _pollfds[0].revents & POLLIN;
-	// 	if (pollin_happened)
-	// 		Msg("Pollin", "DEBUG");
-	// 	else
-	// 		Msg("No Pollin :()", "DEBUG");
-	// }
 }
 
 const std::string	Server::getIP() const {
