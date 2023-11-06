@@ -38,13 +38,31 @@ using std::pair;
 
 #include <string>
 using std::string;
+using std::getline;
 
 #include <map>
 using std::map;
 
+#include <cctype>
+using std::isspace;
+
+#include <iterator>
+using std::next;
+
+#include <sstream>
+using std::istringstream;
+
+#include <algorithm>
+using std::find;
+using std::find_if;
+
+#include <iomanip>
+using std::setw;
+using std::setfill;
+
+
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <algorithm>
 #include <stdexcept>
 
 #include "Command.hpp"

@@ -1,9 +1,5 @@
 #include "Client.hpp"
 
-#include <iostream>
-using std::cout;
-using std::endl;
-
 Client::Client(int fd) : fd(fd) {};
 
 Client::~Client() {}
@@ -77,8 +73,8 @@ bool Client::isFounder(Channel& c) const {
 	return c.hasFounder(*this);
 }
 
-std::ostream& operator<<(std::ostream& os, const Client& client) {
-	string str = string("Client(") + std::to_string(client.getFD()) + ", " + client.getNickname() + ", " + client.getUsername() + ", " + client.getHostname() + ", " + client.getServername() + ", " + client.getRealname() + ")";
+ostream& operator<<(ostream& os, const Client& client) {
+	string str = string("Client(") + to_string(client.getFD()) + ", " + client.getNickname() + ", " + client.getUsername() + ", " + client.getHostname() + ", " + client.getServername() + ", " + client.getRealname() + ")";
 	os << str;
 	return os;
 }

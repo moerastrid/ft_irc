@@ -4,10 +4,6 @@
 
 //https://modern.ircdocs.horse/#invite-message
 
-#include <iostream>
-using std::cout;
-using std::endl;
-
 bool is_channel(string name) {
 	for (char c : name) {
 		if(!isspace(c)) {
@@ -35,7 +31,7 @@ bool verify_name(string arg) {
 
 bool verify_realname(string arg) {
 	for (string::const_iterator it = arg.begin(); it != arg.end(); ++it) {
-		if (!is_valid_nickname_character(*it) && !std::isspace(*it))
+		if (!is_valid_nickname_character(*it) && !isspace(*it))
 			return false;
 	}
 	return true;
@@ -43,11 +39,11 @@ bool verify_realname(string arg) {
 
 // Takes a comma-separated string of arguments, gives back a vector of said arguments.
 vector<string> split_args(string args) {
-	std::istringstream nameStream(args);
-	std::vector<std::string> res;
+	istringstream nameStream(args);
+	vector<string> res;
 
-	std::string buffer;
-	while (std::getline(nameStream, buffer, ',')) {
+	string buffer;
+	while (getline(nameStream, buffer, ',')) {
 		res.push_back(buffer);
 	}
 
@@ -90,15 +86,19 @@ Executor::Executor(env& e) : e(e) {
 
 Executor::~Executor() {}
 
+#include <iostream>
+using std::cout;
+using std::endl;
+
 void Executor::send_to_client(int fd, string message) {
 	cout << endl << "Sending [" << message << "] to client" << endl;
 	const char* c_message = message.c_str();
 	send(fd, c_message, sizeof c_message, 0);
 }
 
-int Executor::validateArguments(const std::string& command, int numArgs) {
+int Executor::validateArguments(const string& command, int numArgs) {
 	if (this->argCount.find(command) != this->argCount.end()) {
-		std::pair<int, int> argCounts = this->argCount[command];
+		pair<int, int> argCounts = this->argCount[command];
 		int minArgs = argCounts.first;
 		int maxArgs = argCounts.second;
 
@@ -282,11 +282,17 @@ RFC 1459
  * Incoming message: USER <username> <hostname> <servername> :<realname> (Not a user command, but automatically sent by the client on a new connection.)
  * Possible replies:
  * 
+ * Responses added:
+ * ERR_ERRONEOUSNICKNAME
+ * RPL_WELCOME
+ * 
  * Responses handled:
  * ERR_NEEDMOREPARAMS
  * ERR_ALREADYREGISTRED
  * 
- * Responses not (yet) handled:
+ * Responses not yet handled:
+ * 
+ * Responses not handled:
  * 
  */
 string Executor::run_USER(vector<string> args, int fd) {
@@ -306,7 +312,7 @@ string Executor::run_USER(vector<string> args, int fd) {
 		if (client->getUsername().empty()) {// first time connec part 2
 			message = build_reply(RPL_WELCOME, client->getNickname(), username, "Welcome to Astrid's & Thibauld's IRC server, " + username + "!");
 		} else {
-			message = build_reply(RPL_WELCOME, client->getNickname(), username, "Username changed to " + username);
+			return build_reply(ERR_ALREADYREGISTERED, client->getNickname(), username, "You may not reregister");
 		}
 		client->setUsername(username);
 		client->setHostname(hostname);
@@ -471,7 +477,7 @@ string Executor::run_PRIVMSG(vector<string> args, int fd) {
 
 	for (vector<string>::iterator it = args.begin(); it != args.end(); it++) {
 		ss << *it;
-		if (std::next(it) != args.end())
+		if (next(it) != args.end())
 			ss << " ";
 	}
 	ss << "\n";
@@ -647,9 +653,9 @@ string Executor::run_KICK(vector<string> args, int fd) {
 		return build_reply(ERR_NOSUCHCHANNEL, caller->getNickname(), channelname, "No such channel");
 	}
 
-	vector<string>::iterator reason_start = std::find_if(args.begin(), args.end(), find_reason);
+	vector<string>::iterator reason_start = find_if(args.begin(), args.end(), find_reason);
 
-	for (vector<string>::iterator name_it = std::next(args.begin()); name_it != reason_start; name_it++) {
+	for (vector<string>::iterator name_it = next(args.begin()); name_it != reason_start; name_it++) {
 		Client* client = getClientByNickname(*name_it);
 		if (client == NULL) {
 			message += build_reply(ERR_NOSUCHNICK, caller->getNickname(), *name_it, "No such nickname");
@@ -689,7 +695,7 @@ string Executor::run_PART(vector<string> args, int fd) {
 	}
 
 	vector<string> channelnames = split_args(args[0]);
-	vector<string>::iterator reason_it = std::find_if(args.begin(), args.end(), find_reason);
+	vector<string>::iterator reason_it = find_if(args.begin(), args.end(), find_reason);
 	string message = "";
 
 	for (vector<string>::iterator it = channelnames.begin(); it != channelnames.end(); it++) {
@@ -738,7 +744,7 @@ string Executor::run_PART(vector<string> args, int fd) {
  * ERR_NOSUCHNICK		()
  * ERR_USERONCHANNEL	()
  *
- * RPL_INVITING         ()
+ * RPL_INVITING			()
  *
  * Not yet handled:
  *
@@ -946,22 +952,19 @@ string Executor::format_reason(vector<string>::iterator& reason_start, vector<st
 	string message = "";
 	for (vector<string>::iterator it = reason_start; it != args.end(); it++) {
 		message += *it;
-		if (std::next(it) != args.end()) {
+		if (next(it) != args.end()) {
 			message += " ";
 		}
 	}
 	return message;
 }
 
-
-#include <iomanip>
-
 string Executor::build_reply(int response_code, string callername, string target, string message) {
 	if (response_code == NOTICE) {
 		return build_notice_reply(target, callername, message);
 	}
 	stringstream response;
-	response << std::setw(3) << std::setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
+	response << setw(3) << setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
 
 	return ":" + this->e.server_address + " " + response.str() + " " + callername + " " + target + " :" + message + "\n";
 }
@@ -975,7 +978,7 @@ string Executor::build_channel_reply(int response_code, string callername, strin
 		return build_notice_reply(target, callername, message);
 	}
 	stringstream response;
-	response << std::setw(3) << std::setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
+	response << setw(3) << setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
 
 	return ":" + this->e.server_address + " " + response.str() + " " + callername + " " + target + " " + channel + " :" + message + "\n";
 }
@@ -986,7 +989,7 @@ string Executor::getServerPassword() {
 
 string Executor::build_WHOIS_reply(int response_code, string callername, string target, string userinfo) {
 	stringstream response;
-	response << std::setw(3) << std::setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
+	response << setw(3) << setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
 
 	return ":" + this->e.server_address + " " + response.str() + " " + callername + " " + target + " " + userinfo + "\n";
 }

@@ -3,11 +3,19 @@
 
 #include <string>
 using std::string;
+
 #include <vector>
 using std::vector;
+
 #include <sstream>
 using std::stringstream;
+
 #include <algorithm>
+using std::find_if;
+
+#include <cctype>
+using std::isspace;
+
 
 class Command {
 private:

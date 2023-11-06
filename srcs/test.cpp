@@ -4,15 +4,18 @@
 using std::cout;
 using std::endl;
 
+#include <ostream>
+using std::ostream;
+
 #define COLOR_RED	"\x1b[31m"
 #define COLOR_GREEN	"\x1b[32m"
 
 // Define ANSI escape code to reset text color to the default
 #define COLOR_RESET	"\x1b[0m"
 
-class CustomOutputStream : public std::ostream {
+class CustomOutputStream : public ostream {
 public:
-	CustomOutputStream(std::ostream& output) : std::ostream(output.rdbuf()), output_stream(output) {}
+	CustomOutputStream(ostream& output) : ostream(output.rdbuf()), output_stream(output) {}
 
 	template <typename T>
 	CustomOutputStream& operator<<(const T& value) {
@@ -28,22 +31,24 @@ public:
 	};
 
 	// Override the << operator for endl
-	CustomOutputStream& operator<<(std::ostream& (*manipulator)(std::ostream&)) {
+	CustomOutputStream& operator<<(ostream& (*manipulator)(ostream&)) {
 		manipulator(output_stream);
 		return *this;
 	};
 
 private:
-	std::ostream& output_stream;
+	ostream& output_stream;
 };
 
 void test(env& env, string& incoming, int& fd, string expected) {
 	static int i = 0;
-	CustomOutputStream customOut(std::cout);
+	CustomOutputStream customOut(cout);
+	
+	
 	static Executor ex(env);
 
 	cout << "Test " << i++ << endl;
-	customOut << "Processing Incoming message: [" + incoming + "]" << std::endl;
+	customOut << "Processing Incoming message: [" + incoming + "]" << endl;
 
 	Command cmd(incoming, fd);
 
@@ -124,8 +129,6 @@ void QUIT_test(env& env) {
 	(void)env;
 }
 
-
-
 void connect_two_clients(env& env) {
 	int fd_user1 = 4;
 	int fd_user2 = 5;
@@ -151,7 +154,6 @@ void connect_two_clients(env& env) {
 	test(env, mode1, fd_user1, ":localhost 403 neus neus :No such channel\n");
 	test(env, whois1, fd_user1, ":localhost \n");
 	test(env, ping1, fd_user1, "PONG localhost\n");
-
 
 	test(env, capreq, fd_user2, ":localhost CAP NAK :-\n");
 	test(env, user2, fd_user2, ":localhost NOTICE Astrid Astrid :Remember to set your nickname using the NICK command\n");
