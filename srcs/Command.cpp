@@ -1,6 +1,6 @@
 #include "Command.hpp"
 
-Command::Command(const string& client_message_string, int client_fd) {
+Command::Command(const string& client_message_string) {
 	stringstream ss(client_message_string);
 
 	string cmd_str;
@@ -14,11 +14,11 @@ Command::Command(const string& client_message_string, int client_fd) {
 
 	this->combine_reason();
 
-	this->client_fd = client_fd;
+	// this->client_fd = client_fd;
 }
 
 Command::Command() {
-	this->client_fd = -1;
+	// this->client_fd = -1;
 }
 
 Command::~Command() {}

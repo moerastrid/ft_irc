@@ -196,7 +196,7 @@ string Executor::run_PASS(vector<string> args, int fd) {
 
 	caller->setPassword(newpassword);
 
-	return build_reply(0, "", "", "");
+	return build_reply(NOTICE, "PASS", "PASS", "Remember to set your username and nickname with USER and PASS.");
 }
 
 /*
@@ -851,7 +851,7 @@ string Executor::run_TOPIC(vector<string> args, int fd) {
 	return "";
 }
 
-#include <unistd.h>
+// #include <unistd.h>
 
 // Client wants to disconnect from server
 /*

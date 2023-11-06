@@ -50,7 +50,7 @@ void test(env& env, string& incoming, int& fd, string expected) {
 	cout << "Test " << i++ << endl;
 	customOut << "Processing Incoming message: [" + incoming + "]" << endl;
 
-	Command cmd(incoming, fd);
+	Command cmd(incoming);
 
 	cout << "Reply received: ";
 	string reply = ex.run(cmd, fd);

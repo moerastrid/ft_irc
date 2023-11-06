@@ -60,14 +60,12 @@ using std::find_if;
 using std::setw;
 using std::setfill;
 
-
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <stdexcept>
 
 #include "Command.hpp"
 #include "env.hpp"
-
 
 class Executor; // Forward declaration
 

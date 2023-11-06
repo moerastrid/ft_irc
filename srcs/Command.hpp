@@ -21,10 +21,10 @@ class Command {
 private:
 	string			command;
 	vector<string>	args;
-	int				client_fd;
+	// int				client_fd;
 public:
 	Command();
-	Command(const string& client_message_string, int client_fd);
+	Command(const string& client_message_string);
 	~Command();
 	const Command& operator=(const Command& other);
 
