@@ -738,7 +738,7 @@ string Executor::run_PART(vector<string> args, int fd) {
  * ERR_NOSUCHNICK		()
  * ERR_USERONCHANNEL	()
  *
- * RPL_INVITING         ()
+ * RPL_INVITING			()
  *
  * Not yet handled:
  *

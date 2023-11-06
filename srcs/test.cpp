@@ -40,6 +40,8 @@ private:
 void test(env& env, string& incoming, int& fd, string expected) {
 	static int i = 0;
 	CustomOutputStream customOut(std::cout);
+	
+	
 	static Executor ex(env);
 
 	cout << "Test " << i++ << endl;
@@ -124,8 +126,6 @@ void QUIT_test(env& env) {
 	(void)env;
 }
 
-
-
 void connect_two_clients(env& env) {
 	int fd_user1 = 4;
 	int fd_user2 = 5;
@@ -151,7 +151,6 @@ void connect_two_clients(env& env) {
 	test(env, mode1, fd_user1, ":localhost 403 neus neus :No such channel\n");
 	test(env, whois1, fd_user1, ":localhost \n");
 	test(env, ping1, fd_user1, "PONG localhost\n");
-
 
 	test(env, capreq, fd_user2, ":localhost CAP NAK :-\n");
 	test(env, user2, fd_user2, ":localhost NOTICE Astrid Astrid :Remember to set your nickname using the NICK command\n");
