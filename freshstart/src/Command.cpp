@@ -1,24 +1,24 @@
 #include "Command.hpp"
 
-Command::Command(const string& client_message_string, int client_fd) {
+Command::Command(const string& client_message_string) {
 	stringstream ss(client_message_string);
 
 	string cmd_str;
 	ss >> cmd_str;
 	this->setCmd(cmd_str);
 
-	std::string arg;
+	string arg;
 	while (ss >> arg) {
 		this->addArg(arg);
 	}
 
 	this->combine_reason();
 
-	this->client_fd = client_fd;
+	// this->client_fd = client_fd;
 }
 
 Command::Command() {
-	this->client_fd = -1;
+	// this->client_fd = -1;
 }
 
 Command::~Command() {}
@@ -55,14 +55,14 @@ vector<string> Command::getArgs() {
 bool find_reason(const string& str) {
 	auto it = str.begin();
 
-	while (it != str.end() && std::isspace(*it))
+	while (it != str.end() && isspace(*it))
 		it++;
 
 	return (it != str.end() && *it == ':');
 }
 
 void Command::combine_reason() {
-	vector<string>::iterator it = std::find_if(this->args.begin(), this->args.end(), find_reason);
+	vector<string>::iterator it = find_if(this->args.begin(), this->args.end(), find_reason);
 	if (it == args.end())
 		return ;
 

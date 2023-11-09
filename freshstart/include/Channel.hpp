@@ -1,12 +1,20 @@
-#pragma once
+#ifndef CHANNEL_HPP
+#define CHANNEL_HPP
 
 #include <vector>
 using std::vector;
 
+#include <ostream>
+using std::ostream;
+
 #include <algorithm>
+using std::find;
 
 #include <utility>
 using std::pair;
+
+#include <string>
+using std::to_string;
 
 #include "Client.hpp"
 
@@ -39,20 +47,24 @@ public:
 	const string& getName() const;
 	const string& getPassword() const;
 	const string& getTopic() const;
-	bool isInviteOnly() const;
-	bool hasTopicRestricted() const;
 	const vector<Client>& getClients() const;
+	const vector<Client>& getOperators() const;
 	size_t getUserLimit() const;
 	string getModes() const;
+	int getFounderFD() const;
+	bool isInviteOnly() const;
+	bool hasTopicRestricted() const;
 	bool hasMode(char mode) const;
+
 	bool hasOperator(const Client& client) const;
 	bool hasFounder(const Client& client) const;
 	bool hasUser(const Client& client) const;
-	int getFounderFD() const;
 
-	void setTopic(string& topic);
+	void setPassword(string password);
+	void setTopic(string topic);
 	void makeInviteOnly();
 	void takeInviteOnly();
+	void toggleInviteOnly();
 	void makeTopicOperatorOnly();
 	void takeTopicOperatorOnly();
 	void setUserLimit(size_t limit);
@@ -68,3 +80,7 @@ public:
 
 std::ostream& operator<<(std::ostream& os, const Channel& channel);
 bool operator==(const Channel& lhs, const Channel& rhs);
+
+#endif /* end of include guard: CHANNEL_HPP */
+
+

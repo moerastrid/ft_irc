@@ -1,7 +1,14 @@
-#pragma once
+#ifndef CLIENT_HPP
+#define CLIENT_HPP
 
 #include <string>
 using std::string;
+
+#include <ostream>
+using std::ostream;
+
+#include <string>
+using std::to_string;
 
 #include "Channel.hpp"
 
@@ -45,3 +52,4 @@ public:
 
 bool operator==(const Client& lhs, const Client& rhs);
 std::ostream& operator<<(std::ostream& os, const Client& client);
+#endif /* end of include guard: CLIENT_HPP */

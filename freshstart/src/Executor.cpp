@@ -4,10 +4,6 @@
 
 //https://modern.ircdocs.horse/#invite-message
 
-#include <iostream>
-using std::cout;
-using std::endl;
-
 bool is_channel(string name) {
 	for (char c : name) {
 		if(!isspace(c)) {
@@ -35,7 +31,7 @@ bool verify_name(string arg) {
 
 bool verify_realname(string arg) {
 	for (string::const_iterator it = arg.begin(); it != arg.end(); ++it) {
-		if (!is_valid_nickname_character(*it) && !std::isspace(*it))
+		if (!is_valid_nickname_character(*it) && !isspace(*it))
 			return false;
 	}
 	return true;
@@ -43,11 +39,11 @@ bool verify_realname(string arg) {
 
 // Takes a comma-separated string of arguments, gives back a vector of said arguments.
 vector<string> split_args(string args) {
-	std::istringstream nameStream(args);
-	std::vector<std::string> res;
+	istringstream nameStream(args);
+	vector<string> res;
 
-	std::string buffer;
-	while (std::getline(nameStream, buffer, ',')) {
+	string buffer;
+	while (getline(nameStream, buffer, ',')) {
 		res.push_back(buffer);
 	}
 
@@ -90,15 +86,19 @@ Executor::Executor(env& e) : e(e) {
 
 Executor::~Executor() {}
 
+#include <iostream>
+using std::cout;
+using std::endl;
+
 void Executor::send_to_client(int fd, string message) {
 	cout << endl << "Sending [" << message << "] to client" << endl;
 	const char* c_message = message.c_str();
 	send(fd, c_message, sizeof c_message, 0);
 }
 
-int Executor::validateArguments(const std::string& command, int numArgs) {
+int Executor::validateArguments(const string& command, int numArgs) {
 	if (this->argCount.find(command) != this->argCount.end()) {
-		std::pair<int, int> argCounts = this->argCount[command];
+		pair<int, int> argCounts = this->argCount[command];
 		int minArgs = argCounts.first;
 		int maxArgs = argCounts.second;
 
@@ -164,7 +164,7 @@ string Executor::run(Command& cmd, int fd) {
  * Responses not (yet) handled:
  */
 string Executor::run_CAP([[maybe_unused]]vector<string> args, [[maybe_unused]]int fd) {
-	return this->e.server_address + " CAP NAK :-\n";
+	return ":" + this->e.server_address + " CAP NAK :-\n";
 }
 
 /*
@@ -196,7 +196,7 @@ string Executor::run_PASS(vector<string> args, int fd) {
 
 	caller->setPassword(newpassword);
 
-	return build_reply(0, "", "", "");
+	return build_reply(NOTICE, "PASS", "PASS", "Remember to set your username and nickname with USER and PASS.");
 }
 
 /*
@@ -282,11 +282,17 @@ RFC 1459
  * Incoming message: USER <username> <hostname> <servername> :<realname> (Not a user command, but automatically sent by the client on a new connection.)
  * Possible replies:
  * 
+ * Responses added:
+ * ERR_ERRONEOUSNICKNAME
+ * RPL_WELCOME
+ * 
  * Responses handled:
  * ERR_NEEDMOREPARAMS
  * ERR_ALREADYREGISTRED
  * 
- * Responses not (yet) handled:
+ * Responses not yet handled:
+ * 
+ * Responses not handled:
  * 
  */
 string Executor::run_USER(vector<string> args, int fd) {
@@ -306,7 +312,7 @@ string Executor::run_USER(vector<string> args, int fd) {
 		if (client->getUsername().empty()) {// first time connec part 2
 			message = build_reply(RPL_WELCOME, client->getNickname(), username, "Welcome to Astrid's & Thibauld's IRC server, " + username + "!");
 		} else {
-			message = build_reply(RPL_WELCOME, client->getNickname(), username, "Username changed to " + username);
+			return build_reply(ERR_ALREADYREGISTERED, client->getNickname(), username, "You may not reregister");
 		}
 		client->setUsername(username);
 		client->setHostname(hostname);
@@ -317,98 +323,6 @@ string Executor::run_USER(vector<string> args, int fd) {
 		addClient("", username, hostname, servername, realname, fd);
 		message = build_reply(NOTICE, username, username, "Remember to set your nickname using the NICK command");
 	}
-	return message;
-}
-
-bool check_privileges(Client* caller, Channel* target, string modestring) {
-	bool res = true;
-	if (modestring.find('i') != string::npos) {
-		res = res && caller->isOperator(*target);
-	}
-	if (modestring.find('t') != string::npos) {
-		if (target->hasTopicRestricted())
-			res = res && caller->isOperator(*target);
-	}
-	if (modestring.find('k') != string::npos)
-		res = res && caller->isOperator(*target);
-	if (modestring.find('o') != string::npos)
-		res = res && (caller->isFounder(*target) || caller->isOperator(*target));
-	if (modestring.find('l') != string::npos)
-		res = res && caller->isOperator(*target);
-	return res;
-}
-
-/*
- * Incoming message		: MODE <channel> [<mode> [<mode parameters>]]
- * Mode arguments		: (set with +<mode> or -<mode>)
- * 		i				: invite only
- * 		t				: Topic change only by operator
- * 		k <key>			: Adds/removes password
- * 		o <nickname>	: Give <nickname> operator status.
- * 		l <count>		: Set max number of users for channel (0 = unlimited).
- * Parameters			: The target nickname or channel and the modes with their parameters to set or remove. If the target nickname or channel is omitted, the active nickname or channel will be used.
- * Description			: Modifies the channel modes for which you are privileged to modify. You can specify multiple modes in one command and prepend them by using the ‘+’ sign to set or ‘-’ sign to unset; modes that require a parameter will be retrieved from the argument list.
- * 
- * Possible replies		: ???
- *
- * Responses handled:
- * ERR_NEEDMOREPARAMS
- * ERR_NOSUCHNICK 		(Used to indicate the nickname parameter supplied to a command is currently unused.)
- * ERR_USERSDONTMATCH 	(Error sent to any user trying to view or change the user mode for a user other than themselves.)
- *
- * Responses not yet handled:
- * ERR_NOSUCHCHANNEL 	(Requested channel is unknown)
- * ERR_UNKNOWNMODE		(Requested mode is unknown)
- * RPL_UMODEIS 			(To answer a query about a client's own mode, RPL_UMODEIS is sent back.)
- * RPL_CHANNELMODEIS 	(Response to mode status request) "<channel> <mode> <mode params>"
- * ERR_CHANOPRIVSNEEDED	(User without operator status request mode change that requires OP)
- * ERR_NOTONCHANNEL 	(Returned by the server whenever a client tries to perform a channel effecting command for which the client isn't a member.)
- * ERR_KEYSET 			(Format: "<channel> Channel key already set")
- * ERR_UMODEUNKNOWNFLAG	(Returned by the server to indicate that a MODE message was sent with a nickname parameter and that the a mode flag sent was not recognized.)
- * 
- * Responses not handled:
- * RPL_BANLIST 			(We don't support a banlist)
- * RPL_ENDOFBANLIS 		(We don't support a banlist)
- */
-string Executor::run_MODE(vector<string> args, int fd) {
-	Client* caller = getClientByFD(fd);
-	if (caller == NULL) {
-		return "USER NOT FOUND";
-	}
-
-	string target = args[0];
-	// Client* target_client = getClientByNickname(target);
-	Channel* channel = getChannelByName(target);
-	bool target_is_channel = is_channel(target);
-
-	if (!target_is_channel) { // If target is a user. (Commented code checks properly, but we don't support modes on users, only channels)
-		return build_reply(ERR_NOSUCHCHANNEL, caller->getNickname(), target, "No such channel (we don't support changing modes for users)");
-		// if (target_client == NULL) // if target doesn't exist
-		// 	return build_reply(ERR_NOSUCHNICK, caller->getNickname(), target, "No such nick/channel");
-		// else if (caller->getNickname().compare(target) != 0) // if target doesn't match caller.
-		// 	return build_reply(ERR_USERSDONTMATCH, caller->getNickname(), target, "Cant change mode for other users");
-	}
-	if (channel == NULL) { // If target is a channel and it doesn't exist.
-		return build_reply(ERR_NOSUCHCHANNEL, caller->getNickname(), target, "No such channel");
-	}
-	if (args.size() == 1) { // No modestring
-		return build_reply(RPL_CHANNELMODEIS, caller->getNickname(), target, channel->getModes());
-	}
-
-	string modestring = args[1];
-	string modeargs = "";
-	if (args.size() == 3) {
-		modeargs = args[2];
-	}
-
-	if (check_privileges(caller, channel, modestring) == false) {
-		return build_reply(ERR_CHANOPRIVSNEEDED, caller->getNickname(), target, "You're not a channel operator");
-	}
-
-	string message = "";
-
-	message = build_reply(ERR_UNKNOWNMODE, caller->getNickname(), "mode", "Unknown mode");
-
 	return message;
 }
 
@@ -471,7 +385,7 @@ string Executor::run_PRIVMSG(vector<string> args, int fd) {
 
 	for (vector<string>::iterator it = args.begin(); it != args.end(); it++) {
 		ss << *it;
-		if (std::next(it) != args.end())
+		if (next(it) != args.end())
 			ss << " ";
 	}
 	ss << "\n";
@@ -588,8 +502,8 @@ string Executor::run_JOIN(vector<string> args, int fd) {
 		} else {
 			string password = ch->getPassword();
 			const vector<Client>& clients = ch->getClients();
-
-			if (clients.size() >= ch->getUserLimit()) {
+			size_t userLimit = ch->getUserLimit();
+			if (userLimit != 0 && clients.size() >= userLimit) {
 				message += build_reply(ERR_CHANNELISFULL, client->getNickname(), ch->getName(), "Cannot join channel (+l)");
 				continue;
 			}
@@ -647,9 +561,9 @@ string Executor::run_KICK(vector<string> args, int fd) {
 		return build_reply(ERR_NOSUCHCHANNEL, caller->getNickname(), channelname, "No such channel");
 	}
 
-	vector<string>::iterator reason_start = std::find_if(args.begin(), args.end(), find_reason);
+	vector<string>::iterator reason_start = find_if(args.begin(), args.end(), find_reason);
 
-	for (vector<string>::iterator name_it = std::next(args.begin()); name_it != reason_start; name_it++) {
+	for (vector<string>::iterator name_it = next(args.begin()); name_it != reason_start; name_it++) {
 		Client* client = getClientByNickname(*name_it);
 		if (client == NULL) {
 			message += build_reply(ERR_NOSUCHNICK, caller->getNickname(), *name_it, "No such nickname");
@@ -689,7 +603,7 @@ string Executor::run_PART(vector<string> args, int fd) {
 	}
 
 	vector<string> channelnames = split_args(args[0]);
-	vector<string>::iterator reason_it = std::find_if(args.begin(), args.end(), find_reason);
+	vector<string>::iterator reason_it = find_if(args.begin(), args.end(), find_reason);
 	string message = "";
 
 	for (vector<string>::iterator it = channelnames.begin(); it != channelnames.end(); it++) {
@@ -738,7 +652,7 @@ string Executor::run_PART(vector<string> args, int fd) {
  * ERR_NOSUCHNICK		()
  * ERR_USERONCHANNEL	()
  *
- * RPL_INVITING         ()
+ * RPL_INVITING			()
  *
  * Not yet handled:
  *
@@ -845,7 +759,7 @@ string Executor::run_TOPIC(vector<string> args, int fd) {
 	return "";
 }
 
-#include <unistd.h>
+// #include <unistd.h>
 
 // Client wants to disconnect from server
 /*
@@ -946,22 +860,19 @@ string Executor::format_reason(vector<string>::iterator& reason_start, vector<st
 	string message = "";
 	for (vector<string>::iterator it = reason_start; it != args.end(); it++) {
 		message += *it;
-		if (std::next(it) != args.end()) {
+		if (next(it) != args.end()) {
 			message += " ";
 		}
 	}
 	return message;
 }
 
-
-#include <iomanip>
-
 string Executor::build_reply(int response_code, string callername, string target, string message) {
 	if (response_code == NOTICE) {
 		return build_notice_reply(target, callername, message);
 	}
 	stringstream response;
-	response << std::setw(3) << std::setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
+	response << setw(3) << setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
 
 	return ":" + this->e.server_address + " " + response.str() + " " + callername + " " + target + " :" + message + "\n";
 }
@@ -975,7 +886,7 @@ string Executor::build_channel_reply(int response_code, string callername, strin
 		return build_notice_reply(target, callername, message);
 	}
 	stringstream response;
-	response << std::setw(3) << std::setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
+	response << setw(3) << setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
 
 	return ":" + this->e.server_address + " " + response.str() + " " + callername + " " + target + " " + channel + " :" + message + "\n";
 }
@@ -986,7 +897,7 @@ string Executor::getServerPassword() {
 
 string Executor::build_WHOIS_reply(int response_code, string callername, string target, string userinfo) {
 	stringstream response;
-	response << std::setw(3) << std::setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
+	response << setw(3) << setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
 
 	return ":" + this->e.server_address + " " + response.str() + " " + callername + " " + target + " " + userinfo + "\n";
 }

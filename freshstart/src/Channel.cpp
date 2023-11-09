@@ -92,7 +92,7 @@ string Channel::getModes() const {
 	else
 		unset += "l";
 
-	return "+" + set + "-" + unset + " " + std::to_string(this->userLimit);
+	return "+" + set + "-" + unset + " " + to_string(this->userLimit);
 }
 bool Channel::hasMode(char mode) const {
 	if (mode == 'i') {
@@ -111,7 +111,7 @@ bool Channel::hasMode(char mode) const {
 }
 
 bool Channel::hasOperator(const Client &client) const {
-	if (std::find(this->operators.begin(), this->operators.end(), client) != this->operators.end()) {
+	if (find(this->operators.begin(), this->operators.end(), client) != this->operators.end()) {
 		return true;
 	}
 	return false;
@@ -133,6 +133,9 @@ int Channel::getFounderFD() const {
 
 void Channel::setTopic(string topic) {
 	this->topic = topic;
+}
+void Channel::setPassword(string password) {
+	this->password = password;
 }
 void Channel::makeInviteOnly() {
 	this->inviteOnly = true;
@@ -186,7 +189,7 @@ void Channel::addOperator(const Client &client) {
 }
 
 void Channel::removeOperator(const Client &client) {
-	vector<Client>::iterator it = std::find(operators.begin(), operators.end(), client);
+	vector<Client>::iterator it = find(operators.begin(), operators.end(), client);
 	if (it != operators.end()) {
 		this->operators.erase(it);
 	}
@@ -202,7 +205,7 @@ void Channel::addClient(const Client& client) {
 }
 
 int Channel::removeClient(const Client& client) {
-	vector<Client>::iterator it = std::find(clients.begin(), clients.end(), client);
+	vector<Client>::iterator it = find(clients.begin(), clients.end(), client);
 	if (it == clients.end()) {
 		return 1;
 	}
@@ -210,7 +213,7 @@ int Channel::removeClient(const Client& client) {
 	return 0;
 }
 
-std::ostream& operator<<(std::ostream& os, const Channel& channel) {
+ostream& operator<<(ostream& os, const Channel& channel) {
 	os << "Channel(" << channel.getName() << ", [";
 	const vector<Client>& clients = channel.getClients();
 	for (vector<Client>::const_iterator it = clients.begin(); it != clients.end(); it++) {
@@ -226,4 +229,17 @@ std::ostream& operator<<(std::ostream& os, const Channel& channel) {
 
 bool operator==(const Channel& lhs, const Channel& rhs) {
 	return lhs.getName() == rhs.getName();
+}
+
+void Channel::toggleInviteOnly()
+{
+	if (this->isInviteOnly()) {
+		this->takeInviteOnly();
+	} else {
+		this->makeInviteOnly();
+	}
+}
+
+const vector<Client> &Channel::getOperators() const {
+	return this->operators;
 }

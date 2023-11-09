@@ -1,4 +1,5 @@
-#pragma once
+#ifndef EXECUTOR_HPP
+#define EXECUTOR_HPP
 
 #define NOTICE 999
 
@@ -30,25 +31,43 @@
 #define ERR_BADCHANNELKEY 475
 #define ERR_CHANOPRIVSNEEDED 482 
 
+#define ERR_UMODEUNKNOWNFLAG 501
 #define ERR_USERSDONTMATCH 502 // Cant change mode for other users
 
 #include <utility>
 using std::pair;
+using std::tuple;
 
 #include <string>
 using std::string;
+using std::getline;
 
 #include <map>
 using std::map;
 
+#include <cctype>
+using std::isspace;
+
+#include <iterator>
+using std::next;
+
+#include <sstream>
+using std::istringstream;
+
+#include <algorithm>
+using std::find;
+using std::find_if;
+
+#include <iomanip>
+using std::setw;
+using std::setfill;
+
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <algorithm>
 #include <stdexcept>
 
 #include "Command.hpp"
 #include "env.hpp"
-
 
 class Executor; // Forward declaration
 
@@ -82,6 +101,13 @@ class Executor {
 		string run_TOPIC(vector<string> args, int fd);
 		string run_QUIT(vector<string> args, int fd);
 
+		string handle_modes(Client* caller, vector<tuple<bool, char, string>> mode_cmds, Channel* target);
+		void handle_i_mode(bool add, Channel* target);
+		void handle_t_mode(bool add, Channel* target);
+		void handle_k_mode(bool add, string arg, Channel* target);
+		void handle_o_mode(bool add, string arg, Channel* target);
+		void handle_l_mode(bool add, string arg, Channel* target);
+
 		void addClient(string username, string nickname, string hostname, string servername, string realname, int fd);
 		void addChannel(string name, string password, Client* client);
 
@@ -99,8 +125,16 @@ class Executor {
 		string build_notice_reply(string callername, string target, string message);
 		string build_channel_reply(int response_code, string callername, string target, string channel, string message);
 		string build_WHOIS_reply(int response_code, string callername, string target, string userinfo);
+		string build_mode_reply(string callername, string target_channel, string modestring, string modeargs);
 		string error_message(int error_code, string a, string b);
 
 		void send_to_client(int fd, string message);
 };
 
+bool is_channel(string name);
+bool is_valid_nickname_character(char c);
+bool verify_name(string arg);
+bool verify_realname(string arg);
+vector<string> split_args(string args);
+
+#endif /* end of include guard: EXECUTOR_HPP */
