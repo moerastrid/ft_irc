@@ -131,8 +131,11 @@ int Channel::getFounderFD() const {
 	return this->founderFD;
 }
 
-void Channel::setTopic(string& topic) {
+void Channel::setTopic(string topic) {
 	this->topic = topic;
+}
+void Channel::setPassword(string password) {
+	this->password = password;
 }
 void Channel::makeInviteOnly() {
 	this->inviteOnly = true;
@@ -226,4 +229,17 @@ ostream& operator<<(ostream& os, const Channel& channel) {
 
 bool operator==(const Channel& lhs, const Channel& rhs) {
 	return lhs.getName() == rhs.getName();
+}
+
+void Channel::toggleInviteOnly()
+{
+	if (this->isInviteOnly()) {
+		this->takeInviteOnly();
+	} else {
+		this->makeInviteOnly();
+	}
+}
+
+const vector<Client> &Channel::getOperators() const {
+	return this->operators;
 }

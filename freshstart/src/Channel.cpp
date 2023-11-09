@@ -131,7 +131,7 @@ int Channel::getFounderFD() const {
 	return this->founderFD;
 }
 
-void Channel::setTopic(string& topic) {
+void Channel::setTopic(string topic) {
 	this->topic = topic;
 }
 void Channel::makeInviteOnly() {

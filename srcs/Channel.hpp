@@ -47,20 +47,24 @@ public:
 	const string& getName() const;
 	const string& getPassword() const;
 	const string& getTopic() const;
-	bool isInviteOnly() const;
-	bool hasTopicRestricted() const;
 	const vector<Client>& getClients() const;
+	const vector<Client>& getOperators() const;
 	size_t getUserLimit() const;
 	string getModes() const;
+	int getFounderFD() const;
+	bool isInviteOnly() const;
+	bool hasTopicRestricted() const;
 	bool hasMode(char mode) const;
+
 	bool hasOperator(const Client& client) const;
 	bool hasFounder(const Client& client) const;
 	bool hasUser(const Client& client) const;
-	int getFounderFD() const;
 
-	void setTopic(string& topic);
+	void setPassword(string password);
+	void setTopic(string topic);
 	void makeInviteOnly();
 	void takeInviteOnly();
+	void toggleInviteOnly();
 	void makeTopicOperatorOnly();
 	void takeTopicOperatorOnly();
 	void setUserLimit(size_t limit);

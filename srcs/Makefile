@@ -19,6 +19,7 @@ SRCS =	Channel.cpp \
 		Client.cpp \
 		Command.cpp \
 		Executor.cpp \
+		Executor_mode.cpp \
 		test.cpp
 
 OBJS = $(SRCS:.cpp=.o)
