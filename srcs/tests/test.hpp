@@ -1,7 +1,7 @@
 #ifndef TEST_HPP
 #define TEST_HPP
 
-#include "Executor.hpp"
+#include "../Executor.hpp"
 
 #include <iostream>
 using std::cout;
