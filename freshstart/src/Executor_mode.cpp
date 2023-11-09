@@ -196,9 +196,13 @@ string Executor::handle_modes(Client* caller, vector<tuple<bool, char, string>> 
 			case 0:
 				message += build_reply(ERR_UMODEUNKNOWNFLAG, caller->getNickname(), target->getName(), "Unknown MODE flag");
 				break;
-			case -1:
+/*
+LET OP ! heb deze uitgecomment vanwege : 
+COMPILE error: case label value is less than minimum value for type [-Werror=switch-outside-range]
+*/
+			//case -1:
 				//ignored
-				break;
+			//	break;
 			default:
 				// Shouldn't happen.
 				message += build_reply(ERR_UMODEUNKNOWNFLAG, caller->getNickname(), target->getName(), "Unknown MODE flag");
