@@ -1,36 +1,39 @@
 #include "test.hpp"
 
-void test(Executor& ex, string& incoming, int& fd, string expected) {
+void test(Executor& ex, string incoming, int& fd, string expected) {
 	static int i = 0;
 	CustomOutputStream customOut(cout);
 
-	cout << "Test " << i++ << endl;
-	customOut << "Processing Incoming message: [" + incoming + "]" << endl;
+	cout << "Test " << i++;
+//	customOut << "Processing Incoming message: [" + incoming + "]" << endl;
 
 	Command cmd(incoming);
 
-	cout << "Reply received: ";
+//	cout << "Reply received: ";
 	string reply = ex.run(cmd, fd);
 
 	if (reply.compare(expected) == 0) {
-		customOut << COLOR_GREEN << "[" << reply << "]" << endl;
-		cout << "Expected      : ";
-		customOut << "[" << expected << "]" << COLOR_RESET << endl;
+		cout << COLOR_GREEN << "	[OK]	" << COLOR_RESET;
+		customOut << " " << incoming << " " << endl;
+//		customOut << COLOR_GREEN << "[" << reply << "]" << endl;
+//		cout << "Expected      : ";
+//		customOut << "[" << expected << "]" << COLOR_RESET << endl;
 	} else {
-		customOut << COLOR_RED << "[" << reply << "]" << endl;
-		cout << "Expected      : ";
-		customOut << "[" << expected << "]" << COLOR_RESET << endl;
+		cout << COLOR_RED << "	[FAIL]	" << COLOR_RESET;
+		customOut << " " << incoming << " " << endl;
+		cout << "	Reply received: ";
+		customOut << COLOR_RED << "[" << reply << "]" << COLOR_RESET << endl;
+		cout << "	Expected      : ";
+		customOut << COLOR_RED << "[" << expected << "]" << COLOR_RESET << endl;
 	}
-
-	cout << "===============================" << endl << endl;
 }
 
-void run(Executor& ex, string& incoming, int& fd) {
+void run(Executor& ex, string incoming, int& fd) {
 	Command cmd(incoming);
 	string reply = ex.run(cmd, fd);
 	CustomOutputStream customOut(cerr);
-	customOut << "Reply: " << reply << endl;
-	cerr << "===============================" << endl;
+//	customOut << "Reply: " << reply << endl;
+//	cerr << "===============================" << endl;
 }
 
 // Connects two clients to the server, and joins four test channels. 
@@ -43,51 +46,41 @@ void connect_two_clients(Executor& ex) {
 	int fd_user1 = 4;
 	int fd_user2 = 5;
 
-	string capreq = "CAP LS\n";
-	run(ex, capreq, fd_user1);
+//	string capreq = "CAP LS\n";
+//	run(ex, capreq, fd_user1);
 
 	string nick1 = "NICK neus\n";
 	string user1 = "USER Thibauld Thibauld_PC localhost :Thibauld WW Nuyten\n";
-	string mode1 = "MODE neus +i\n";
-	string whois1 = "WHOIS neus\n";
-	string ping1 = "PING localhost\n";
+//	string mode1 = "MODE neus +i\n";
+//	string whois1 = "WHOIS neus\n";
+//	string ping1 = "PING localhost\n";
 	run(ex, nick1, fd_user1);
 	run(ex, user1, fd_user1);
-	run(ex, mode1, fd_user1);
-	run(ex, whois1, fd_user1);
-	run(ex, ping1, fd_user1);
+//	run(ex, mode1, fd_user1);
+//	run(ex, whois1, fd_user1);
+//	run(ex, ping1, fd_user1);
 
 	string nick2 = "NICK astrid\n";
 	string user2 = "USER Astrid Astrid_PC localhost :Astrid Geels\n";
-	string mode2 = "MODE astrid +i\n";
-	string whois2 = "WHOIS astrid\n";
-	string ping2 = "PING localhost\n";
-	run(ex, capreq, fd_user2);
+//	string mode2 = "MODE astrid +i\n";
+//	string whois2 = "WHOIS astrid\n";
+//	string ping2 = "PING localhost\n";
+//	run(ex, capreq, fd_user2);
 	run(ex, user2, fd_user2);
 	run(ex, nick2, fd_user2);
-	run(ex, mode2, fd_user2);
-	run(ex, whois2, fd_user2);
-	run(ex, ping2, fd_user2);
+//	run(ex, mode2, fd_user2);
+//	run(ex, whois2, fd_user2);
+//	run(ex, ping2, fd_user2);
 
-	string join11 = "JOIN #test 123";
-	string join12 = "JOIN #test2";
-	run(ex, join11, fd_user1);
-	run(ex, join12, fd_user1);
+	run(ex, "JOIN #test", fd_user1); //Order is deliberate
+	run(ex, "JOIN #test2", fd_user1);
+	run(ex, "JOIN #test2", fd_user2);
+	run(ex, "JOIN #test3", fd_user2);
+	run(ex, "JOIN #test4", fd_user2);
+	run(ex, "JOIN #test3", fd_user1);
 
-	string join24 = "JOIN #test4 234";
-	string join23 = "JOIN #test3";
-	run(ex, join24, fd_user2);
-	run(ex, join23, fd_user2);
-
-	string join22 = "JOIN #test2";
-	string join21 = "JOIN #test 123";
-	run(ex, join22, fd_user2);
-	run(ex, join21, fd_user2);
-
-	string join13 = "JOIN #test3";
-	string join14 = "JOIN #test4 234";
-	run(ex, join13, fd_user1);
-	run(ex, join14, fd_user1);
+	run(ex, "MODE #test2 +o neus", fd_user1);
+	run(ex, "MODE #test3 +o astrid", fd_user2);
 }
 
 int main() {

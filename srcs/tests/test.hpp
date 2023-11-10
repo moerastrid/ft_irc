@@ -44,8 +44,8 @@ private:
 	ostream& output_stream;
 };
 
-void test(Executor& ex, string& incoming, int& fd, string expected);
-void run(Executor& ex, string& incoming, int& fd);
+void test(Executor& ex, string incoming, int& fd, string expected);
+void run(Executor& ex, string incoming, int& fd);
 void connect_two_clients(Executor& ex);
 
 void CAP_test();

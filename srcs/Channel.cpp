@@ -70,30 +70,42 @@ size_t Channel::getUserLimit() const {
 	return this->userLimit;
 }
 
-
 // modes: i t k l (o not shown here)
-string Channel::getModes() const {
-	string set;
-	string unset;
+pair<string,string> Channel::getModes() const {
+	string set = "+";
+	string unset = "-";
+
+	string modeargs;
+
 	if (this->isInviteOnly())
 		set += "i";
-	else 
+	else
 		unset += "i";
+
 	if (this->hasTopicRestricted())
 		set += "t";
 	else
 		unset += "t";
-	if (this->password.size() > 0)
+
+	if (this->password.size() > 0) {
 		set += "k";
+		modeargs += this->getPassword();
+	}
 	else
 		unset += "k";
-	if (this->userLimit == 0)
+
+	if (this->userLimit == 0) {
 		set += "l";
+		modeargs += to_string(this->getUserLimit());
+	}
 	else
 		unset += "l";
 
-	return "+" + set + "-" + unset + " " + to_string(this->userLimit);
+	pair<string,string> p = std::make_pair(set + unset, modeargs);
+	return p;
 }
+
+
 bool Channel::hasMode(char mode) const {
 	if (mode == 'i') {
 		return this->isInviteOnly();
@@ -195,8 +207,6 @@ void Channel::removeOperator(const Client &client) {
 	}
 	return;
 }
-
-#include <iostream>
 
 void Channel::addClient(const Client& client) {
 	if (find(this->clients.begin(), this->clients.end(), client) == this->clients.end()) {

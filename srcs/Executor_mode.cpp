@@ -41,13 +41,13 @@ static vector<tuple<bool, char, string>> parse_modestring(string modestring, vec
 				try {
 					arg = modeargs.at(argcounter++);
 				} catch (std::out_of_range& e) {
-					modes.push_back(tuple<bool, char, string>(add, -1, "")); // MISSING PARAMETER
+					modes.push_back(std::tuple<bool, char, string>(add, -1, "")); // MISSING PARAMETER
 					continue;
 				}
 			}
-			modes.push_back(tuple<bool, char, string>(add, el, arg));
+			modes.push_back(std::tuple<bool, char, string>(add, el, arg));
 		} else {
-			modes.push_back(tuple<bool, char, string>(add, 0, "")); // UNKNOWN MODE
+			modes.push_back(std::tuple<bool, char, string>(add, 0, "")); // UNKNOWN MODE
 		}
 	}
 	return modes;
@@ -122,7 +122,7 @@ void Executor::handle_k_mode(bool add, string arg, Channel* target) {
 
 // Type A: must always have parameter, otherwise ignore command.
 void Executor::handle_o_mode(bool add, string arg, Channel* target) {
-	if(!arg.size())
+	if (!arg.size())
 		return;
 	Client* c = this->getClientByNickname(arg);	
 	if (c == NULL)
@@ -154,13 +154,12 @@ using std::endl;
 
 string Executor::handle_modes(Client* caller, vector<tuple<bool, char, string>> mode_cmds, Channel* target) {
 	string message = "";
-	// static int i = 0;
 	for (const auto& mode_cmd: mode_cmds) {
 		bool add = std::get<0>(mode_cmd);
 		char mode = std::get<1>(mode_cmd);
 		string modearg = std::get<2>(mode_cmd);
-		// cout << "HANDLING " + to_string(i++) + ": " << add << " " << mode << " " << modearg << endl;
 		string modestring;
+
 		switch (mode)
 		{
 			case 'i':
@@ -169,7 +168,7 @@ string Executor::handle_modes(Client* caller, vector<tuple<bool, char, string>> 
 				message += build_mode_reply(caller->getNickname(), target->getName(), modestring, modearg);
 				break;
 			case 't':
-				handle_i_mode(add, target);
+				handle_t_mode(add, target);
 				modestring = "+t";
 				message += build_mode_reply(caller->getNickname(), target->getName(), modestring, modearg);
 				break;
@@ -186,7 +185,7 @@ string Executor::handle_modes(Client* caller, vector<tuple<bool, char, string>> 
 			case 'o':
 				modestring = "+o";
 				message += build_mode_reply(caller->getNickname(), target->getName(), modestring, modearg);
-				handle_o_mode(add, modearg, target);
+				handle_o_mode(add, modearg, target); //#TODO check modearg for existence of user.
 				break;
 			case 'l':
 				modestring = "+l";
@@ -196,11 +195,9 @@ string Executor::handle_modes(Client* caller, vector<tuple<bool, char, string>> 
 			case 0:
 				message += build_reply(ERR_UMODEUNKNOWNFLAG, caller->getNickname(), target->getName(), "Unknown MODE flag");
 				break;
-			case -1:
-				//ignored
+			case -1: //ignored
 				break;
 			default:
-				// Shouldn't happen.
 				message += build_reply(ERR_UMODEUNKNOWNFLAG, caller->getNickname(), target->getName(), "Unknown MODE flag");
 				break;
 		}
@@ -262,7 +259,8 @@ string Executor::run_MODE(vector<string> args, int fd) {
 		return build_reply(ERR_NOSUCHCHANNEL, caller->getNickname(), target, "No such channel");
 	}
 	if (args.size() == 1) { // No modestring
-		return build_reply(RPL_CHANNELMODEIS, caller->getNickname(), target, channel->getModes());
+		pair<string, string> replymodes = channel->getModes();
+		return build_mode_reply(caller->getNickname(), target, replymodes.first, replymodes.second);
 	}
 
 	string modestring = args[1];
@@ -288,5 +286,14 @@ string Executor::run_MODE(vector<string> args, int fd) {
 }
 
 string Executor::build_mode_reply(string callername, string target_channel, string modestring, string modeargs) {
-	return ":" + this->e.server_address + " " + to_string(RPL_CHANNELMODEIS) + " " + callername + " " + target_channel + " " + modestring + " " + modeargs + "\n";
+	string message = ":" + this->e.server_address + " " + to_string(RPL_CHANNELMODEIS) + " " + callername + " " + target_channel + " " + modestring;
+	if (!modeargs.empty()) {
+		 message += " " + modeargs;
+	}
+	message += "\n";
+	return message;
 }
+
+//void messageDispatch() {
+//	map<string, string> m = {"RPL_CHANNELMODEIS","build-a-string magic"};
+//}
