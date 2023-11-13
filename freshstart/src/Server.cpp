@@ -92,9 +92,13 @@ void	Server::addConnection() {
 	}
 }
 
-void	Server::closeConnection(const int i) {
-	close(_pollFds[i].fd);			
-	_pollFds.erase(_pollFds.begin() + i );
+void	Server::closeConnection(const int fd) {
+	cout << "DEBUG : " << fd << std::endl;
+	close(fd);
+	for (unsigned long i(0); i < _pollFds.size(); i++) {
+		if (_pollFds[i].fd == fd)
+			_pollFds.erase(_pollFds.begin() + i);
+	}
 }
 
 
@@ -116,6 +120,8 @@ void	Server::run() {
 				// sleep(1);
 			} else if (_pollFds[i].revents & POLLOUT) {
 				// Msg("POLLOUT", "DEBUG");
+				char	hello[] = "Hello this is I R C ";
+				send(_pollFds[i].fd, hello, sizeof(hello), MSG_DONTWAIT);
 				// sleep(1);
 			} else if ((_pollFds[i].revents & POLLHUP ) | (_pollFds[i].revents & POLLRDHUP )) {
 				Msg("POLLHUP or POLLRDHUP", "DEBUG");
@@ -137,11 +143,18 @@ void Server::receive(int fd) {
 	// Msg("incoming message :", "DEBUG");
 	memset(&buf, 0, sizeof(buf));
 	int nbytes = recv(fd, buf, sizeof(buf), MSG_DONTWAIT);
-	buf[nbytes] = '\0';
+	// buf[nbytes] = '\0';
 	received.append(buf);
     if (!received.empty()) {
         cout << received << endl;
-    }
+    } else {
+		Msg("received empty string", "DEBUG");
+		closeConnection(fd);
+	}
+	while (nbytes != 0) {
+		nbytes = recv(fd, buf, sizeof(buf), MSG_DONTWAIT);
+		received.append(buf);
+	}
 }
 
 int	Server::setPoll() {
