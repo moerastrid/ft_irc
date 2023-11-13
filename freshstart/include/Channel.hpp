@@ -50,7 +50,7 @@ public:
 	const vector<Client>& getClients() const;
 	const vector<Client>& getOperators() const;
 	size_t getUserLimit() const;
-	string getModes() const;
+	pair<string,string> getModes() const;
 	int getFounderFD() const;
 	bool isInviteOnly() const;
 	bool hasTopicRestricted() const;

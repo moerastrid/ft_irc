@@ -21,5 +21,6 @@ int main(int argc, char **argv) {
 	while (1) {
 		ircServer.run(e);
 	}
+	std::cout << "Successfully ended the REAL TALK IRC " << ircServer << " \\^.^/" << std::endl;
 	return (EXIT_SUCCESS);
 }

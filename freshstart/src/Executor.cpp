@@ -72,7 +72,7 @@ Executor::Executor(env& e) : e(e) {
 	this->argCount["PASS"] 		= {1, 1};
 	this->argCount["NICK"] 		= {1, 1};
 	this->argCount["USER"] 		= {4, -1};
-	this->argCount["MODE"] 		= {1, 3};
+	this->argCount["MODE"] 		= {1, -1};
 	this->argCount["PING"] 		= {1, 1};
 	this->argCount["PRIVMSG"] 	= {2, -1};
 	this->argCount["WHOIS"] 	= {0, -1};
@@ -102,7 +102,6 @@ int Executor::validateArguments(const string& command, int numArgs) {
 		int minArgs = argCounts.first;
 		int maxArgs = argCounts.second;
 
-		// Check if the number of arguments falls within the specified range.
 		if (numArgs < minArgs) {
 			return -1;
 		}
@@ -111,7 +110,7 @@ int Executor::validateArguments(const string& command, int numArgs) {
 		}
 	}
 
-	return 0; // Argument count is valid.
+	return 0;
 }
 
 string Executor::run(Command& cmd, int fd) {
@@ -128,7 +127,7 @@ string Executor::run(Command& cmd, int fd) {
 		return build_reply(ERR_UNKNOWNCOMMAND, command, command, "Unknown command from client");
 	}
 
-	 int numArgs = cmd.getArgs().size();
+	int numArgs = cmd.getArgs().size();
 
 	// Validate the number of arguments for the command.
 	 //#TODO add client nickname.

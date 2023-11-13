@@ -36,6 +36,8 @@
 
 #include <utility>
 using std::pair;
+
+#include <tuple>
 using std::tuple;
 
 #include <string>

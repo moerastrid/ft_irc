@@ -7,7 +7,7 @@ using std::string;
 #include "Client.hpp"
 #include "Channel.hpp"
 
-struct env {
+class env {
 	public:
 		string				server_address = "localhost";
 		vector<Client>		clients;

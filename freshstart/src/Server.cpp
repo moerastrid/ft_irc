@@ -109,6 +109,7 @@ void	Server::run(env &e) {
 	if (setPoll() == 0)
 		return;
 	
+	Executor ex(e);
 	for (unsigned long i(0); i < _pollFds.size(); i++) {
 		if (_pollFds[i].fd == _sockfd.fd && _pollFds[i].revents == POLLIN) {
 			addConnection(e);
@@ -118,7 +119,9 @@ void	Server::run(env &e) {
 				continue;
 			} else if (_pollFds[i].revents & POLLIN) {
 				// Msg("POLLIN", "DEBUG");
-				receive(e, _pollFds[i].fd);
+				string incoming = receive(e, _pollFds[i].fd);
+				Command cmd(incoming);
+				string reply = ex.run(cmd, _pollFds[i].fd);
 				// sleep(1);
 			} else if (_pollFds[i].revents & POLLOUT) {
 
@@ -146,7 +149,9 @@ string Server::receive(env &e, int fd) {
 	// Msg("incoming message :", "DEBUG");
 	memset(&buf, 0, sizeof(buf));
 	int nbytes = recv(fd, buf, sizeof(buf), MSG_DONTWAIT);
-	buf[nbytes] = '\0';
+	if (nbytes == -1)
+		return (NULL);
+	// buf[nbytes] = '\0';
 	received.append(buf);
     if (!received.empty()) {
         cout << received << endl;
@@ -154,10 +159,11 @@ string Server::receive(env &e, int fd) {
 		Msg("received empty string", "DEBUG");
 		closeConnection(e, fd);
 	}
-	while (nbytes != 0) {
-		nbytes = recv(fd, buf, sizeof(buf), MSG_DONTWAIT);
-		received.append(buf);
-	}
+	// while (nbytes != 0) {
+	// 	memset(&buf, 0, sizeof(buf));
+	// 	nbytes = recv(fd, buf, sizeof(buf), MSG_DONTWAIT);
+	// 	received.append(buf);
+	// }
 	return (received);
 }
 
