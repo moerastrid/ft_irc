@@ -40,8 +40,6 @@ Server::Server(const int port, const string pass) : _port(port), _pass(pass) {
 	Server::setUp();
 	_pollFds.push_back(_sockfd);
 
-    
-
 	Msg("server waiting for connections ... ", "INFO");
 }
 
@@ -69,7 +67,7 @@ void	Server::setUp() {
 	}
 }
 
-void	Server::addConnection() {
+void	Server::addConnection(env &e) {
 	socklen_t	tempSize = sizeof(_sockin);
 	struct pollfd new_fd;
 	memset(&new_fd, 0, sizeof(new_fd));
@@ -87,45 +85,50 @@ void	Server::addConnection() {
 		Msg("Connection accepted on " + std::to_string(new_fd.fd), "INFO");
 		new_fd.events = POLLIN|POLLOUT|POLLHUP|POLLRDHUP;
 		_pollFds.push_back(new_fd);
-
-		Client(new_fd.fd);
+		e.clients.push_back(Client(new_fd.fd));
+		// add client
 	}
 }
 
-void	Server::closeConnection(const int fd) {
+void	Server::closeConnection(env &e, const int fd) {
 	cout << "DEBUG : " << fd << std::endl;
 	close(fd);
 	for (unsigned long i(0); i < _pollFds.size(); i++) {
 		if (_pollFds[i].fd == fd)
 			_pollFds.erase(_pollFds.begin() + i);
 	}
+	for(unsigned long i = 0; i < e.clients.size(); i++) {
+		if (e.clients[i].getFD() == fd)
+			e.clients.erase(e.clients.begin() + i);
+	}
 }
 
 
 
-void	Server::run() {
+void	Server::run(env &e) {
 	if (setPoll() == 0)
 		return;
 	
 	for (unsigned long i(0); i < _pollFds.size(); i++) {
 		if (_pollFds[i].fd == _sockfd.fd && _pollFds[i].revents == POLLIN) {
-			addConnection();
+			addConnection(e);
 		}
 		else {
 			if (_pollFds[i].revents == 0){
 				continue;
 			} else if (_pollFds[i].revents & POLLIN) {
 				// Msg("POLLIN", "DEBUG");
-				receive(_pollFds[i].fd);
+				receive(e, _pollFds[i].fd);
 				// sleep(1);
 			} else if (_pollFds[i].revents & POLLOUT) {
+
 				// Msg("POLLOUT", "DEBUG");
-				char	hello[] = "Hello this is I R C ";
-				send(_pollFds[i].fd, hello, sizeof(hello), MSG_DONTWAIT);
+				// char	hello[] = "Hello this is I R C ";
+				// send(_pollFds[i].fd, hello, sizeof(hello), MSG_DONTWAIT);
 				// sleep(1);
 			} else if ((_pollFds[i].revents & POLLHUP ) | (_pollFds[i].revents & POLLRDHUP )) {
 				Msg("POLLHUP or POLLRDHUP", "DEBUG");
-				closeConnection(i);
+				closeConnection(e, i);
 			} else if (_pollFds[i].revents & POLLERR) {
                 string report;
                 report.append("error with client ");
@@ -137,24 +140,25 @@ void	Server::run() {
 	}
 }
 
-void Server::receive(int fd) {
+string Server::receive(env &e, int fd) {
 	char	buf[BUFSIZE];
 	string	received;
 	// Msg("incoming message :", "DEBUG");
 	memset(&buf, 0, sizeof(buf));
 	int nbytes = recv(fd, buf, sizeof(buf), MSG_DONTWAIT);
-	// buf[nbytes] = '\0';
+	buf[nbytes] = '\0';
 	received.append(buf);
     if (!received.empty()) {
         cout << received << endl;
     } else {
 		Msg("received empty string", "DEBUG");
-		closeConnection(fd);
+		closeConnection(e, fd);
 	}
 	while (nbytes != 0) {
 		nbytes = recv(fd, buf, sizeof(buf), MSG_DONTWAIT);
 		received.append(buf);
 	}
+	return (received);
 }
 
 int	Server::setPoll() {

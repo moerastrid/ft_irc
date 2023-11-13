@@ -17,12 +17,15 @@ using std::string;
 using std::vector;
 
 #include "Client.hpp"
+#include "env.hpp"
+// #include "executor.hpp" ?
 
 #define BUFSIZE 512
 
 class Server {
 	private :
 		Server();										//default constructor
+
 		struct sockaddr_in		_sockin;
 		struct pollfd			_sockfd;
 
@@ -32,9 +35,9 @@ class Server {
 
 		void	setUp();
 		int		setPoll();
-		void	addConnection();
-		void	closeConnection(const int i);
-		void	receive(int fd);
+		void	addConnection(env &e);
+		void	closeConnection(env &e, const int i);
+		string	receive(env &e, int fd);
 
 	public :
 		~Server();										// default destructor
@@ -42,12 +45,9 @@ class Server {
 		Server &operator=(const Server &src);			// = sign operator
 		Server(const int port, const string pass);		// constructor (PORT, pass)
 		
-		void				run();
-
+		void				run(env &e);
 		const string		getIP() const;
 		int					getPort() const;
-
-
 };
 
 std::ostream& operator<<(std::ostream& os, const Server& server);
