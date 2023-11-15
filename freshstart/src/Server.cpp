@@ -106,7 +106,7 @@ void	Server::run() {
 	
 	for (unsigned long i(0); i < _pollFds.size(); i++) {
 		if (_pollFds[i].fd == _sockfd.fd && _pollFds[i].revents == POLLIN) {
-			addConnection(e);
+			addConnection();
 		}
 		else {
 			if (_pollFds[i].revents == 0) {
@@ -127,7 +127,7 @@ void	Server::run() {
 			} else if (_pollFds[i].revents & POLLERR) {
                 string report;
                 report.append("error with client ");
-                report.append(to_string(i));
+                report.append(std::to_string(i));
                 report.append(", disconnecting client");
                 Msg(report, "ERROR");
             }
