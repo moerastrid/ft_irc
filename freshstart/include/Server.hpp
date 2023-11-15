@@ -22,6 +22,8 @@ class Server {
 	private :
 		Server();										//default constructor
 
+        const string            _name = "REAL TALK IRC";
+
 		struct sockaddr_in		_sockin;
 		struct pollfd			_sockfd;
 
@@ -44,6 +46,7 @@ class Server {
 		void				run();
 		const string		getIP() const;
 		int					getPort() const;
+        const string        getName() const;
 };
 
 std::ostream& operator<<(std::ostream& os, const Server& server);

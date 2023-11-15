@@ -192,7 +192,11 @@ int	Server::getPort() const {
 	return this->_port;
 }
 
+const string	Server::getName() const {
+	return this->_name;
+}
+
 std::ostream& operator<<(std::ostream& os, const Server& serv) {
-	os << "Server(" << serv.getIP() << ", " << serv.getPort() << ")";
+	os << "Server(" << serv.getName() << ", " << serv.getIP() << ", " << serv.getPort() << ")";
 	return os;
 }

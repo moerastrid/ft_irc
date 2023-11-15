@@ -1,10 +1,8 @@
 #include "ircserver.hpp"
-#include "Msg.hpp"
-#include "Server.hpp"
 
 
 int main(int argc, char **argv) {
-	int			port = -1;
+	int			port;
 
 	port = parse(argc, argv);
 	if (port < 0) {
@@ -12,11 +10,11 @@ int main(int argc, char **argv) {
 	}
 
 	Server ircServer(port, argv[2]);
-	std::cout << "Successfully booted the REAL TALK IRC " << ircServer << " \\^.^/" << std::endl;
+	std::cout << "Successfully booted the " << ircServer << " \\^.^/" << std::endl;
 	
 	while (1) {
 		ircServer.run();
 	}
-	std::cout << "Successfully ended the REAL TALK IRC " << ircServer << " \\^.^/" << std::endl;
+	std::cout << "Successfully ended the " << ircServer << " \\^.^/" << std::endl;
 	return (EXIT_SUCCESS);
 }
