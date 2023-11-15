@@ -67,7 +67,7 @@ void	Server::setUp() {
 	}
 }
 
-void	Server::addConnection(env &e) {
+void	Server::addConnection() {
 	socklen_t	tempSize = sizeof(_sockin);
 	struct pollfd new_fd;
 	memset(&new_fd, 0, sizeof(new_fd));
@@ -85,43 +85,35 @@ void	Server::addConnection(env &e) {
 		Msg("Connection accepted on " + std::to_string(new_fd.fd), "INFO");
 		new_fd.events = POLLIN|POLLOUT|POLLHUP|POLLRDHUP;
 		_pollFds.push_back(new_fd);
-		e.clients.push_back(Client(new_fd.fd));
 		// add client
 	}
 }
 
-void	Server::closeConnection(env &e, const int fd) {
+void	Server::closeConnection(const int fd) {
 	cout << "DEBUG : " << fd << std::endl;
 	close(fd);
 	for (unsigned long i(0); i < _pollFds.size(); i++) {
 		if (_pollFds[i].fd == fd)
 			_pollFds.erase(_pollFds.begin() + i);
 	}
-	for(unsigned long i = 0; i < e.clients.size(); i++) {
-		if (e.clients[i].getFD() == fd)
-			e.clients.erase(e.clients.begin() + i);
-	}
 }
 
 
 
-void	Server::run(env &e) {
+void	Server::run() {
 	if (setPoll() == 0)
 		return;
 	
-	Executor ex(e);
 	for (unsigned long i(0); i < _pollFds.size(); i++) {
 		if (_pollFds[i].fd == _sockfd.fd && _pollFds[i].revents == POLLIN) {
 			addConnection(e);
 		}
 		else {
-			if (_pollFds[i].revents == 0){
+			if (_pollFds[i].revents == 0) {
 				continue;
 			} else if (_pollFds[i].revents & POLLIN) {
 				// Msg("POLLIN", "DEBUG");
-				string incoming = receive(e, _pollFds[i].fd);
-				Command cmd(incoming);
-				string reply = ex.run(cmd, _pollFds[i].fd);
+				string incoming = receive(_pollFds[i].fd);
 				// sleep(1);
 			} else if (_pollFds[i].revents & POLLOUT) {
 
@@ -131,7 +123,7 @@ void	Server::run(env &e) {
 				// sleep(1);
 			} else if ((_pollFds[i].revents & POLLHUP ) | (_pollFds[i].revents & POLLRDHUP )) {
 				Msg("POLLHUP or POLLRDHUP", "DEBUG");
-				closeConnection(e, i);
+				closeConnection(i);
 			} else if (_pollFds[i].revents & POLLERR) {
                 string report;
                 report.append("error with client ");
@@ -143,7 +135,7 @@ void	Server::run(env &e) {
 	}
 }
 
-string Server::receive(env &e, int fd) {
+string Server::receive(int fd) {
 	char	buf[BUFSIZE];
 	string	received;
 	// Msg("incoming message :", "DEBUG");
@@ -157,7 +149,7 @@ string Server::receive(env &e, int fd) {
         cout << received << endl;
     } else {
 		Msg("received empty string", "DEBUG");
-		closeConnection(e, fd);
+		closeConnection(fd);
 	}
 	// while (nbytes != 0) {
 	// 	memset(&buf, 0, sizeof(buf));

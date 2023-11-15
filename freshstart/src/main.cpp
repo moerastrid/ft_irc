@@ -5,7 +5,6 @@
 
 int main(int argc, char **argv) {
 	int			port = -1;
-	env			e;
 
 	port = parse(argc, argv);
 	if (port < 0) {
@@ -15,11 +14,8 @@ int main(int argc, char **argv) {
 	Server ircServer(port, argv[2]);
 	std::cout << "Successfully booted the REAL TALK IRC " << ircServer << " \\^.^/" << std::endl;
 	
-	e.server_address = ircServer.getIP();
-	e.server_password = argv[2];
-
 	while (1) {
-		ircServer.run(e);
+		ircServer.run();
 	}
 	std::cout << "Successfully ended the REAL TALK IRC " << ircServer << " \\^.^/" << std::endl;
 	return (EXIT_SUCCESS);

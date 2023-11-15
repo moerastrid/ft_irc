@@ -16,10 +16,6 @@ using std::string;
 #include <vector>
 using std::vector;
 
-#include "Client.hpp"
-#include "env.hpp"
-#include "Executor.hpp"
-
 #define BUFSIZE 512
 
 class Server {
@@ -35,9 +31,9 @@ class Server {
 
 		void	setUp();
 		int		setPoll();
-		void	addConnection(env &e);
-		void	closeConnection(env &e, const int i);
-		string	receive(env &e, int fd);
+		void	addConnection();
+		void	closeConnection(const int i);
+		string	receive(int fd);
 
 	public :
 		~Server();										// default destructor
@@ -45,7 +41,7 @@ class Server {
 		Server &operator=(const Server &src);			// = sign operator
 		Server(const int port, const string pass);		// constructor (PORT, pass)
 		
-		void				run(env &e);
+		void				run();
 		const string		getIP() const;
 		int					getPort() const;
 };
