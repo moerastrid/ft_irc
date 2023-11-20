@@ -18,6 +18,7 @@ using std::vector;
 
 #include "Msg.hpp"
 #include "Client.hpp"
+#include "Executor.hpp"
 
 #define BUFSIZE 512
 
@@ -25,7 +26,7 @@ class Server {
 	private :
 		Server();										//default constructor
 
-        const string            _name = "REAL TALK IRC";
+		const string			_name = "REAL TALK IRC";
 		string					_hostname;
 		string					_ip;
 
@@ -51,11 +52,38 @@ class Server {
 		Server &operator=(const Server &src);			// = sign operator
 		Server(const int port, const string pass);		// constructor (PORT, pass)
 		
-		void				run();
+		void				run(Executor& ex);
 		const string		getIP() const;
 		int					getPort() const;
-        const string        getName() const;
+		const string		getName() const;
 		const string		getHostname() const;
+};
+
+class CustomOutputStream : public ostream {
+public:
+	CustomOutputStream(ostream& output) : ostream(output.rdbuf()), output_stream(output) {}
+
+	template <typename T>
+	CustomOutputStream& operator<<(const T& value) {
+		for (const auto& el : value) {
+			if (el == '\n') {
+				// Special handling for printing the literal "\n"
+				output_stream << "\\n";
+			} else {
+				output_stream << el;
+			}
+		}
+		return *this;
+	};
+
+	// Override the << operator for endl
+	CustomOutputStream& operator<<(ostream& (*manipulator)(ostream&)) {
+		manipulator(output_stream);
+		return *this;
+	};
+
+private:
+	ostream& output_stream;
 };
 
 std::ostream& operator<<(std::ostream& os, const Server& server);
