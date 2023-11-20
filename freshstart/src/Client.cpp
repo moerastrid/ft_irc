@@ -53,6 +53,10 @@ void Client::takeOperator(Channel& c) {
 	c.removeOperator(*this);
 }
 
+const struct pollfd	&Client::getPFD() const {
+	return pfd;
+}
+
 int Client::getFD() const {
 	return this->pfd.fd;
 }

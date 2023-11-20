@@ -21,13 +21,14 @@ class Client {
 private:
 	// const int		fd;
 	struct pollfd	pfd;
-	
+
 	string			nickname;
 	string			username;
 	string			hostname;
 	string			servername;
 	string			realname;
 	string			password;
+	bool			sending;
 
 public:
 	~Client();
@@ -35,6 +36,7 @@ public:
 	Client(const Client& other);
 	Client& operator=(const Client& other);
 
+	const struct pollfd	&getPFD() const;
 	int getFD() const;
 	const string& getNickname() const;
 	const string& getUsername() const;

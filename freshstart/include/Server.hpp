@@ -16,7 +16,6 @@ using std::string;
 #include <vector>
 using std::vector;
 
-
 #include "Msg.hpp"
 #include "Client.hpp"
 
@@ -35,13 +34,13 @@ class Server {
 
 		int						_port;
 		string					_pass;
-		vector<struct pollfd>	_pollFds;
-		// vector<client>		_clients;
+		// vector<struct pollfd>	_pollFds;
+		vector<Client>			_clients;
 
 
 		void	setUp();
 		void	setInfo();
-		int		setPoll();
+		int		setPoll(struct pollfd *fds, size_t fdsize);
 		void	addConnection();
 		void	closeConnection(const int i);
 		string	receive(int fd);

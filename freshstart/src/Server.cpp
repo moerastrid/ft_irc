@@ -21,7 +21,9 @@ Server &Server::operator=(const Server &src) {
 	_sockfd = src._sockfd;
 	_port = src._port;
 	_pass = src._pass;
-	_pollFds = src._pollFds;
+	_hostname = src._hostname;
+	_ip = src._ip;
+	_clients = src._clients;
 	return (*this);
 }
 
@@ -38,7 +40,7 @@ Server::Server(const int port, const string pass) : _port(port), _pass(pass) {
 
 	Server::setUp();
 	Server::setInfo();
-	_pollFds.push_back(_sockfd);
+	// _pollFds.push_back(_sockfd);
 
 	Msg("server waiting for connections ... ", "INFO");
 }
@@ -87,11 +89,11 @@ void	Server::setUp() {
 
 void	Server::addConnection() {
 	socklen_t	tempSize = sizeof(_sockin);
-	struct pollfd new_fd;
+	int new_fd;
 	memset(&new_fd, 0, sizeof(new_fd));
 
-	new_fd.fd = accept(_sockfd.fd, (struct sockaddr *)&_sockin, (socklen_t *)&tempSize);
-	if (new_fd.fd == -1) {
+	new_fd = accept(_sockfd.fd, (struct sockaddr *)&_sockin, (socklen_t *)&tempSize);
+	if (new_fd == -1) {
 		// if (errno == EWOULDBLOCK || errno == EAGAIN) {
 		// 	// Msg("No pending connections", "INFO");
 		// 	return ;
@@ -100,10 +102,10 @@ void	Server::addConnection() {
 			return ;
 		// }
 	} else {
-		Msg("Connection accepted on " + std::to_string(new_fd.fd), "INFO");
-		new_fd.events = POLLIN|POLLHUP|POLLRDHUP;
+		Msg("Connection accepted on " + std::to_string(new_fd), "INFO");
 		
-		_pollFds.push_back(new_fd);
+		_clients.push_back(Client(new_fd));
+		// _pollFds.push_back(new_fd);
 
 		// add client
 	}
@@ -112,9 +114,9 @@ void	Server::addConnection() {
 void	Server::closeConnection(const int fd) {
 	Msg("Connection closed on " + std::to_string(fd), "INFO");
 	close(fd);
-	for (unsigned long i(0); i < _pollFds.size(); i++) {
-		if (_pollFds[i].fd == fd)
-			_pollFds.erase(_pollFds.begin() + i);
+	for (unsigned long i(0); i < _clients.size(); i++) {
+		if (_clients[i].getFD() == fd)
+			_clients.erase(_clients.begin() + i);
 	}
 
 	// remove client
@@ -123,35 +125,32 @@ void	Server::closeConnection(const int fd) {
 
 
 void	Server::run() {
-	if (setPoll() == 0)
+	size_t fdsize = _clients.size() + 1;
+	struct pollfd fds[fdsize];
+
+	if (setPoll(fds, fdsize) == 0)
 		return;
 	
-	for (unsigned long i(0); i < _pollFds.size(); i++) {
-		if (_pollFds[i].fd == _sockfd.fd && _pollFds[i].revents == POLLIN) {
+	for (unsigned long i(0); i < fdsize; i++) {
+		if (fds[i].fd == _sockfd.fd && fds[i].revents == POLLIN) {
 			addConnection();
 		}
 		else {
-			if (_pollFds[i].revents == 0) {
+			if (fds[i].revents == 0) {
 				continue;
-			} else if (_pollFds[i].revents & POLLIN) {
+			} else if (fds[i].revents & POLLIN) {
 				Msg("POLLIN", "DEBUG");
-				string incoming = receive(_pollFds[i].fd);
-				// sleep(1);
-			} else if (_pollFds[i].revents & POLLOUT) {
-				
-
+				string incoming = receive(fds[i].fd);
+			} else if (fds[i].revents & POLLOUT) {
 				Msg("POLLOUT", "DEBUG");
 				char	hello[] = "Hello this is patrick ";
-				send(_pollFds[i].fd, hello, sizeof(hello), MSG_DONTWAIT);
-			} else if ((_pollFds[i].revents & POLLHUP ) | (_pollFds[i].revents & POLLRDHUP )) {
+				send(fds[i].fd, hello, sizeof(hello), MSG_DONTWAIT);
+			} else if ((fds[i].revents & POLLHUP ) | (fds[i].revents & POLLRDHUP )) {
 				Msg("POLLHUP or POLLRDHUP", "DEBUG");
 				closeConnection(i);
-			} else if (_pollFds[i].revents & POLLERR) {
-                string report;
-                report.append("error with client ");
-                report.append(std::to_string(i));
-                report.append(", disconnecting client");
-                Msg(report, "ERROR");
+			} else if (fds[i].revents & POLLERR) {
+                Msg("error with client " + std::to_string(i), "ERROR");
+				closeConnection(i);
             }
 		}
 	}
@@ -160,7 +159,7 @@ void	Server::run() {
 string Server::receive(int fd) {
 	char	buf[BUFSIZE];
 	string	received;
-	// Msg("incoming message :", "DEBUG");
+	Msg("incoming message from client" + _clients[fd - 1].getUsername(), "DEBUG");
 	memset(&buf, 0, sizeof(buf));
 	int nbytes = recv(fd, buf, sizeof(buf), MSG_DONTWAIT);
 	if (nbytes == -1)
@@ -168,7 +167,7 @@ string Server::receive(int fd) {
 	// buf[nbytes] = '\0';
 	received.append(buf);
     if (!received.empty()) {
-        cout << received << endl;
+        cout << received;
     } else {
 		Msg("received empty string", "DEBUG");
 		closeConnection(fd);
@@ -181,8 +180,19 @@ string Server::receive(int fd) {
 	return (received);
 }
 
-int	Server::setPoll() {
-	int ret = poll(_pollFds.data(), _pollFds.size(), -1);
+int	Server::setPoll(struct pollfd *fds, size_t fdsize) {
+	// vector<struct pollfd> pollFds;
+	
+
+	// static struct pollfd fds[100];
+
+	fds[0] = _sockfd;
+	for (size_t i(1); i < fdsize; i++) {
+		fds[i] = _clients[i - 1].getPFD();
+	}
+
+	int ret = poll(fds, fdsize, -1);
+	// int ret = poll(_pollFds.data(), _pollFds.size(), -1);
 	if (ret < 0) {
 		perror("ERROR\tpoll :");
 		exit(EXIT_FAILURE);
