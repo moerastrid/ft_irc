@@ -52,6 +52,10 @@ public:
 	void setPassword(string& password);
 	void makeOperator(Channel& c);
 	void takeOperator(Channel& c);
+
+	bool checkEvent(short event);
+	bool checkRevent(short revent);
+
 };
 
 bool operator==(const Client& lhs, const Client& rhs);
