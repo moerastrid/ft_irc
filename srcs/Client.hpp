@@ -10,13 +10,17 @@ using std::ostream;
 #include <string>
 using std::to_string;
 
+#include <poll.h>
+
+
 #include "Channel.hpp"
 
 class Channel; // Forward declaration
 
 class Client {
 private:
-	const int		fd;
+	// const int		fd;
+	struct pollfd	pfd;
 	string			nickname;
 	string			username;
 	string			hostname;
