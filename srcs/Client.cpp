@@ -79,11 +79,11 @@ bool Client::isFounder(Channel& c) const {
 }
 
 bool Client::checkEvent(short event) {
-	return this->pfd->event | event;
+	return this->pfd.events | event;
 }
 
 bool Client::checkRevent(short revent) {
-	return this->pfd->revent | revent;
+	return this->pfd.revents | revent;
 }
 
 ostream& operator<<(ostream& os, const Client& client) {
