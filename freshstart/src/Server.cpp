@@ -31,7 +31,7 @@ Server::Server(const int port, const string pass) : _port(port), _pass(pass) {
 	memset(&_sockin, 0, sizeof(_sockin));
 	memset(&_sockfd, 0, sizeof(_sockfd));
 
-	_sockfd.events = POLLIN|POLLOUT|POLLHUP;
+	_sockfd.events = POLLIN|POLLHUP;
 
 	_sockin.sin_family = AF_INET;
 	_sockin.sin_port = htons(_port);
@@ -49,8 +49,8 @@ void	Server::setUp() {
 		perror("ERROR\tServer::setUp socket()");
     	exit(EXIT_FAILURE);
 	}
+	// fcntl(_sockfd.fd, F_SETFL, O_NONBLOCK);
 	int yes = 1;
-	fcntl(_sockfd.fd, F_SETFL, O_NONBLOCK);
 	if (setsockopt(_sockfd.fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1) {
 		perror("ERROR\tServer::setUp setsockopt()");
 		exit(EXIT_FAILURE);
@@ -112,13 +112,13 @@ void	Server::run() {
 			if (_pollFds[i].revents == 0) {
 				continue;
 			} else if (_pollFds[i].revents & POLLIN) {
-				// Msg("POLLIN", "DEBUG");
+				Msg("POLLIN", "DEBUG");
 				string incoming = receive(_pollFds[i].fd);
 				// sleep(1);
 			} else if (_pollFds[i].revents & POLLOUT) {
 
 				// Msg("POLLOUT", "DEBUG");
-				// char	hello[] = "Hello this is I R C ";
+				// char	hello[] = "Hello this is patrick ";
 				// send(_pollFds[i].fd, hello, sizeof(hello), MSG_DONTWAIT);
 				// sleep(1);
 			} else if ((_pollFds[i].revents & POLLHUP ) | (_pollFds[i].revents & POLLRDHUP )) {
