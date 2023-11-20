@@ -28,6 +28,10 @@ Client& Client::operator=(const Client& other) {
 	return *this;
 }
 
+void Client::setRevents(const short& revents) {
+	this->pfd.revents = revents;
+}
+
 void Client::setNickname(string& nickname) {
 	this->nickname = nickname;
 }
@@ -83,11 +87,11 @@ bool Client::isFounder(Channel& c) const {
 }
 
 bool Client::checkEvent(short event) {
-	return this->pfd.events | event;
+	return this->pfd.events & event;
 }
 
 bool Client::checkRevent(short revent) {
-	return this->pfd.revents | revent;
+	return this->pfd.revents & revent;
 }
 
 ostream& operator<<(ostream& os, const Client& client) {

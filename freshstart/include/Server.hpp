@@ -8,7 +8,6 @@
 #include <unistd.h>
 #include <cstdlib>
 #include <cstring>
-#include <poll.h>
 
 #include <string>
 using std::string;
@@ -20,6 +19,8 @@ using std::vector;
 #include "Client.hpp"
 
 #define BUFSIZE 512
+
+#include <poll.h>
 
 class Server {
 	private :
@@ -40,7 +41,8 @@ class Server {
 
 		void	setUp();
 		void	setInfo();
-		int		setPoll(struct pollfd *fds, size_t fdsize);
+		int		setPoll();
+		void	incomingConnection();
 		void	addConnection();
 		void	closeConnection(const int i);
 		string	receive(int fd);
@@ -56,6 +58,9 @@ class Server {
 		int					getPort() const;
         const string        getName() const;
 		const string		getHostname() const;
+		struct pollfd**		getPollFDS() const;
+		Client* 					getClientByFD(int fd);
+		vector<Client>::iterator	getItToClientByFD(int fd);
 };
 
 std::ostream& operator<<(std::ostream& os, const Server& server);

@@ -47,6 +47,7 @@ public:
 	bool isOperator(Channel& c) const;
 	bool isFounder(Channel& c) const;
 
+	void setRevents(const short& revents);
 	void setNickname(string& nickname);
 	void setUsername(string& username);
 	void setHostname(string& hostname);

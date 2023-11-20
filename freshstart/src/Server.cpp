@@ -87,6 +87,25 @@ void	Server::setUp() {
 	}
 }
 
+
+Client* Server::getClientByFD(int fd) {
+	vector<Client>& clients = this->_clients;
+	for (vector<Client>::iterator it = clients.begin(); it != clients.end(); it++) {
+		if (it->getFD() == fd)
+			return &(*it);
+	}
+	return NULL;
+}
+
+vector<Client>::iterator	Server::getItToClientByFD(int fd) {
+	vector<Client>& clients = this->_clients;
+	for (vector<Client>::iterator it = clients.begin(); it != clients.end(); it++) {
+		if (it->getFD() == fd)
+			return (it);
+	}
+	return clients.end();
+}
+
 void	Server::addConnection() {
 	socklen_t	tempSize = sizeof(_sockin);
 	int new_fd;
@@ -94,69 +113,65 @@ void	Server::addConnection() {
 
 	new_fd = accept(_sockfd.fd, (struct sockaddr *)&_sockin, (socklen_t *)&tempSize);
 	if (new_fd == -1) {
-		// if (errno == EWOULDBLOCK || errno == EAGAIN) {
-		// 	// Msg("No pending connections", "INFO");
-		// 	return ;
-		// } else {
 			perror("accept");
 			return ;
-		// }
 	} else {
 		Msg("Connection accepted on " + std::to_string(new_fd), "INFO");
-		
 		_clients.push_back(Client(new_fd));
-		
-		
-		// _pollFds.push_back(new_fd);
-
-		// add client
 	}
 }
 
 void	Server::closeConnection(const int fd) {
 	Msg("Connection closed on " + std::to_string(fd), "INFO");
 	close(fd);
+	_clients.erase(getItToClientByFD(fd));
 	for (unsigned long i(0); i < _clients.size(); i++) {
 		if (_clients[i].getFD() == fd)
 			_clients.erase(_clients.begin() + i);
 	}
-
-	// remove client
 }
 
 
 
 void	Server::run() {
-	size_t fdsize = _clients.size() + 1;
-	struct pollfd fds[fdsize];
-
-	if (setPoll(fds, fdsize) == 0)
+	if (setPoll() == 0)
 		return;
 	
-	for (unsigned long i(0); i < fdsize; i++) {
-		if (fds[i].fd == _sockfd.fd && fds[i].revents == POLLIN) {
-			addConnection();
+	if (_sockfd.revents & POLLIN) {
+		addConnection();
+	} else if (_sockfd.revents & POLLERR ) {
+		Msg("HELP", "ERROR");
+		exit(-1) ;
+	}
+	
+	/* bool checkEvent(short& event);
+	bool checkRevent(short& revent); */
+
+	for (size_t	i = 0; i < _clients.size(); i++) {
+		if (_clients[i].getPFD().revents == 0)
+			continue ;
+		// if (_clients[i].getPFD().revents & POLLHUP) {
+		// 	Msg("POLLHUP", "DEBUG");
+	 	// 	closeConnection(_clients[i].getFD());
+		// 	continue ;
+		// }
+		if (_clients[i].checkRevent(POLLHUP|POLLRDHUP)) {
+			Msg("POLLHUP/POLLRDHUP", "DEBUG");
+	 		closeConnection(_clients[i].getFD());
+			continue ;
 		}
-		else {
-			if (fds[i].revents == 0) {
-				continue;
-			} else if (fds[i].revents & POLLIN) {
-				Msg("POLLIN", "DEBUG");
-				string incoming = receive(fds[i].fd);
-			} else if (fds[i].revents & POLLOUT) {
-				Msg("POLLOUT", "DEBUG");
-				char	hello[] = "Hello this is patrick ";
-				send(fds[i].fd, hello, sizeof(hello), MSG_DONTWAIT);
-			} else if ((fds[i].revents & POLLHUP ) | (fds[i].revents & POLLRDHUP )) {
-				Msg("POLLHUP or POLLRDHUP", "DEBUG");
-				closeConnection(i);
-			} else if (fds[i].revents & POLLERR) {
-                Msg("error with client " + std::to_string(i), "ERROR");
-				closeConnection(i);
-            }
+		if (_clients[i].getPFD().revents & POLLIN) {
+			Msg("POLLIN", "DEBUG");
+			string incoming = receive(_clients[i].getFD());
 		}
+		if (_clients[i].getPFD().revents & POLLOUT) {
+			Msg("POLLOUT", "DEBUG");
+			char	hello[] = "Hello this is patrick ";
+			send(_clients[i].getFD(), hello, sizeof(hello), MSG_DONTWAIT);
+		} 
 	}
 }
+
 
 string Server::receive(int fd) {
 	char	buf[BUFSIZE];
@@ -182,24 +197,28 @@ string Server::receive(int fd) {
 	return (received);
 }
 
-int	Server::setPoll(struct pollfd *fds, size_t fdsize) {
-	// vector<struct pollfd> pollFds;
-	
+int	Server::setPoll() {
+	vector<struct pollfd>	pollFds;
 
-	// static struct pollfd fds[100];
-
-	fds[0] = _sockfd;
-	for (size_t i(1); i < fdsize; i++) {
-		fds[i] = _clients[i - 1].getPFD();
+	pollFds.push_back(_sockfd);
+	for (const auto& client : _clients) {
+		pollFds.push_back(client.getPFD());
 	}
-
-	int ret = poll(fds, fdsize, -1);
-	// int ret = poll(_pollFds.data(), _pollFds.size(), -1);
+	int ret = poll(pollFds.data(), pollFds.size(), -1);
 	if (ret < 0) {
 		perror("ERROR\tpoll :");
 		exit(EXIT_FAILURE);
 	} else if (ret == 0) {
 		Msg("None of the FD's are ready", "INFO");
+	}
+
+	for (const auto &pollFd : pollFds) {
+		if (pollFd.fd == _sockfd.fd) {
+			_sockfd.revents = pollFd.revents;
+		} else {
+			Client *C = getClientByFD(pollFd.fd);
+			C->setRevents(pollFd.revents);
+		}
 	}
 	return(ret);
 }
