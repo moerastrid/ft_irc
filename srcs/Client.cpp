@@ -2,7 +2,7 @@
 
 Client::Client(int fd) {
 	this->pfd.fd = fd; // effectively const
-	this->pfd.events = POLLIN|POLLOUT|POLLHUP|POLLRDHUP;
+	this->pfd.events = POLLIN|POLLHUP|POLLRDHUP;
 };
 
 Client::~Client() {}
