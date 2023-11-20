@@ -38,9 +38,28 @@ Server::Server(const int port, const string pass) : _port(port), _pass(pass) {
 	_sockin.sin_addr.s_addr = INADDR_ANY; /*perhaps htonl(INADDR_ANY); instead?*/
 
 	Server::setUp();
+	Server::setInfo();
 	_pollFds.push_back(_sockfd);
 
 	Msg("server waiting for connections ... ", "INFO");
+}
+
+void	Server::setInfo() {
+	char	hostname[MAXHOSTNAMELEN];
+	bzero(hostname, sizeof(hostname));
+	if (gethostname(hostname, MAXHOSTNAMELEN) != 0) {
+		perror("Server::setHostInfo gethostname");
+    	exit(EXIT_FAILURE);
+	}
+	_hostname = hostname;
+	struct hostent *host_entry;
+	host_entry = gethostbyname(hostname);
+   	if (host_entry == NULL) {
+    	perror("Server::setHostInfo gethostbyname");
+    	exit(EXIT_FAILURE);
+   	}
+	string ip = inet_ntoa(*((struct in_addr*)host_entry->h_addr_list[0]));
+	_ip = ip;
 }
 
 void	Server::setUp() {
@@ -83,19 +102,24 @@ void	Server::addConnection() {
 		}
 	} else {
 		Msg("Connection accepted on " + std::to_string(new_fd.fd), "INFO");
-		new_fd.events = POLLIN|POLLOUT|POLLHUP|POLLRDHUP;
+		new_fd.events = POLLIN|POLLHUP|POLLRDHUP;
+		
 		_pollFds.push_back(new_fd);
+
 		// add client
 	}
 }
 
 void	Server::closeConnection(const int fd) {
-	cout << "DEBUG : " << fd << std::endl;
+	Msg("Connection closed on " + std::to_string(fd), "INFO");
+	// cout << "DEBUG : " << fd << std::endl;
 	close(fd);
 	for (unsigned long i(0); i < _pollFds.size(); i++) {
 		if (_pollFds[i].fd == fd)
 			_pollFds.erase(_pollFds.begin() + i);
 	}
+
+	// remove client
 }
 
 
@@ -116,11 +140,11 @@ void	Server::run() {
 				string incoming = receive(_pollFds[i].fd);
 				// sleep(1);
 			} else if (_pollFds[i].revents & POLLOUT) {
+				
 
-				// Msg("POLLOUT", "DEBUG");
-				// char	hello[] = "Hello this is patrick ";
-				// send(_pollFds[i].fd, hello, sizeof(hello), MSG_DONTWAIT);
-				// sleep(1);
+				Msg("POLLOUT", "DEBUG");
+				char	hello[] = "Hello this is patrick ";
+				send(_pollFds[i].fd, hello, sizeof(hello), MSG_DONTWAIT);
 			} else if ((_pollFds[i].revents & POLLHUP ) | (_pollFds[i].revents & POLLRDHUP )) {
 				Msg("POLLHUP or POLLRDHUP", "DEBUG");
 				closeConnection(i);
@@ -170,33 +194,23 @@ int	Server::setPoll() {
 	return(ret);
 }
 
-const string	Server::getIP() const {
-	char	hostname[MAXHOSTNAMELEN];
-	bzero(hostname, sizeof(hostname));
-	if (gethostname(hostname, MAXHOSTNAMELEN) != 0) {
-		perror("Server::setHostInfo gethostname");
-    	exit(EXIT_FAILURE);
-	}
+const string	Server::getHostname() const {
+	return _hostname;
+}
 
-	struct hostent *host_entry;
-	host_entry = gethostbyname(hostname);
-   	if (host_entry == NULL) {
-    	perror("Server::setHostInfo gethostbyname");
-    	exit(EXIT_FAILURE);
-   	}
-	string ip = inet_ntoa(*((struct in_addr*)host_entry->h_addr_list[0]));
-	return (ip);
+const string	Server::getIP() const {
+	return _ip;
 }
 
 int	Server::getPort() const {
-	return this->_port;
+	return _port;
 }
 
 const string	Server::getName() const {
-	return this->_name;
+	return _name;
 }
 
 std::ostream& operator<<(std::ostream& os, const Server& serv) {
-	os << "Server(" << serv.getName() << ", " << serv.getIP() << ", " << serv.getPort() << ")";
+	os << "Server(" << serv.getName() << ", " << serv.getHostname() << ", " << serv.getIP() << ", " << serv.getPort() << ")";
 	return os;
 }

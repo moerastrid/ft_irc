@@ -23,6 +23,8 @@ class Server {
 		Server();										//default constructor
 
         const string            _name = "REAL TALK IRC";
+		string					_hostname;
+		string					_ip;
 
 		struct sockaddr_in		_sockin;
 		struct pollfd			_sockfd;
@@ -32,6 +34,7 @@ class Server {
 		vector<struct pollfd>	_pollFds;
 
 		void	setUp();
+		void	setInfo();
 		int		setPoll();
 		void	addConnection();
 		void	closeConnection(const int i);
@@ -47,6 +50,7 @@ class Server {
 		const string		getIP() const;
 		int					getPort() const;
         const string        getName() const;
+		const string		getHostname() const;
 };
 
 std::ostream& operator<<(std::ostream& os, const Server& server);
