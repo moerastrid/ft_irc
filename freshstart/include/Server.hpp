@@ -16,6 +16,10 @@ using std::string;
 #include <vector>
 using std::vector;
 
+
+#include "Msg.hpp"
+#include "Client.hpp"
+
 #define BUFSIZE 512
 
 class Server {
@@ -32,6 +36,8 @@ class Server {
 		int						_port;
 		string					_pass;
 		vector<struct pollfd>	_pollFds;
+		// vector<client>		_clients;
+
 
 		void	setUp();
 		void	setInfo();

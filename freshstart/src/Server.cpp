@@ -1,5 +1,4 @@
 #include "Server.hpp"
-#include "Msg.hpp"
 
 Server::Server() {
 	Msg("Server default constructor", "DEBUG");
@@ -93,13 +92,13 @@ void	Server::addConnection() {
 
 	new_fd.fd = accept(_sockfd.fd, (struct sockaddr *)&_sockin, (socklen_t *)&tempSize);
 	if (new_fd.fd == -1) {
-		if (errno == EWOULDBLOCK || errno == EAGAIN) {
-			// Msg("No pending connections", "INFO");
-			return ;
-		} else {
+		// if (errno == EWOULDBLOCK || errno == EAGAIN) {
+		// 	// Msg("No pending connections", "INFO");
+		// 	return ;
+		// } else {
 			perror("accept");
 			return ;
-		}
+		// }
 	} else {
 		Msg("Connection accepted on " + std::to_string(new_fd.fd), "INFO");
 		new_fd.events = POLLIN|POLLHUP|POLLRDHUP;
@@ -112,7 +111,6 @@ void	Server::addConnection() {
 
 void	Server::closeConnection(const int fd) {
 	Msg("Connection closed on " + std::to_string(fd), "INFO");
-	// cout << "DEBUG : " << fd << std::endl;
 	close(fd);
 	for (unsigned long i(0); i < _pollFds.size(); i++) {
 		if (_pollFds[i].fd == fd)
