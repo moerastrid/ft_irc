@@ -16,6 +16,10 @@ using std::string;
 #include <vector>
 using std::vector;
 
+
+#include "Msg.hpp"
+#include "Client.hpp"
+
 #define BUFSIZE 512
 
 class Server {
@@ -23,6 +27,8 @@ class Server {
 		Server();										//default constructor
 
         const string            _name = "REAL TALK IRC";
+		string					_hostname;
+		string					_ip;
 
 		struct sockaddr_in		_sockin;
 		struct pollfd			_sockfd;
@@ -30,8 +36,11 @@ class Server {
 		int						_port;
 		string					_pass;
 		vector<struct pollfd>	_pollFds;
+		// vector<client>		_clients;
+
 
 		void	setUp();
+		void	setInfo();
 		int		setPoll();
 		void	addConnection();
 		void	closeConnection(const int i);
@@ -47,6 +56,7 @@ class Server {
 		const string		getIP() const;
 		int					getPort() const;
         const string        getName() const;
+		const string		getHostname() const;
 };
 
 std::ostream& operator<<(std::ostream& os, const Server& server);

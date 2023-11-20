@@ -7,12 +7,23 @@ OBJ_DIR = obj
 
 HDR = include/ircserver.hpp \
 	include/Msg.hpp \
-	include/Server.hpp
+	include/Server.hpp \
+	include/Channel.hpp \
+	include/Client.hpp \
+	include/Command.hpp \
+	include/env.hpp \
+	include/Executor.hpp
 
 SRC = $(SRC_DIR)/main.cpp \
 	$(SRC_DIR)/parse.cpp \
 	$(SRC_DIR)/Msg.cpp \
-	$(SRC_DIR)/Server.cpp
+	$(SRC_DIR)/Server.cpp \
+	$(SRC_DIR)/Channel.cpp \
+	$(SRC_DIR)/Client.cpp \
+	$(SRC_DIR)/Command.cpp \
+	$(SRC_DIR)/Executor.cpp \
+	$(SRC_DIR)/Executor_mode.cpp
+
 
 OBJ = $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRC))
 

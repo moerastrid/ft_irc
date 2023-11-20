@@ -1,5 +1,4 @@
 #include "Server.hpp"
-#include "Msg.hpp"
 
 Server::Server() {
 	Msg("Server default constructor", "DEBUG");
@@ -31,16 +30,35 @@ Server::Server(const int port, const string pass) : _port(port), _pass(pass) {
 	memset(&_sockin, 0, sizeof(_sockin));
 	memset(&_sockfd, 0, sizeof(_sockfd));
 
-	_sockfd.events = POLLIN|POLLOUT|POLLHUP;
+	_sockfd.events = POLLIN|POLLHUP;
 
 	_sockin.sin_family = AF_INET;
 	_sockin.sin_port = htons(_port);
 	_sockin.sin_addr.s_addr = INADDR_ANY; /*perhaps htonl(INADDR_ANY); instead?*/
 
 	Server::setUp();
+	Server::setInfo();
 	_pollFds.push_back(_sockfd);
 
 	Msg("server waiting for connections ... ", "INFO");
+}
+
+void	Server::setInfo() {
+	char	hostname[MAXHOSTNAMELEN];
+	bzero(hostname, sizeof(hostname));
+	if (gethostname(hostname, MAXHOSTNAMELEN) != 0) {
+		perror("Server::setHostInfo gethostname");
+    	exit(EXIT_FAILURE);
+	}
+	_hostname = hostname;
+	struct hostent *host_entry;
+	host_entry = gethostbyname(hostname);
+   	if (host_entry == NULL) {
+    	perror("Server::setHostInfo gethostbyname");
+    	exit(EXIT_FAILURE);
+   	}
+	string ip = inet_ntoa(*((struct in_addr*)host_entry->h_addr_list[0]));
+	_ip = ip;
 }
 
 void	Server::setUp() {
@@ -49,8 +67,8 @@ void	Server::setUp() {
 		perror("ERROR\tServer::setUp socket()");
     	exit(EXIT_FAILURE);
 	}
+	// fcntl(_sockfd.fd, F_SETFL, O_NONBLOCK);
 	int yes = 1;
-	fcntl(_sockfd.fd, F_SETFL, O_NONBLOCK);
 	if (setsockopt(_sockfd.fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1) {
 		perror("ERROR\tServer::setUp setsockopt()");
 		exit(EXIT_FAILURE);
@@ -74,28 +92,32 @@ void	Server::addConnection() {
 
 	new_fd.fd = accept(_sockfd.fd, (struct sockaddr *)&_sockin, (socklen_t *)&tempSize);
 	if (new_fd.fd == -1) {
-		if (errno == EWOULDBLOCK || errno == EAGAIN) {
-			// Msg("No pending connections", "INFO");
-			return ;
-		} else {
+		// if (errno == EWOULDBLOCK || errno == EAGAIN) {
+		// 	// Msg("No pending connections", "INFO");
+		// 	return ;
+		// } else {
 			perror("accept");
 			return ;
-		}
+		// }
 	} else {
 		Msg("Connection accepted on " + std::to_string(new_fd.fd), "INFO");
-		new_fd.events = POLLIN|POLLOUT|POLLHUP|POLLRDHUP;
+		new_fd.events = POLLIN|POLLHUP|POLLRDHUP;
+		
 		_pollFds.push_back(new_fd);
+
 		// add client
 	}
 }
 
 void	Server::closeConnection(const int fd) {
-	cout << "DEBUG : " << fd << std::endl;
+	Msg("Connection closed on " + std::to_string(fd), "INFO");
 	close(fd);
 	for (unsigned long i(0); i < _pollFds.size(); i++) {
 		if (_pollFds[i].fd == fd)
 			_pollFds.erase(_pollFds.begin() + i);
 	}
+
+	// remove client
 }
 
 
@@ -112,15 +134,15 @@ void	Server::run() {
 			if (_pollFds[i].revents == 0) {
 				continue;
 			} else if (_pollFds[i].revents & POLLIN) {
-				// Msg("POLLIN", "DEBUG");
+				Msg("POLLIN", "DEBUG");
 				string incoming = receive(_pollFds[i].fd);
 				// sleep(1);
 			} else if (_pollFds[i].revents & POLLOUT) {
+				
 
-				// Msg("POLLOUT", "DEBUG");
-				// char	hello[] = "Hello this is I R C ";
-				// send(_pollFds[i].fd, hello, sizeof(hello), MSG_DONTWAIT);
-				// sleep(1);
+				Msg("POLLOUT", "DEBUG");
+				char	hello[] = "Hello this is patrick ";
+				send(_pollFds[i].fd, hello, sizeof(hello), MSG_DONTWAIT);
 			} else if ((_pollFds[i].revents & POLLHUP ) | (_pollFds[i].revents & POLLRDHUP )) {
 				Msg("POLLHUP or POLLRDHUP", "DEBUG");
 				closeConnection(i);
@@ -170,33 +192,23 @@ int	Server::setPoll() {
 	return(ret);
 }
 
-const string	Server::getIP() const {
-	char	hostname[MAXHOSTNAMELEN];
-	bzero(hostname, sizeof(hostname));
-	if (gethostname(hostname, MAXHOSTNAMELEN) != 0) {
-		perror("Server::setHostInfo gethostname");
-    	exit(EXIT_FAILURE);
-	}
+const string	Server::getHostname() const {
+	return _hostname;
+}
 
-	struct hostent *host_entry;
-	host_entry = gethostbyname(hostname);
-   	if (host_entry == NULL) {
-    	perror("Server::setHostInfo gethostbyname");
-    	exit(EXIT_FAILURE);
-   	}
-	string ip = inet_ntoa(*((struct in_addr*)host_entry->h_addr_list[0]));
-	return (ip);
+const string	Server::getIP() const {
+	return _ip;
 }
 
 int	Server::getPort() const {
-	return this->_port;
+	return _port;
 }
 
 const string	Server::getName() const {
-	return this->_name;
+	return _name;
 }
 
 std::ostream& operator<<(std::ostream& os, const Server& serv) {
-	os << "Server(" << serv.getName() << ", " << serv.getIP() << ", " << serv.getPort() << ")";
+	os << "Server(" << serv.getName() << ", " << serv.getHostname() << ", " << serv.getIP() << ", " << serv.getPort() << ")";
 	return os;
 }
