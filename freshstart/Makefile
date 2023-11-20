@@ -1,5 +1,5 @@
 NAME := ircserver
-FLAGS =  -Wall -Wextra -Werror -Iinclude -fsanitize=address #-std=c++20
+FLAGS =  -Wall -Wextra -Werror -Iinclude -g -fsanitize=address #-std=c++20
 CXX = c++
 
 SRC_DIR = src
