@@ -5,7 +5,9 @@ Client::Client(int fd) {
 	this->pfd.events = POLLIN|POLLHUP|POLLRDHUP;
 };
 
-Client::~Client() {}
+Client::~Client() {
+	// close(fd); #include stuff
+}
 
 Client::Client(const Client& other) {
 	this->nickname = other.nickname;

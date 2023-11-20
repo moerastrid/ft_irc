@@ -17,13 +17,15 @@ Server::Server(const Server &src) {
 
 Server &Server::operator=(const Server &src) {
 	Msg("Server assignment operator", "DEBUG");
-	_sockin = src._sockin;
-	_sockfd = src._sockfd;
-	_port = src._port;
-	_pass = src._pass;
-	_hostname = src._hostname;
-	_ip = src._ip;
-	_clients = src._clients;
+	if (this != &src) {
+		_sockin = src._sockin;
+		_sockfd = src._sockfd;
+		_port = src._port;
+		_pass = src._pass;
+		_hostname = src._hostname;
+		_ip = src._ip;
+		_clients = src._clients;
+	}
 	return (*this);
 }
 
@@ -33,7 +35,6 @@ Server::Server(const int port, const string pass) : _port(port), _pass(pass) {
 	memset(&_sockfd, 0, sizeof(_sockfd));
 
 	_sockfd.events = POLLIN|POLLHUP;
-
 	_sockin.sin_family = AF_INET;
 	_sockin.sin_port = htons(_port);
 	_sockin.sin_addr.s_addr = INADDR_ANY; /*perhaps htonl(INADDR_ANY); instead?*/
@@ -50,15 +51,15 @@ void	Server::setInfo() {
 	bzero(hostname, sizeof(hostname));
 	if (gethostname(hostname, MAXHOSTNAMELEN) != 0) {
 		perror("Server::setHostInfo gethostname");
-    	exit(EXIT_FAILURE);
+		exit(EXIT_FAILURE);
 	}
 	_hostname = hostname;
 	struct hostent *host_entry;
 	host_entry = gethostbyname(hostname);
-   	if (host_entry == NULL) {
-    	perror("Server::setHostInfo gethostbyname");
-    	exit(EXIT_FAILURE);
-   	}
+	if (host_entry == NULL) {
+		perror("Server::setHostInfo gethostbyname");
+		exit(EXIT_FAILURE);
+	}
 	string ip = inet_ntoa(*((struct in_addr*)host_entry->h_addr_list[0]));
 	_ip = ip;
 }
@@ -67,7 +68,7 @@ void	Server::setUp() {
 	_sockfd.fd = socket(AF_INET, SOCK_STREAM|SOCK_NONBLOCK, 0);
 	if (_sockfd.fd == -1) {
 		perror("ERROR\tServer::setUp socket()");
-    	exit(EXIT_FAILURE);
+		exit(EXIT_FAILURE);
 	}
 	// fcntl(_sockfd.fd, F_SETFL, O_NONBLOCK);
 	int yes = 1;
@@ -78,7 +79,7 @@ void	Server::setUp() {
 	if (bind(_sockfd.fd, (struct sockaddr *) &_sockin, sizeof(_sockin)) == -1) {
 		if (_port < 1024)
 			Msg("If you're not superuser: no permission to use ports under 1024", "WARNING");
-    	perror("ERROR\tServer::setUp bind()");
+		perror("ERROR\tServer::setUp bind()");
 		exit(EXIT_FAILURE);
 	}
 	if (listen(_sockfd.fd, SOMAXCONN) == -1) {
@@ -133,9 +134,12 @@ void	Server::closeConnection(const int fd) {
 
 
 
-void	Server::run() {
+void	Server::run(Executor& ex) {
 	if (setPoll() == 0)
 		return;
+
+	CustomOutputStream customOut(cout);
+	string buf = "";
 	
 	if (_sockfd.revents & POLLIN) {
 		addConnection();
@@ -162,7 +166,26 @@ void	Server::run() {
 		}
 		if (_clients[i].getPFD().revents & POLLIN) {
 			Msg("POLLIN", "DEBUG");
-			string incoming = receive(_clients[i].getFD());
+			
+				
+			buf += receive(_clients[i].getFD());
+
+			if (buf.find('\n') == string::npos)
+				continue;
+
+			vector<string> lines; //Split lines
+			istringstream iss(buf);
+			string line;
+			while (std::getline(iss, line, '\n')) {
+				lines.push_back(line + '\n');
+			}
+
+			for (string lin : lines) {
+				cout << "  Processing: [" << lin << "]" << endl;
+				Command cmd(lin);
+				string reply = ex.run(cmd, _clients[i].getFD());
+				customOut << "Server reply: [" << reply << "]" << endl;
+			}
 		}
 		if (_clients[i].getPFD().revents & POLLOUT) {
 			Msg("POLLOUT", "DEBUG");
@@ -183,9 +206,9 @@ string Server::receive(int fd) {
 		return (NULL);
 	// buf[nbytes] = '\0';
 	received.append(buf);
-    if (!received.empty()) {
-        cout << received;
-    } else {
+	if (!received.empty()) {
+		cout << received;
+	} else {
 		Msg("received empty string", "DEBUG");
 		closeConnection(fd);
 	}

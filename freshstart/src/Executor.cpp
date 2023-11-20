@@ -118,6 +118,7 @@ string Executor::run(Command& cmd, int fd) {
 //	 if (client == NULL)
 //	 	return "USER NOT FOUND\n"; // HELP
 
+
 	string command = cmd.getCommand();
 	mbrFuncPtr ptr;
 	try {
