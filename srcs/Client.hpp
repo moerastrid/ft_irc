@@ -10,13 +10,17 @@ using std::ostream;
 #include <string>
 using std::to_string;
 
+#include <poll.h>
+
+
 #include "Channel.hpp"
 
 class Channel; // Forward declaration
 
 class Client {
 private:
-	const int		fd;
+	// const int		fd;
+	struct pollfd	pfd;
 	string			nickname;
 	string			username;
 	string			hostname;
@@ -48,6 +52,10 @@ public:
 	void setPassword(string& password);
 	void makeOperator(Channel& c);
 	void takeOperator(Channel& c);
+
+	bool checkEvent(short event);
+	bool checkRevent(short revent);
+
 };
 
 bool operator==(const Client& lhs, const Client& rhs);

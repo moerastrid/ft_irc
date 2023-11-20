@@ -1,15 +1,19 @@
 #include "Client.hpp"
 
-Client::Client(int fd) : fd(fd) {};
+Client::Client(int fd) {
+	this->pfd.fd = fd; // effectively const
+	this->pfd.events = POLLIN|POLLOUT|POLLHUP|POLLRDHUP;
+};
 
 Client::~Client() {}
 
-Client::Client(const Client& other) : fd(other.fd) {
+Client::Client(const Client& other) {
 	this->nickname = other.nickname;
 	this->username = other.username;
 	this->hostname = other.hostname;
 	this->servername = other.servername;
 	this->realname = other.realname;
+	this->pfd = other.pfd;
 }
 
 Client& Client::operator=(const Client& other) {
@@ -19,6 +23,7 @@ Client& Client::operator=(const Client& other) {
 		this->hostname = other.hostname;
 		this->servername = other.servername;
 		this->realname = other.realname;
+		this->pfd = other.pfd;
 	}
 	return *this;
 }
@@ -49,7 +54,7 @@ void Client::takeOperator(Channel& c) {
 }
 
 int Client::getFD() const {
-	return this->fd;
+	return this->pfd.fd;
 }
 const string& Client::getNickname() const {
 	return this->nickname;
@@ -71,6 +76,14 @@ bool Client::isOperator(Channel& c) const {
 }
 bool Client::isFounder(Channel& c) const {
 	return c.hasFounder(*this);
+}
+
+bool Client::checkEvent(short event) {
+	return this->pfd.events | event;
+}
+
+bool Client::checkRevent(short revent) {
+	return this->pfd.revents | revent;
 }
 
 ostream& operator<<(ostream& os, const Client& client) {
