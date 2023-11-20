@@ -105,6 +105,8 @@ void	Server::addConnection() {
 		Msg("Connection accepted on " + std::to_string(new_fd), "INFO");
 		
 		_clients.push_back(Client(new_fd));
+		
+		
 		// _pollFds.push_back(new_fd);
 
 		// add client
@@ -159,7 +161,7 @@ void	Server::run() {
 string Server::receive(int fd) {
 	char	buf[BUFSIZE];
 	string	received;
-	Msg("incoming message from client" + _clients[fd - 1].getUsername(), "DEBUG");
+	Msg("incoming message from fd " + to_string(fd), "DEBUG");
 	memset(&buf, 0, sizeof(buf));
 	int nbytes = recv(fd, buf, sizeof(buf), MSG_DONTWAIT);
 	if (nbytes == -1)
