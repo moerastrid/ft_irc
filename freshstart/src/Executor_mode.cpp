@@ -195,8 +195,9 @@ string Executor::handle_modes(Client* caller, vector<tuple<bool, char, string>> 
 			case 0:
 				message += build_reply(ERR_UMODEUNKNOWNFLAG, caller->getNickname(), target->getName(), "Unknown MODE flag");
 				break;
-			case -1: //ignored
-				break;
+// kan dit weg? switch-outside-range error code komt steeds op
+//			case -1: //ignored
+//				break;
 			default:
 				message += build_reply(ERR_UMODEUNKNOWNFLAG, caller->getNickname(), target->getName(), "Unknown MODE flag");
 				break;
