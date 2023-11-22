@@ -13,13 +13,9 @@ Command::Command(const string& client_message_string) {
 	}
 
 	this->combine_reason();
-
-	// this->client_fd = client_fd;
 }
 
-Command::Command() {
-	// this->client_fd = -1;
-}
+Command::Command() {}
 
 Command::~Command() {}
 

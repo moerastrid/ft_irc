@@ -31,11 +31,9 @@ Client& Client::operator=(const Client& other) {
 void Client::setEvents(const short& events) {
 	this->pfd.events = events;
 }
-
 void Client::setRevents(const short& revents) {
 	this->pfd.revents = revents;
 }
-
 void Client::setNickname(const string& nickname) {
 	this->nickname = nickname;
 }
@@ -64,7 +62,6 @@ void Client::takeOperator(Channel& c) {
 const struct pollfd	&Client::getPFD() const {
 	return this->pfd;
 }
-
 int Client::getFD() const {
 	return this->pfd.fd;
 }
@@ -119,7 +116,6 @@ bool operator==(const Client &lhs, const Client &rhs) {
 			lhs.getUsername() == rhs.getUsername();
 }
 
-
-void	Client::removeSuccesfullySentDataFromBuffer(size_t	nbytes) {
+void Client::removeSuccesfullySentDataFromBuffer(size_t nbytes) {
 	datatosend.erase(0, nbytes);
 }
