@@ -286,7 +286,7 @@ string Executor::run_MODE(vector<string> args, int fd) {
 }
 
 string Executor::build_mode_reply(string callername, string target_channel, string modestring, string modeargs) {
-	string message = ":" + this->e.server_address + " " + to_string(RPL_CHANNELMODEIS) + " " + callername + " " + target_channel + " " + modestring;
+	string message = ":" + this->e.hostname + " " + to_string(RPL_CHANNELMODEIS) + " " + callername + " " + target_channel + " " + modestring;
 	if (!modeargs.empty()) {
 		 message += " " + modeargs;
 	}

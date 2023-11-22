@@ -4,41 +4,42 @@
 
 //https://modern.ircdocs.horse/#invite-message
 
-bool is_channel(string name) {
-	for (char c : name) {
-		if(!isspace(c)) {
-			if (c == '#')
-				return true;
-			break;
-		}
-	}
-	return false;
+bool is_channel_char(char c) {
+	return isalnum(c) || string("!#$%'()+,-./").find(c) != string::npos;
 }
 
-bool is_valid_nickname_character(char c) {
+bool is_channel(const string& name) {
+	for (const auto& c : name) {
+		if (!is_channel_char(c))
+			return false;
+	}
+	return !name.empty() && name.front() == '#';
+}
+
+bool is_nickname_character(char c) {
 	if (isalnum(c) || c == '_' || c == '-' || c == '[' || c == ']' || c == '\\' || c == '^' || c == '{' || c == '}')
 		return true;
 	return false;
 }
 
-bool verify_name(string arg) {
+bool verify_name(const string& arg) {
 	for (string::const_iterator it = arg.begin(); it != arg.end(); ++it) {
-		if (!is_valid_nickname_character(*it))
+		if (!is_nickname_character(*it))
 			return false;
 	}
 	return true;
 }
 
-bool verify_realname(string arg) {
+bool verify_realname(const string& arg) {
 	for (string::const_iterator it = arg.begin(); it != arg.end(); ++it) {
-		if (!is_valid_nickname_character(*it) && !isspace(*it))
+		if (!is_nickname_character(*it) && !isspace(*it))
 			return false;
 	}
 	return true;
 }
 
 // Takes a comma-separated string of arguments, gives back a vector of said arguments.
-vector<string> split_args(string args) {
+vector<string> split_args(const string& args) {
 	istringstream nameStream(args);
 	vector<string> res;
 
@@ -52,7 +53,7 @@ vector<string> split_args(string args) {
 
 // Executor class
 
-Executor::Executor(env& e) : e(e) {
+Executor::Executor(Env& e) : e(e) {
 	this->funcMap["CAP"] 		= &Executor::run_CAP;
 	this->funcMap["PASS"] 		= &Executor::run_PASS;
 	this->funcMap["NICK"] 		= &Executor::run_NICK;
@@ -164,7 +165,7 @@ string Executor::run(Command& cmd, int fd) {
  * Responses not (yet) handled:
  */
 string Executor::run_CAP([[maybe_unused]]vector<string> args, [[maybe_unused]]int fd) {
-	return ":" + this->e.server_address + " CAP NAK :-\n";
+	return ":" + this->e.hostname + " CAP NAK :-\n";
 }
 
 /*
@@ -336,7 +337,7 @@ string Executor::run_USER(vector<string> args, int fd) {
  * Responses not (yet) handled:
  */
 string Executor::run_PING([[maybe_unused]]vector<string> args, [[maybe_unused]]int fd) {
-	return "PONG " + this->e.server_address + "\n";
+	return "PONG " + this->e.hostname + "\n";
 }
 
 /*
@@ -575,7 +576,7 @@ string Executor::run_KICK(vector<string> args, int fd) {
 			continue;
 		}
 
-		message += ":" + this->e.server_address + " KICK " + channelname + " " + *name_it + " " + *reason_start + "\n";
+		message += ":" + this->e.hostname + " KICK " + channelname + " " + *name_it + " " + *reason_start + "\n";
 	}
 
 	return message;
@@ -618,7 +619,7 @@ string Executor::run_PART(vector<string> args, int fd) {
 			continue;
 		}
 
-		message += ":" + this->e.server_address + " PART " + *it + "\n";
+		message += ":" + this->e.hostname + " PART " + *it + "\n";
 		if (reason_it == args.end()) {
 			cout << "skipping reason (#TODO change to default message)" << endl;
 			continue;
@@ -874,11 +875,11 @@ string Executor::build_reply(int response_code, string callername, string target
 	stringstream response;
 	response << setw(3) << setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
 
-	return ":" + this->e.server_address + " " + response.str() + " " + callername + " " + target + " :" + message + "\n";
+	return ":" + this->e.hostname + " " + response.str() + " " + callername + " " + target + " :" + message + "\n";
 }
 
 string Executor::build_notice_reply(string callername, string target, string message) {
-	return ":" + this->e.server_address + " NOTICE " + callername + " " + target + " :" + message + "\n";
+	return ":" + this->e.hostname + " NOTICE " + callername + " " + target + " :" + message + "\n";
 }
 
 string Executor::build_channel_reply(int response_code, string callername, string target, string channel, string message) {
@@ -888,16 +889,16 @@ string Executor::build_channel_reply(int response_code, string callername, strin
 	stringstream response;
 	response << setw(3) << setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
 
-	return ":" + this->e.server_address + " " + response.str() + " " + callername + " " + target + " " + channel + " :" + message + "\n";
+	return ":" + this->e.hostname + " " + response.str() + " " + callername + " " + target + " " + channel + " :" + message + "\n";
 }
 
 string Executor::getServerPassword() {
-	return this->e.server_password;
+	return this->e.pass;
 }
 
 string Executor::build_WHOIS_reply(int response_code, string callername, string target, string userinfo) {
 	stringstream response;
 	response << setw(3) << setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
 
-	return ":" + this->e.server_address + " " + response.str() + " " + callername + " " + target + " " + userinfo + "\n";
+	return ":" + this->e.hostname + " " + response.str() + " " + callername + " " + target + " " + userinfo + "\n";
 }

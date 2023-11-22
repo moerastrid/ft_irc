@@ -1,20 +1,20 @@
 #include "ircserver.hpp"
 
 #include "Executor.hpp"
-#include "env.hpp"
+#include "Env.hpp"
 
 int main(int argc, char **argv) {
 	int			port;
-	env env;
-	Executor	ex(env);
 
 	port = parse(argc, argv);
 	if (port < 0) {
 		return (EXIT_FAILURE);
 	}
 
-	
-	Server ircServer(port, argv[2]);
+	Env env(port, argv[2]);
+	Executor	ex(env);
+
+	Server ircServer(env);
 	std::cout << "Successfully booted the " << ircServer << " \\^.^/" << std::endl;
 	
 	while (1) {
