@@ -28,6 +28,10 @@ Client& Client::operator=(const Client& other) {
 	return *this;
 }
 
+void Client::setEvents(const short& events) {
+	this->pfd.events = events;
+}
+
 void Client::setRevents(const short& revents) {
 	this->pfd.revents = revents;
 }

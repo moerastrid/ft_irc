@@ -19,7 +19,6 @@ class Channel; // Forward declaration
 
 class Client {
 private:
-	// const int		fd;
 	struct pollfd	pfd;
 
 	string			nickname;
@@ -31,6 +30,9 @@ private:
 	bool			sending;
 
 public:
+	string			recvbuf;
+	string			sendbuf;
+
 	~Client();
 	Client(int fd);
 	Client(const Client& other);
@@ -47,6 +49,7 @@ public:
 	bool isOperator(Channel& c) const;
 	bool isFounder(Channel& c) const;
 
+	void setEvents(const short& events);
 	void setRevents(const short& revents);
 	void setNickname(string& nickname);
 	void setUsername(string& username);

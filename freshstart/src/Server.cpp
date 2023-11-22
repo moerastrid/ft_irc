@@ -1,12 +1,18 @@
 #include "Server.hpp"
 
+/* 
+TO DO (astrid)
+	-	try-catch blokken maken voor server setup (& die koppelen aan main?)
+	-	when shutting down server (???) (closing client connections?)
+
+*/
+
 Server::Server() {
 	Msg("Server default constructor", "DEBUG");
 }
 
 Server::~Server() {
 	Msg("Server default destructor", "DEBUG");
-
 	close(_sockfd.fd);
 }
 
@@ -37,11 +43,10 @@ Server::Server(const int port, const string pass) : _port(port), _pass(pass) {
 	_sockfd.events = POLLIN|POLLHUP;
 	_sockin.sin_family = AF_INET;
 	_sockin.sin_port = htons(_port);
-	_sockin.sin_addr.s_addr = INADDR_ANY; /*perhaps htonl(INADDR_ANY); instead?*/
+	_sockin.sin_addr.s_addr = INADDR_ANY;
 
 	Server::setUp();
 	Server::setInfo();
-	// _pollFds.push_back(_sockfd);
 
 	Msg("server waiting for connections ... ", "INFO");
 }
@@ -70,7 +75,7 @@ void	Server::setUp() {
 		perror("ERROR\tServer::setUp socket()");
 		exit(EXIT_FAILURE);
 	}
-	// fcntl(_sockfd.fd, F_SETFL, O_NONBLOCK);
+	fcntl(_sockfd.fd, F_SETFL, O_NONBLOCK);
 	int yes = 1;
 	if (setsockopt(_sockfd.fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1) {
 		perror("ERROR\tServer::setUp setsockopt()");
@@ -126,10 +131,6 @@ void	Server::closeConnection(const int fd) {
 	Msg("Connection closed on " + std::to_string(fd), "INFO");
 	close(fd);
 	_clients.erase(getItToClientByFD(fd));
-	for (unsigned long i(0); i < _clients.size(); i++) {
-		if (_clients[i].getFD() == fd)
-			_clients.erase(_clients.begin() + i);
-	}
 }
 
 
@@ -139,7 +140,6 @@ void	Server::run(Executor& ex) {
 		return;
 
 	CustomOutputStream customOut(cout);
-	string buf = "";
 	
 	if (_sockfd.revents & POLLIN) {
 		addConnection();
@@ -152,51 +152,74 @@ void	Server::run(Executor& ex) {
 	bool checkRevent(short& revent); */
 
 	for (size_t	i = 0; i < _clients.size(); i++) {
-		if (_clients[i].getPFD().revents == 0)
+		if (_clients[i].getPFD().revents == 0) {
 			continue ;
-		// if (_clients[i].getPFD().revents & POLLHUP) {
-		// 	Msg("POLLHUP", "DEBUG");
-	 	// 	closeConnection(_clients[i].getFD());
-		// 	continue ;
-		// }
-		if (_clients[i].checkRevent(POLLHUP|POLLRDHUP)) {
+		} else if (_clients[i].checkRevent(POLLHUP|POLLRDHUP)) {
 			Msg("POLLHUP/POLLRDHUP", "DEBUG");
 	 		closeConnection(_clients[i].getFD());
-			continue ;
-		}
-		if (_clients[i].getPFD().revents & POLLIN) {
-			Msg("POLLIN", "DEBUG");
-			
-			//client.recbuf = receive;
-			//if (newline -> execute)
-
-
-			buf += receive(_clients[i].getFD());
-
-			if (buf.find('\n') == string::npos)
-				continue;
-
-			vector<string> lines; //Split lines
-			istringstream iss(buf);
-			string line;
-			while (std::getline(iss, line, '\n')) {
-				lines.push_back(line + '\n');
+		} else if (_clients[i].checkRevent(POLLERR)) {
+			Msg("POLLERR", "DEBUG");
+	 		closeConnection(_clients[i].getFD());
+		} else {
+			if (_clients[i].checkRevent(POLLIN)) {
+				Msg("POLLIN", "DEBUG");
+				receiveChunk(_clients[i]);
 			}
-
-			for (string lin : lines) {
-				cout << "  Processing: [" << lin << "]" << endl;
-				Command cmd(lin);
-				string reply = ex.run(cmd, _clients[i].getFD());
-				customOut << "Server reply: [" << reply << "]" << endl;
+			if (_clients[i].checkRevent(POLLOUT)) {
+				Msg("POLLOUT", "DEBUG");
+				sendChunk(_clients[i]);
 			}
 		}
-		if (_clients[i].getPFD().revents & POLLOUT) {
-			Msg("POLLOUT", "DEBUG");
-			char	hello[] = "Hello this is patrick ";
-			send(_clients[i].getFD(), hello, sizeof(hello), MSG_DONTWAIT);
-		} 
 	}
 }
+
+void	Server::receiveChunk(Client &c) {
+	char	buf[BUFSIZE];
+	memset(&buf, 0, sizeof(buf));
+
+	// recv 
+}
+
+void	Server::sendChunk(Client &c) {
+	char	buf[BUFSIZE];
+	memset(&buf, 0, sizeof(buf));
+}
+
+
+
+		// if (_clients[i].getPFD().revents & POLLIN) {
+		// 	Msg("POLLIN", "DEBUG");
+			
+		// 	//client.recbuf = receive;
+		// 	//if (newline -> execute)
+
+
+		// 	buf += receive(_clients[i].getFD());
+
+		// 	if (buf.find('\n') == string::npos)
+		// 		continue;
+
+		// 	vector<string> lines; //Split lines
+		// 	istringstream iss(buf);
+		// 	string line;
+		// 	while (std::getline(iss, line, '\n')) {
+		// 		lines.push_back(line + '\n');
+		// 	}
+
+		// 	for (string lin : lines) {
+		// 		cout << "  Processing: [" << lin << "]" << endl;
+		// 		Command cmd(lin);
+		// 		string reply = ex.run(cmd, _clients[i].getFD());
+		// 		customOut << "Server reply: [" << reply << "]" << endl;
+		// 	}
+		// }
+		// if (_clients[i].getPFD().revents & POLLOUT) {
+		// 	Msg("POLLOUT", "DEBUG");
+		// 	char	hello[] = "Hello this is patrick ";
+		// 	send(_clients[i].getFD(), hello, sizeof(hello), MSG_DONTWAIT);
+		// } 
+
+
 
 
 string Server::receive(int fd) {

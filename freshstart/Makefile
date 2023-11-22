@@ -38,9 +38,6 @@ $(NAME): $(OBJ) $(HDR)
 $(OBJ_DIR) :
 	mkdir -pv $(OBJ_DIR)
 
-run:	all
-	./$(NAME)
-
 clean :
 	rm -fr $(OBJ_DIR)
 

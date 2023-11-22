@@ -103,7 +103,7 @@ class Executor {
 		string run_TOPIC(vector<string> args, int fd);
 		string run_QUIT(vector<string> args, int fd);
 
-		string handle_modes(Client* caller, vector<tuple<bool, char, string>> mode_cmds, Channel* target);
+		string handle_modes(Client* caller, vector<tuple<bool, signed char, string>> mode_cmds, Channel* target);
 		void handle_i_mode(bool add, Channel* target);
 		void handle_t_mode(bool add, Channel* target);
 		void handle_k_mode(bool add, string arg, Channel* target);

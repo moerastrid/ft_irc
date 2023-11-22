@@ -22,10 +22,10 @@ static bool hasArg(char mode) {
  * string: mode argument
  */
 
-static vector<tuple<bool, char, string>> parse_modestring(string modestring, vector<string> modeargs) {
+static vector<tuple<bool, signed char, string>> parse_modestring(string modestring, vector<string> modeargs) {
 	bool add = true;
 	int argcounter = 0;
-	vector<tuple<bool, char, string>> modes;
+	vector<tuple<bool, signed char, string>> modes;
 	for (const auto& el : modestring) {
 		if (el == '+') {
 			add = true;
@@ -41,13 +41,13 @@ static vector<tuple<bool, char, string>> parse_modestring(string modestring, vec
 				try {
 					arg = modeargs.at(argcounter++);
 				} catch (std::out_of_range& e) {
-					modes.push_back(std::tuple<bool, char, string>(add, -1, "")); // MISSING PARAMETER
+					modes.push_back(std::tuple<bool, signed char, string>(add, -1, "")); // MISSING PARAMETER
 					continue;
 				}
 			}
-			modes.push_back(std::tuple<bool, char, string>(add, el, arg));
+			modes.push_back(std::tuple<bool, signed char, string>(add, el, arg));
 		} else {
-			modes.push_back(std::tuple<bool, char, string>(add, 0, "")); // UNKNOWN MODE
+			modes.push_back(std::tuple<bool, signed char, string>(add, 0, "")); // UNKNOWN MODE
 		}
 	}
 	return modes;
@@ -152,11 +152,11 @@ void Executor::handle_l_mode(bool add, string arg, Channel* target) {
 using std::cout;
 using std::endl;
 
-string Executor::handle_modes(Client* caller, vector<tuple<bool, char, string>> mode_cmds, Channel* target) {
+string Executor::handle_modes(Client* caller, vector<tuple<bool, signed char, string>> mode_cmds, Channel* target) {
 	string message = "";
 	for (const auto& mode_cmd: mode_cmds) {
 		bool add = std::get<0>(mode_cmd);
-		char mode = std::get<1>(mode_cmd);
+		signed char mode = std::get<1>(mode_cmd);
 		string modearg = std::get<2>(mode_cmd);
 		string modestring;
 
@@ -195,9 +195,8 @@ string Executor::handle_modes(Client* caller, vector<tuple<bool, char, string>> 
 			case 0:
 				message += build_reply(ERR_UMODEUNKNOWNFLAG, caller->getNickname(), target->getName(), "Unknown MODE flag");
 				break;
-// kan dit weg? switch-outside-range error code komt steeds op
-//			case -1: //ignored
-//				break;
+			case -1: //ignored
+				break;
 			default:
 				message += build_reply(ERR_UMODEUNKNOWNFLAG, caller->getNickname(), target->getName(), "Unknown MODE flag");
 				break;
@@ -282,7 +281,7 @@ string Executor::run_MODE(vector<string> args, int fd) {
 		return build_mode_reply(caller->getNickname(), target, modestring, modeargs);
 	}
 
-	vector<tuple<bool, char, string>> mode_cmds = parse_modestring(modestring, modeargs);
+	vector<tuple<bool, signed char, string>> mode_cmds = parse_modestring(modestring, modeargs);
 	return handle_modes(caller, mode_cmds, channel);
 }
 

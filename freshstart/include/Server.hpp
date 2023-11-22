@@ -36,7 +36,6 @@ class Server {
 
 		int						_port;
 		string					_pass;
-		// vector<struct pollfd>	_pollFds;
 		vector<Client>			_clients;
 
 
@@ -47,6 +46,8 @@ class Server {
 		void	addConnection();
 		void	closeConnection(const int i);
 		string	receive(int fd);
+		void	receiveChunk(Client &c);
+		void	sendChunk(Client &c);
 
 	public :
 		~Server();										// default destructor

@@ -13,6 +13,7 @@ int main(int argc, char **argv) {
 		return (EXIT_FAILURE);
 	}
 
+	
 	Server ircServer(port, argv[2]);
 	std::cout << "Successfully booted the " << ircServer << " \\^.^/" << std::endl;
 	
