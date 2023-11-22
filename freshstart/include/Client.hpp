@@ -28,10 +28,10 @@ private:
 	string			realname;
 	string			password;
 	bool			sending;
+	string			datatosend;
 
 public:
 	string			recvbuf;
-	string			sendbuf;
 
 	~Client();
 	Client(int fd);
@@ -46,6 +46,7 @@ public:
 	const string& getServername() const;
 	const string& getRealname() const;
 	const string& getPassword() const;
+	const string& getDataToSend() const;
 	bool isOperator(Channel& c) const;
 	bool isFounder(Channel& c) const;
 
@@ -63,6 +64,7 @@ public:
 	bool checkEvent(short event);
 	bool checkRevent(short revent);
 
+	void	removeSuccesfullySentDataFromBuffer(size_t	nbytes);
 };
 
 bool operator==(const Client& lhs, const Client& rhs);

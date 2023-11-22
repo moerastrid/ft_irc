@@ -62,7 +62,7 @@ void Client::takeOperator(Channel& c) {
 }
 
 const struct pollfd	&Client::getPFD() const {
-	return pfd;
+	return this->pfd;
 }
 
 int Client::getFD() const {
@@ -82,6 +82,9 @@ const string& Client::getServername() const {
 }
 const string& Client::getRealname() const {
 	return this->realname;
+}
+const string& Client::getDataToSend() const {
+	return this->datatosend;
 }
 bool Client::isOperator(Channel& c) const {
 	return c.hasOperator(*this);
@@ -108,4 +111,9 @@ bool operator==(const Client &lhs, const Client &rhs) {
 	return 	lhs.getFD() == rhs.getFD() &&
 			lhs.getNickname() == rhs.getNickname() &&
 			lhs.getUsername() == rhs.getUsername();
+}
+
+
+void	Client::removeSuccesfullySentDataFromBuffer(size_t	nbytes) {
+	datatosend.erase(0, nbytes);
 }

@@ -4,7 +4,7 @@
 TO DO (astrid)
 	-	try-catch blokken maken voor server setup (& die koppelen aan main?)
 	-	when shutting down server (???) (closing client connections?)
-
+	-	recv returned -1 -> dan wat?
 */
 
 // Server::Server() {
@@ -41,7 +41,7 @@ Server::Server(Env& env) : env(env) {
 	// memset(&env.sockin, 0, sizeof(env.sockin));
 	// memset(&env.sockfd, 0, sizeof(env.sockfd));
 
-	sockfd.events = POLLIN|POLLHUP;
+	sockfd.events = POLLIN|POLLHUP|POLLRDHUP;
 	sockin.sin_family = AF_INET;
 	sockin.sin_port = htons(this->env.port);
 	sockin.sin_addr.s_addr = INADDR_ANY;
@@ -164,14 +164,15 @@ void	Server::run([[maybe_unused]] Executor& ex) {
 		} else {
 			if (this->env.clients[i].checkRevent(POLLIN)) {
 				Msg("POLLIN", "DEBUG");
-				receiveChunk(this->env.clients[i]);
+				if (receivefromClient(this->env.clients[i]) == false)
+					closeConnection(this->env.clients[i].getFD());
 				// execute? 
-				ex.run(this->env.clients[i]);
+				// ex.run(this->env.clients[i]);
 				
 			}
 			if (this->env.clients[i].checkRevent(POLLOUT)) {
 				Msg("POLLOUT", "DEBUG");
-				sendChunk(this->env.clients[i]);
+				sendtoClient(this->env.clients[i]);
 			}
 		}
 	}
@@ -221,80 +222,36 @@ void	Server::run([[maybe_unused]] Executor& ex) {
 	// 
 }
 
-void	Server::receiveChunk(Client &c) {
+bool	Server::receivefromClient(Client &c) {
 	char	buf[BUFSIZE];
 	memset(&buf, 0, sizeof(buf));
 
-	(void)c;
-	// recv(c.getFD(), buf, BUFSIZE);
-
-}
-
-void	Server::sendChunk(Client &c) {
-	char	buf[BUFSIZE];
-	memset(&buf, 0, sizeof(buf));
-	(void)c;
-}
-
-
-
-		// if (_clients[i].getPFD().revents & POLLIN) {
-		// 	Msg("POLLIN", "DEBUG");
-			
-		// 	//client.recbuf = receive;
-		// 	//if (newline -> execute)
-
-
-		// 	buf += receive(_clients[i].getFD());
-
-		// 	if (buf.find('\n') == string::npos)
-		// 		continue;
-
-		// 	vector<string> lines; //Split lines
-		// 	istringstream iss(buf);
-		// 	string line;
-		// 	while (std::getline(iss, line, '\n')) {
-		// 		lines.push_back(line + '\n');
-		// 	}
-
-		// 	for (string lin : lines) {
-		// 		cout << "  Processing: [" << lin << "]" << endl;
-		// 		Command cmd(lin);
-		// 		string reply = ex.run(cmd, _clients[i].getFD());
-		// 		customOut << "Server reply: [" << reply << "]" << endl;
-		// 	}
-		// }
-		// if (_clients[i].getPFD().revents & POLLOUT) {
-		// 	Msg("POLLOUT", "DEBUG");
-		// 	char	hello[] = "Hello this is patrick ";
-		// 	send(_clients[i].getFD(), hello, sizeof(hello), MSG_DONTWAIT);
-		// } 
-
-
-
-
-string Server::receive(int fd) {
-	char	buf[BUFSIZE];
-	string	received;
-	Msg("incoming message from fd " + to_string(fd), "DEBUG");
-	memset(&buf, 0, sizeof(buf));
-	int nbytes = recv(fd, buf, sizeof(buf), MSG_DONTWAIT);
-	if (nbytes == -1)
-		return (NULL);
-	// buf[nbytes] = '\0';
-	received.append(buf);
-	if (!received.empty()) {
-		cout << received;
-	} else {
-		Msg("received empty string", "DEBUG");
-		closeConnection(fd);
+	int nbytes = recv(c.getFD(), buf, sizeof(buf), MSG_DONTWAIT);
+	if (nbytes < 0) {
+		Msg("error in receiving data", "ERROR"); 
+		return (false);
 	}
-	// while (nbytes != 0) {
-	// 	memset(&buf, 0, sizeof(buf));
-	// 	nbytes = recv(fd, buf, sizeof(buf), MSG_DONTWAIT);
-	// 	received.append(buf);
-	// }
-	return (received);
+	if (nbytes == 0) {
+		Msg("no connection with Client " + to_string(c.getFD()), "WARNING"); 
+		return (false);
+	} 
+
+	c.recvbuf += buf;
+	return (true);
+}
+
+void	Server::sendtoClient(Client &c) {
+	string	dataToSend = c.getDataToSend();
+	if (dataToSend.empty()) {
+		c.setEvents(POLLIN|POLLHUP|POLLRDHUP);
+		return ;
+	}
+	int nbytes = send(c.getFD(), dataToSend.c_str(), dataToSend.size(), 0);
+	if (nbytes <= 0) {
+		Msg("error in sending data", "ERROR");
+		return ;
+	}
+	c.removeSuccesfullySentDataFromBuffer(nbytes);
 }
 
 int	Server::setPoll() {

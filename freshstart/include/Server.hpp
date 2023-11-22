@@ -41,8 +41,8 @@ class Server {
 		void	addConnection();
 		void	closeConnection(const int i);
 		string	receive(int fd);
-		void	receiveChunk(Client &c);
-		void	sendChunk(Client &c);
+		bool	receivefromClient(Client &c);
+		void	sendtoClient(Client &c);
 
 	public :
 		Server(Env& env);								//default constructor
