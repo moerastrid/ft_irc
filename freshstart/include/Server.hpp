@@ -18,6 +18,7 @@ using std::vector;
 #include "Msg.hpp"
 #include "Client.hpp"
 #include "Executor.hpp"
+#include "Env.hpp"
 
 #define BUFSIZE 512
 
@@ -25,19 +26,18 @@ using std::vector;
 
 class Server {
 	private :
-		Server();										//default constructor
 
-		const string			_name = "REAL TALK IRC";
-		string					_hostname;
-		string					_ip;
+		const string	name = "REAL TALK IRC";
+		Env& 			env;
+		// string					_hostname;
+		// string					_ip;
 
-		struct sockaddr_in		_sockin;
-		struct pollfd			_sockfd;
+		// struct sockaddr_in		_sockin;
+		// struct pollfd			_sockfd;
 
-		int						_port;
-		string					_pass;
-		// vector<struct pollfd>	_pollFds;
-		vector<Client>			_clients;
+		// int						_port;
+		// string					_pass;
+		// vector<Client>			_clients;
 
 
 		void	setUp();
@@ -49,17 +49,18 @@ class Server {
 		string	receive(int fd);
 
 	public :
+		Server(Env& env);								//default constructor
 		~Server();										// default destructor
 		Server(const Server &src);						//copy constructor
 		Server &operator=(const Server &src);			// = sign operator
 		Server(const int port, const string pass);		// constructor (PORT, pass)
 		
-		void				run(Executor& ex);
-		const string		getIP() const;
-		int					getPort() const;
-		const string		getName() const;
-		const string		getHostname() const;
-		struct pollfd**		getPollFDS() const;
+		void						run(Executor& ex);
+		const string				getIP() const;
+		int							getPort() const;
+		const string				getName() const;
+		const string				getHostname() const;
+		struct pollfd**				getPollFDS() const;
 		Client* 					getClientByFD(int fd);
 		vector<Client>::iterator	getItToClientByFD(int fd);
 };

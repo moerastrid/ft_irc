@@ -69,7 +69,7 @@ using std::setfill;
 #include <stdexcept>
 
 #include "Command.hpp"
-#include "env.hpp"
+#include "Env.hpp"
 
 class Executor; // Forward declaration
 
@@ -79,10 +79,10 @@ class Executor {
 	private:
 		map<string, mbrFuncPtr> funcMap;
 		map<string, pair<int, int>> argCount;
-		env& e;
+		Env& e;
 	public:
 //		Executor();
-		Executor(env& e);
+		Executor(Env& e);
 		~Executor();
 
 		int validateArguments(const string& command, int numArgs);
@@ -133,10 +133,10 @@ class Executor {
 		void send_to_client(int fd, string message);
 };
 
-bool is_channel(string name);
+bool is_channel(const string& name);
 bool is_valid_nickname_character(char c);
-bool verify_name(string arg);
-bool verify_realname(string arg);
-vector<string> split_args(string args);
+bool verify_name(const string& arg);
+bool verify_realname(const string& arg);
+vector<string> split_args(const string& args);
 
 #endif /* end of include guard: EXECUTOR_HPP */
