@@ -12,6 +12,7 @@ int main(int argc, char **argv) {
 	Env env(port, argv[2]);
 	Executor	ex(env);
 
+	
 	Server ircServer(env);
 	std::cout << "Successfully booted the " << ircServer << " \\^.^/" << std::endl;
 	

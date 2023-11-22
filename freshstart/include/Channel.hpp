@@ -36,6 +36,8 @@ private:
 	
 
 public:
+	static Channel	nullchan;
+
 	Channel();
 	~Channel();
 	Channel(const Channel& other);
@@ -60,21 +62,22 @@ public:
 	bool hasFounder(const Client& client) const;
 	bool hasUser(const Client& client) const;
 
-	void setPassword(string password);
-	void setTopic(string topic);
-	void makeInviteOnly();
-	void takeInviteOnly();
-	void toggleInviteOnly();
-	void makeTopicOperatorOnly();
-	void takeTopicOperatorOnly();
-	void setUserLimit(size_t limit);
-	void addMode(char mode, string password, size_t userlimit);
-	void removeMode(char mode);
+	void	setPassword(string password);
+	void	setTopic(string topic);
+	void	toggleInviteOnly();
+	void	setUserLimit(size_t limit);
 
-	void addOperator(const Client& client);
-	void removeOperator(const Client& client);
-	void addClient(const Client& client);
-	int removeClient(const Client& client);
+	void	makeTopicOperatorOnly();
+	void	makeInviteOnly();
+	void	addMode(char mode, string password, size_t userlimit);
+	void	addOperator(const Client& client);
+	void	addClient(const Client& client);
+
+	void	takeTopicOperatorOnly();
+	void	takeInviteOnly();
+	void	removeMode(char mode);
+	void	removeOperator(const Client& client);
+	int		removeClient(const Client& client);
 
 };
 

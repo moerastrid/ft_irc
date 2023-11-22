@@ -53,37 +53,37 @@ static vector<tuple<bool, signed char, string>> parse_modestring(string modestri
 	return modes;
 }
 
-static bool check_privileges(Client* caller, Channel* target, string modestring) {
+static bool check_privileges(const Client& caller, const Channel& target, const string& modestring) {
 	bool res = true;
 	if (modestring.find('i') != string::npos) {
-		res = res && caller->isOperator(*target);
+		res = res && caller.isOperator(target);
 	}
 	if (modestring.find('t') != string::npos) {
-		if (target->hasTopicRestricted())
-			res = res && caller->isOperator(*target);
+		if (target.hasTopicRestricted())
+			res = res && caller.isOperator(target);
 	}
 	if (modestring.find('k') != string::npos)
-		res = res && caller->isOperator(*target);
+		res = res && caller.isOperator(target);
 	if (modestring.find('o') != string::npos)
-		res = res && (caller->isFounder(*target) || caller->isOperator(*target));
+		res = res && (caller.isFounder(target) || caller.isOperator(target));
 	if (modestring.find('l') != string::npos)
-		res = res && caller->isOperator(*target);
+		res = res && caller.isOperator(target);
 	return res;
 }
 
-static pair<string,string> get_current_modes(Channel* ch) {
+static pair<string,string> get_current_modes(const Channel& ch) {
 	string modes = "+";
 	string args = "";
-	string password = ch->getPassword();
-	size_t userLimit = ch->getUserLimit();
+	string password = ch.getPassword();
+	size_t userLimit = ch.getUserLimit();
 	if (!password.empty()) {
 		modes += 'k';
 		args += password;
 	}
-	if (ch->hasTopicRestricted()) {
+	if (ch.hasTopicRestricted()) {
 		modes += 't';
 	}
-	if (ch->isInviteOnly()) {
+	if (ch.isInviteOnly()) {
 		modes += 'i';
 	}
 	if (userLimit != 0) {
@@ -94,47 +94,47 @@ static pair<string,string> get_current_modes(Channel* ch) {
 }
 
 // Type D
-void Executor::handle_i_mode(bool add, Channel* target) {
+void Executor::handle_i_mode(const bool add, Channel& target) {
 	if (add)
-		target->makeInviteOnly();
+		target.makeInviteOnly();
 	else
-		target->takeInviteOnly();
+		target.takeInviteOnly();
 }
 
 // Type D
-void Executor::handle_t_mode(bool add, Channel* target) {
+void Executor::handle_t_mode(const bool add, Channel& target) {
 	if (add)
-		target->makeTopicOperatorOnly();
+		target.makeTopicOperatorOnly();
 	else
-		target->takeTopicOperatorOnly();
+		target.takeTopicOperatorOnly();
 }
 
 // Type B: If set and no parameter, ignore command.
-void Executor::handle_k_mode(bool add, string arg, Channel* target) {
+void Executor::handle_k_mode(const bool add, const string& arg, Channel& target) {
 	if (add) {
-		if (!arg.size()) 
+		if (!arg.size())
 			return ;
-		target->setPassword(arg);
+		target.setPassword(arg);
 	}
 	else
-		target->setPassword("");
+		target.setPassword("");
 }
 
 // Type A: must always have parameter, otherwise ignore command.
-void Executor::handle_o_mode(bool add, string arg, Channel* target) {
+void Executor::handle_o_mode(const bool add, const string& arg, Channel& target) {
 	if (!arg.size())
 		return;
-	Client* c = this->getClientByNickname(arg);	
+	Client& c = this->getClientByNickname(arg);
 	if (c == NULL)
 		return ;
 	if (add)
-		target->addOperator(*c);
+		target.addOperator(c);
 	else
-		target->removeOperator(*c);
+		target.removeOperator(c);
 }
 
 // Type C: If set and no parameter, ignore command.
-void Executor::handle_l_mode(bool add, string arg, Channel* target) {
+void Executor::handle_l_mode(const bool add, const string& arg, Channel& target) {
 	int num;
 	if (add) {
 		try {
@@ -142,17 +142,17 @@ void Executor::handle_l_mode(bool add, string arg, Channel* target) {
 		} catch (const std::exception& e) {
 			return ;
 		}
-		target->setUserLimit(num);
+		target.setUserLimit(num);
 	}
 	else
-		target->takeInviteOnly();
+		target.takeInviteOnly();
 }
 
 #include <iostream>
 using std::cout;
 using std::endl;
 
-string Executor::handle_modes(Client* caller, vector<tuple<bool, signed char, string>> mode_cmds, Channel* target) {
+string Executor::handle_modes(const Client& caller, const vector<tuple<bool, signed char, string>>& mode_cmds, Channel& target) {
 	string message = "";
 	for (const auto& mode_cmd: mode_cmds) {
 		bool add = std::get<0>(mode_cmd);
@@ -165,40 +165,40 @@ string Executor::handle_modes(Client* caller, vector<tuple<bool, signed char, st
 			case 'i':
 				handle_i_mode(add, target);
 				modestring = "+i";
-				message += build_mode_reply(caller->getNickname(), target->getName(), modestring, modearg);
+				message += build_mode_reply(caller.getNickname(), target.getName(), modestring, modearg);
 				break;
 			case 't':
 				handle_t_mode(add, target);
 				modestring = "+t";
-				message += build_mode_reply(caller->getNickname(), target->getName(), modestring, modearg);
+				message += build_mode_reply(caller.getNickname(), target.getName(), modestring, modearg);
 				break;
 			case 'k':
 				modestring = "+k";
 				if (modearg.empty()) {
-					modearg = target->getPassword();
-					message += build_mode_reply(caller->getNickname(), target->getName(), modestring, "");
+					modearg = target.getPassword();
+					message += build_mode_reply(caller.getNickname(), target.getName(), modestring, "");
 					continue;
 				}
 				handle_k_mode(add, modearg, target);
-				message += build_mode_reply(caller->getNickname(), target->getName(), modestring, modearg);
+				message += build_mode_reply(caller.getNickname(), target.getName(), modestring, modearg);
 				break;
 			case 'o':
 				modestring = "+o";
-				message += build_mode_reply(caller->getNickname(), target->getName(), modestring, modearg);
+				message += build_mode_reply(caller.getNickname(), target.getName(), modestring, modearg);
 				handle_o_mode(add, modearg, target); //#TODO check modearg for existence of user.
 				break;
 			case 'l':
 				modestring = "+l";
-				message += build_mode_reply(caller->getNickname(), target->getName(), modestring, modearg);
+				message += build_mode_reply(caller.getNickname(), target.getName(), modestring, modearg);
 				handle_l_mode(add, modearg, target);
 				break;
 			case 0:
-				message += build_reply(ERR_UMODEUNKNOWNFLAG, caller->getNickname(), target->getName(), "Unknown MODE flag");
+				message += build_reply(ERR_UMODEUNKNOWNFLAG, caller.getNickname(), target.getName(), "Unknown MODE flag");
 				break;
 			case -1: //ignored
 				break;
 			default:
-				message += build_reply(ERR_UMODEUNKNOWNFLAG, caller->getNickname(), target->getName(), "Unknown MODE flag");
+				message += build_reply(ERR_UMODEUNKNOWNFLAG, caller.getNickname(), target.getName(), "Unknown MODE flag");
 				break;
 		}
 	}
@@ -237,30 +237,26 @@ string Executor::handle_modes(Client* caller, vector<tuple<bool, signed char, st
  * RPL_BANLIST 			(We don't support a banlist)
  * RPL_ENDOFBANLIS 		(We don't support a banlist)
  */
-string Executor::run_MODE(vector<string> args, int fd) {
-	Client* caller = getClientByFD(fd);
-	if (caller == NULL) {
-		return "USER NOT FOUND";
-	}
+string Executor::run_MODE(const vector<string>& args, Client& caller) {
 
 	string target = args[0];
 	// Client* target_client = getClientByNickname(target);
-	Channel* channel = getChannelByName(target);
+	Channel& channel = getChannelByName(target);
 	bool target_is_channel = is_channel(target);
 
 	if (!target_is_channel) { // If target is a user. (Commented code checks properly, but we don't support modes on users, only channels)
-		return build_reply(ERR_NOSUCHCHANNEL, caller->getNickname(), target, "No such channel (we don't support changing modes for users)");
+		return build_reply(ERR_NOSUCHCHANNEL, caller.getNickname(), target, "No such channel (we don't support changing modes for users)");
 		// if (target_client == NULL) // if target doesn't exist
-		// 	return build_reply(ERR_NOSUCHNICK, caller->getNickname(), target, "No such nick/channel");
-		// else if (caller->getNickname().compare(target) != 0) // if target doesn't match caller.
-		// 	return build_reply(ERR_USERSDONTMATCH, caller->getNickname(), target, "Cant change mode for other users");
+		// 	return build_reply(ERR_NOSUCHNICK, caller.getNickname(), target, "No such nick/channel");
+		// else if (caller.getNickname().compare(target) != 0) // if target doesn't match caller.
+		// 	return build_reply(ERR_USERSDONTMATCH, caller.getNickname(), target, "Cant change mode for other users");
 	}
-	if (channel == NULL) { // If target is a channel and it doesn't exist.
-		return build_reply(ERR_NOSUCHCHANNEL, caller->getNickname(), target, "No such channel");
+	if (channel == Channel::nullchan) { // If target is a channel and it doesn't exist.
+		return build_reply(ERR_NOSUCHCHANNEL, caller.getNickname(), target, "No such channel");
 	}
 	if (args.size() == 1) { // No modestring
-		pair<string, string> replymodes = channel->getModes();
-		return build_mode_reply(caller->getNickname(), target, replymodes.first, replymodes.second);
+		pair<string, string> replymodes = channel.getModes();
+		return build_mode_reply(caller.getNickname(), target, replymodes.first, replymodes.second);
 	}
 
 	string modestring = args[1];
@@ -271,14 +267,14 @@ string Executor::run_MODE(vector<string> args, int fd) {
 	}
 
 	if (check_privileges(caller, channel, modestring) == false) {
-		return build_reply(ERR_CHANOPRIVSNEEDED, caller->getNickname(), target, "You're not an operator of " + target);
+		return build_reply(ERR_CHANOPRIVSNEEDED, caller.getNickname(), target, "You're not an operator of " + target);
 	}
 
 	if (!modestring.size()) {
 		pair<string,string> modedata = get_current_modes(channel);
 		string modestring = modedata.first;
 		string modeargs = modedata.second;
-		return build_mode_reply(caller->getNickname(), target, modestring, modeargs);
+		return build_mode_reply(caller.getNickname(), target, modestring, modeargs);
 	}
 
 	vector<tuple<bool, signed char, string>> mode_cmds = parse_modestring(modestring, modeargs);

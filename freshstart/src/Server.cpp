@@ -5,6 +5,7 @@ TO DO (astrid)
 	-	try-catch blokken maken voor server setup (& die koppelen aan main?)
 	-	when shutting down server (???) (closing client connections?)
 	-	recv returned -1 -> dan wat?
+	quit cmd
 */
 
 // Server::Server() {
@@ -129,7 +130,7 @@ void	Server::closeConnection(const int fd) {
 	this->env.clients.erase(getItToClientByFD(fd));
 }
 
-
+#include <string>
 
 void	Server::run([[maybe_unused]] Executor& ex) {
 	if (setPoll() == 0)
@@ -158,9 +159,17 @@ void	Server::run([[maybe_unused]] Executor& ex) {
 				Msg("POLLIN", "DEBUG");
 				if (receivefromClient(this->env.clients[i]) == false)
 					closeConnection(this->env.clients[i].getFD());
-				// execute? 
-				ex.run(this->env.clients[i]);
-				
+				// execute?
+
+				istringstream iss(this->env.clients[i].recvbuf);
+				string line;
+				while (getline(iss, line)) {
+					Command cmd(line);
+					ex.run(cmd, this->env.clients[i]);
+					std::cerr << "Input : " << line << endl;
+					std::cerr << "Output: " << this->env.clients[i].getDataToSend() << endl;
+				}
+				// Outgoing lines (plural) are ready now in the client send buffer.
 			}
 			if (this->env.clients[i].checkRevent(POLLOUT)) {
 				Msg("POLLOUT", "DEBUG");
@@ -189,11 +198,13 @@ bool	Server::receivefromClient(Client &c) {
 }
 
 void	Server::sendtoClient(Client &c) {
+	// buf[BUFSIZE] = '\0';
 	string	dataToSend = c.getDataToSend();
 	if (dataToSend.empty()) {
 		c.setEvents(POLLIN|POLLHUP|POLLRDHUP);
 		return ;
 	}
+	dataToSend = ":" + this->env.hostname + " " + dataToSend;
 	int nbytes = send(c.getFD(), dataToSend.c_str(), dataToSend.size(), 0);
 	if (nbytes <= 0) {
 		Msg("error in sending data", "ERROR");
@@ -221,8 +232,8 @@ int	Server::setPoll() {
 		if (pollFd.fd == sockfd.fd) {
 			sockfd.revents = pollFd.revents;
 		} else {
-			Client *C = getClientByFD(pollFd.fd);
-			C->setRevents(pollFd.revents);
+			Client *c = getClientByFD(pollFd.fd);
+			c->setRevents(pollFd.revents);
 		}
 	}
 	return(ret);

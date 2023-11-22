@@ -86,7 +86,7 @@ class Executor {
 		~Executor();
 
 		int validateArguments(const string& command, int numArgs);
-		string run(const Command& cmd, Client& caller);
+		void run(const Command& cmd, Client& caller);
 
 		string run_CAP(const vector<string>& args, Client& caller);
 		string run_PASS(const vector<string>& args, Client& caller);
@@ -103,23 +103,23 @@ class Executor {
 		string run_TOPIC(const vector<string>& args, Client& caller);
 		string run_QUIT(const vector<string>& args, Client& caller);
 
-		string handle_modes(Client* caller, vector<tuple<bool, signed char, string>> mode_cmds, Channel* target);
-		void handle_i_mode(bool add, Channel* target);
-		void handle_t_mode(bool add, Channel* target);
-		void handle_k_mode(bool add, string arg, Channel* target);
-		void handle_o_mode(bool add, string arg, Channel* target);
-		void handle_l_mode(bool add, string arg, Channel* target);
+		string handle_modes(const Client& caller, const vector<tuple<bool, signed char, string>>& mode_cmds, Channel& target);
+		void handle_i_mode(const bool add, Channel& target);
+		void handle_t_mode(const bool add, Channel& target);
+		void handle_k_mode(const bool add, const string& arg, Channel& target);
+		void handle_o_mode(const bool add, const string& arg, Channel& target);
+		void handle_l_mode(const bool add, const string& arg, Channel& target);
 
 		// void addClient(string username, string nickname, string hostname, string servername, string realname, int fd);
-		void addChannel(string name, string password, Client* client);
+		void addChannel(const string& name, const string& password, const Client& caller);
 
 		bool name_exists(const string& name);
 
-		Client* getClientByFD(int fd);
-		string getServerPassword();
-		Channel* getChannelByName(string name);
-		Client* getClientByNickname(string nickname);
+		Client& getClientByFD(const int fd);
+		Client& getClientByNickname(const string& nickname);
 		vector<Client>::iterator getItToClientByNickname(string nickname);
+		Channel& getChannelByName(const string& name);
+		string getServerPassword();
 
 		bool parseUserArguments(const vector<string>& args, string& username,
 								string& hostname, string& servername, string& realname);

@@ -1,4 +1,3 @@
 #include "Env.hpp"
 
-Env::Env(string pass) : pass(pass) {
-}
+Env::Env(int port, string pass) : pass(pass), port(port) {};

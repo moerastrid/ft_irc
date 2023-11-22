@@ -86,10 +86,10 @@ const string& Client::getRealname() const {
 const string& Client::getDataToSend() const {
 	return this->datatosend;
 }
-bool Client::isOperator(Channel& c) const {
+bool Client::isOperator(const Channel& c) const {
 	return c.hasOperator(*this);
 }
-bool Client::isFounder(Channel& c) const {
+bool Client::isFounder(const Channel& c) const {
 	return c.hasFounder(*this);
 }
 
@@ -100,6 +100,12 @@ bool Client::checkEvent(short event) {
 bool Client::checkRevent(short revent) {
 	return this->pfd.revents & revent;
 }
+
+void Client::addSendData(const string& message) {
+	this->datatosend += message;
+}
+
+Client Client::nullclient = Client(-1);
 
 ostream& operator<<(ostream& os, const Client& client) {
 	string str = string("Client(") + to_string(client.getFD()) + ", " + client.getNickname() + ", " + client.getUsername() + ", " + client.getHostname() + ", " + client.getServername() + ", " + client.getRealname() + ")";

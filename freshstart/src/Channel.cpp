@@ -223,6 +223,8 @@ int Channel::removeClient(const Client& client) {
 	return 0;
 }
 
+Channel Channel::nullchan;
+
 ostream& operator<<(ostream& os, const Channel& channel) {
 	os << "Channel(" << channel.getName() << ", [";
 	const vector<Client>& clients = channel.getClients();
