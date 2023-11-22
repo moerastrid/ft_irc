@@ -51,12 +51,12 @@ public:
 
 	void setEvents(const short& events);
 	void setRevents(const short& revents);
-	void setNickname(string& nickname);
-	void setUsername(string& username);
-	void setHostname(string& hostname);
-	void setServername(string& servername);
-	void setRealname(string& realname);
-	void setPassword(string& password);
+	void setNickname(const string& nickname);
+	void setUsername(const string& username);
+	void setHostname(const string& hostname);
+	void setServername(const string& servername);
+	void setRealname(const string& realname);
+	void setPassword(const string& password);
 	void makeOperator(Channel& c);
 	void takeOperator(Channel& c);
 

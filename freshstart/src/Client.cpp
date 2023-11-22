@@ -36,22 +36,22 @@ void Client::setRevents(const short& revents) {
 	this->pfd.revents = revents;
 }
 
-void Client::setNickname(string& nickname) {
+void Client::setNickname(const string& nickname) {
 	this->nickname = nickname;
 }
-void Client::setUsername(string& username) {
+void Client::setUsername(const string& username) {
 	this->username = username;
 }
-void Client::setHostname(string& hostname) {
+void Client::setHostname(const string& hostname) {
 	this->hostname = hostname;
 }
-void Client::setServername(string& servername) {
+void Client::setServername(const string& servername) {
 	this->servername = servername;
 }
-void Client::setRealname(string& realname) {
+void Client::setRealname(const string& realname) {
 	this->realname = realname;
 }
-void Client::setPassword(string& password) {
+void Client::setPassword(const string& password) {
 	this->password = password;
 }
 void Client::makeOperator(Channel& c) {

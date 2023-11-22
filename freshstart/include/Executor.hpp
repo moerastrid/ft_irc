@@ -73,7 +73,7 @@ using std::setfill;
 
 class Executor; // Forward declaration
 
-typedef string (Executor::*mbrFuncPtr)(vector<string>, int fd);
+typedef string (Executor::*mbrFuncPtr)(const vector<string>&, Client&);
 
 class Executor {
 	private:
@@ -86,22 +86,22 @@ class Executor {
 		~Executor();
 
 		int validateArguments(const string& command, int numArgs);
-		string run(Command& cmd, int fd);
+		string run(const Command& cmd, Client& caller);
 
-		string run_CAP(vector<string> args, int fd);
-		string run_PASS(vector<string> args, int fd);
-		string run_NICK(vector<string> args, int fd);
-		string run_USER(vector<string> args, int fd);
-		string run_MODE(vector<string> args, int fd);
-		string run_PING(vector<string> args, int fd);
-		string run_PRIVMSG(vector<string> args, int fd);
-		string run_WHOIS(vector<string> args, int fd);
-		string run_JOIN(vector<string> args, int fd);
-		string run_KICK(vector<string> args, int fd);
-		string run_PART(vector<string> args, int fd);
-		string run_INVITE(vector<string> args, int fd);
-		string run_TOPIC(vector<string> args, int fd);
-		string run_QUIT(vector<string> args, int fd);
+		string run_CAP(const vector<string>& args, Client& caller);
+		string run_PASS(const vector<string>& args, Client& caller);
+		string run_NICK(const vector<string>& args, Client& caller);
+		string run_USER(const vector<string>& args, Client& caller);
+		string run_MODE(const vector<string>& args, Client& caller);
+		string run_PING(const vector<string>& args, Client& caller);
+		string run_PRIVMSG(const vector<string>& args, Client& caller);
+		string run_WHOIS(const vector<string>& args, Client& caller);
+		string run_JOIN(const vector<string>& args, Client& caller);
+		string run_KICK(const vector<string>& args, Client& caller);
+		string run_PART(const vector<string>& args, Client& caller);
+		string run_INVITE(const vector<string>& args, Client& caller);
+		string run_TOPIC(const vector<string>& args, Client& caller);
+		string run_QUIT(const vector<string>& args, Client& caller);
 
 		string handle_modes(Client* caller, vector<tuple<bool, signed char, string>> mode_cmds, Channel* target);
 		void handle_i_mode(bool add, Channel* target);
@@ -110,8 +110,10 @@ class Executor {
 		void handle_o_mode(bool add, string arg, Channel* target);
 		void handle_l_mode(bool add, string arg, Channel* target);
 
-		void addClient(string username, string nickname, string hostname, string servername, string realname, int fd);
+		// void addClient(string username, string nickname, string hostname, string servername, string realname, int fd);
 		void addChannel(string name, string password, Client* client);
+
+		bool name_exists(const string& name);
 
 		Client* getClientByFD(int fd);
 		string getServerPassword();
@@ -130,11 +132,11 @@ class Executor {
 		string build_mode_reply(string callername, string target_channel, string modestring, string modeargs);
 		string error_message(int error_code, string a, string b);
 
-		void send_to_client(int fd, string message);
+		void send_to_client(Client& client, string message);
 };
 
 bool is_channel(const string& name);
-bool is_valid_nickname_character(char c);
+bool is_nickname_character(char c);
 bool verify_name(const string& arg);
 bool verify_realname(const string& arg);
 vector<string> split_args(const string& args);

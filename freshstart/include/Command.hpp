@@ -30,9 +30,10 @@ public:
 
 	void addArg(string arg);
 	void setCmd(string cmd);
-	string getCommand();
-	string getArg(size_t idx);
-	vector<string> getArgs();
+	
+	const string getCommand() const;
+	const string getArg(size_t idx) const;
+	const vector<string> getArgs() const;
 
 	void combine_reason();
 };

@@ -4,15 +4,12 @@
 #include "Env.hpp"
 
 int main(int argc, char **argv) {
-	int			port;
-
-	port = parse(argc, argv);
+	int	port = parse(argc, argv);
 	if (port < 0) {
 		return (EXIT_FAILURE);
 	}
 
-	Env env(argv[2]);
-	env.port = port;
+	Env env(port, argv[2]);
 	Executor	ex(env);
 
 	Server ircServer(env);

@@ -39,16 +39,16 @@ void Command::addArg(string arg) {
 	this->args.push_back(arg);
 }
 
-string Command::getCommand() {
+const string Command::getCommand() const {
 	return this->command;
 }
 
 //throws exception if idx too large
-string Command::getArg(size_t idx) {
+const string Command::getArg(size_t idx) const {
 	return this->args.at(idx);
 }
 
-vector<string> Command::getArgs() {
+const vector<string> Command::getArgs() const {
 	return this->args;
 }
 

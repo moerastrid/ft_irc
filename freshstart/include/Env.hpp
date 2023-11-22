@@ -26,7 +26,7 @@ class Env {
 		string				ip = "0.0.0.0";
 		int					port;
 
-		Env(string pass);
+		Env(int port, string pass);
 };
 
 #endif /* end of include guard: ENV_HPP */
