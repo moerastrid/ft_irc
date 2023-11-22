@@ -43,7 +43,7 @@ Server::Server(Env& env) : env(env) {
 
 	sockfd.events = POLLIN|POLLHUP;
 	sockin.sin_family = AF_INET;
-	sockin.sin_port = htons(env.port);
+	sockin.sin_port = htons(this->env.port);
 	sockin.sin_addr.s_addr = INADDR_ANY;
 
 	Server::setUp();
@@ -165,6 +165,9 @@ void	Server::run([[maybe_unused]] Executor& ex) {
 			if (this->env.clients[i].checkRevent(POLLIN)) {
 				Msg("POLLIN", "DEBUG");
 				receiveChunk(this->env.clients[i]);
+				// execute? 
+				ex.run(this->env.clients[i]);
+				
 			}
 			if (this->env.clients[i].checkRevent(POLLOUT)) {
 				Msg("POLLOUT", "DEBUG");
@@ -222,6 +225,7 @@ void	Server::receiveChunk(Client &c) {
 	char	buf[BUFSIZE];
 	memset(&buf, 0, sizeof(buf));
 
+	(void)c;
 	// recv(c.getFD(), buf, BUFSIZE);
 
 }
@@ -229,6 +233,7 @@ void	Server::receiveChunk(Client &c) {
 void	Server::sendChunk(Client &c) {
 	char	buf[BUFSIZE];
 	memset(&buf, 0, sizeof(buf));
+	(void)c;
 }
 
 

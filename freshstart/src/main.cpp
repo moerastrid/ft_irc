@@ -11,7 +11,8 @@ int main(int argc, char **argv) {
 		return (EXIT_FAILURE);
 	}
 
-	Env env(port, argv[2]);
+	Env env(argv[2]);
+	env.port = port;
 	Executor	ex(env);
 
 	Server ircServer(env);
