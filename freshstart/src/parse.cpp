@@ -50,7 +50,7 @@ int	parse(int argc, char **argv) {
 		return (-1);
 	}
 	port = get_port(argv[1]);
-	if (port < 0 | port > 65535) {
+	if (port < 0 || port > 65535) {
 		Msg("invalid port, please enter digits bewteen 0 and 65535.\nIRCserver usage:\t./ircserver <port> <password>", "ERROR");
 		return(-1);
 	}

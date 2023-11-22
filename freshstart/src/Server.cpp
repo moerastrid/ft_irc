@@ -168,7 +168,9 @@ void	Server::run(Executor& ex) {
 		if (this->env.clients[i].getPFD().revents & POLLIN) {
 			Msg("POLLIN", "DEBUG");
 			
-				
+			//client.recbuf = receive;
+			//if (newline -> execute)
+
 			buf += receive(this->env.clients[i].getFD());
 
 			if (buf.find('\n') == string::npos)
