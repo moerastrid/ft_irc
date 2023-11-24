@@ -30,6 +30,7 @@ SRC = $(SRC_DIR)/main.cpp \
 
 OBJ = $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRC))
 
+# all : $(NAME)
 all :
 	$(MAKE) -j $(NAME)
 
