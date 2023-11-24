@@ -1,6 +1,8 @@
 NAME := ircserver
-FLAGS =  -Wall -Wextra -Werror -Iinclude -g -fsanitize=address #-std=c++20
 CXX = c++
+CXXFLAGS = -Wall -Wextra -Werror -Iinclude
+CXXFLAGS += -g -fsanitize=address
+
 
 SRC_DIR = src
 OBJ_DIR = obj
@@ -28,13 +30,14 @@ SRC = $(SRC_DIR)/main.cpp \
 
 OBJ = $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRC))
 
-all : $(NAME)
+all :
+	$(MAKE) -j $(NAME)
 
 $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp | $(OBJ_DIR)
-	$(CXX) $(FLAGS) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 $(NAME): $(OBJ) $(HDR)
-	$(CXX) $(FLAGS)	-o $(NAME) $(OBJ)
+	$(CXX) $(CXXFLAGS)	-o $(NAME) $(OBJ)
 
 $(OBJ_DIR) :
 	mkdir -pv $(OBJ_DIR)
@@ -45,8 +48,8 @@ clean :
 fclean : clean
 	rm -f $(NAME)
 
-re : fclean all
-# re :
-# 	$(MAKE) -j fclean all
+# re : fclean all
+re :
+	$(MAKE) -j fclean all
 
 .PHONY: all clean fclean re
