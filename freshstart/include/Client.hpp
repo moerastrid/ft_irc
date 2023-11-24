@@ -27,19 +27,19 @@ private:
 	string			servername;
 	string			realname;
 	string			password;
-	bool			sending;
+	// bool			sending;
 	string			datatosend; // to do astrid : []\n[]\n[]\n[]\n
-
+	string			datatorecv;
 
 public:
 	static Client	nullclient;
-	string			recvbuf;
 
 	~Client();
 	Client(int fd);
 	Client(const Client& other);
 	Client& operator=(const Client& other);
 
+	// Getters
 	const struct pollfd&	getPFD() const;
 	int						getFD() const;
 	const string&			getNickname() const;
@@ -48,25 +48,41 @@ public:
 	const string&			getServername() const;
 	const string&			getRealname() const;
 	const string&			getPassword() const;
-	const string&			getDataToSend() const;
-	bool					isOperator(const Channel& c) const;
-	bool					isFounder(const Channel& c) const;
 
-	void					setEvents(const short& events);
-	void					setRevents(const short& revents);
+	// Setters
+	void					setEvents(const short events);
+	void					setRevents(const short revents);
+	void					addEvent(const short event);
+	void					removeEvent(const short event);
+
 	void					setNickname(const string& nickname);
 	void					setUsername(const string& username);
 	void					setHostname(const string& hostname);
 	void					setServername(const string& servername);
 	void					setRealname(const string& realname);
 	void					setPassword(const string& password);
-	void					makeOperator(Channel& c);
-	void					takeOperator(Channel& c);
 
+	void					addSendData(const string& message);
+	void					addRecvData(const string& message);
+
+	// Takers (getters, but these also modifiy the class by deleting what is taken)
+	const string			takeSendData();
+	const string			takeRecvData();
+
+	// Havers (bool)
+	bool					hasSendData() const;
+	bool					hasRecvData() const;
+	bool					isOperator(const Channel& c) const;
+	bool					isFounder(const Channel& c) const;
 	bool					checkEvent(short event);
 	bool					checkRevent(short revent);
 
-	void					addSendData(const string& message);
+	// Changers (set values on some other object)
+	void					makeOperator(Channel& c);
+	void					takeOperator(Channel& c);
+	
+
+	// Old
 	void					removeSuccesfullySentDataFromBuffer(size_t	nbytes);
 };
 

@@ -151,7 +151,7 @@ void Executor::run(const Command& cmd, Client& caller) {
  * Responses not (yet) handled:
  */
 string Executor::run_CAP([[maybe_unused]]const vector<string>& args, [[maybe_unused]]Client& caller) {
-	return ":" + this->e.hostname + " CAP NAK :-\n";
+	return "CAP NAK :-\n";
 }
 
 /*
@@ -565,7 +565,7 @@ string Executor::run_KICK(const vector<string>& args, Client& caller) {
 			continue;
 		}
 
-		message += ":" + this->e.hostname + " KICK " + channelname + " " + *name_it + " " + *reason_start + "\n";
+		message += "KICK " + channelname + " " + *name_it + " " + *reason_start + "\n";
 	}
 
 	return message;
@@ -603,7 +603,7 @@ string Executor::run_PART(const vector<string>& args, Client& caller) {
 			continue;
 		}
 
-		message += ":" + this->e.hostname + " PART " + *it + "\n";
+		message += "PART " + *it + "\n";
 		if (reason_it == args.end()) {
 			cout << "skipping reason (#TODO change to default message)" << endl;
 			continue;
@@ -836,11 +836,11 @@ string Executor::build_reply(int response_code, string callername, string target
 	stringstream response;
 	response << setw(3) << setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
 
-	return ":" + this->e.hostname + " " + response.str() + " " + callername + " " + target + " :" + message + "\n";
+	return response.str() + " " + callername + " " + target + " :" + message + "\n";
 }
 
 string Executor::build_notice_reply(string callername, string target, string message) {
-	return ":" + this->e.hostname + " NOTICE " + callername + " " + target + " :" + message + "\n";
+	return "NOTICE " + callername + " " + target + " :" + message + "\n";
 }
 
 string Executor::build_channel_reply(int response_code, string callername, string target, string channel, string message) {
@@ -850,7 +850,7 @@ string Executor::build_channel_reply(int response_code, string callername, strin
 	stringstream response;
 	response << setw(3) << setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
 
-	return ":" + this->e.hostname + " " + response.str() + " " + callername + " " + target + " " + channel + " :" + message + "\n";
+	return response.str() + " " + callername + " " + target + " " + channel + " :" + message + "\n";
 }
 
 string Executor::getServerPassword() {
@@ -861,5 +861,5 @@ string Executor::build_WHOIS_reply(int response_code, string callername, string 
 	stringstream response;
 	response << setw(3) << setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
 
-	return ":" + this->e.hostname + " " + response.str() + " " + callername + " " + target + " " + userinfo + "\n";
+	return response.str() + " " + callername + " " + target + " " + userinfo + "\n";
 }

@@ -12,6 +12,15 @@ TO DO (astrid)
 // 	Msg("Server default constructor", "DEBUG");
 // }
 
+
+// #TODO delete
+void printHex(const std::string& str) {
+    for (char c : str) {
+        std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(static_cast<unsigned char>(c)) << " ";
+    }
+    std::cout << std::dec << std::endl;
+}
+
 Server::~Server() {
 	Msg("Server default destructor", "DEBUG");
 	close(sockfd.fd);
@@ -90,7 +99,6 @@ void	Server::setUp() {
 	}
 }
 
-
 Client* Server::getClientByFD(int fd) {
 	vector<Client>& clients = this->env.clients;
 	for (vector<Client>::iterator it = clients.begin(); it != clients.end(); it++) {
@@ -109,7 +117,7 @@ vector<Client>::iterator	Server::getItToClientByFD(int fd) {
 	return clients.end();
 }
 
-void	Server::addConnection() {
+void	Server::addConnection() { // This or the function that calls it should probably check if a connection for the same user already exists.
 	socklen_t	tempSize = sizeof(sockin);
 	int new_fd;
 	memset(&new_fd, 0, sizeof(new_fd));
@@ -135,8 +143,6 @@ void	Server::closeConnection(const int fd) {
 void	Server::run([[maybe_unused]] Executor& ex) {
 	if (setPoll() == 0)
 		return;
-
-	CustomOutputStream customOut(cout);
 	
 	if (sockfd.revents & POLLIN) {
 		addConnection();
@@ -146,38 +152,46 @@ void	Server::run([[maybe_unused]] Executor& ex) {
 	}
 
 	for (size_t	i = 0; i < this->env.clients.size(); i++) {
-		if (this->env.clients[i].getPFD().revents == 0) {
+		Client& client = this->env.clients[i];
+
+		if (client.getPFD().revents == 0) {
 			continue ;
-		} else if (this->env.clients[i].checkRevent(POLLHUP|POLLRDHUP)) {
+		} else if (client.checkRevent(POLLHUP|POLLRDHUP)) {
 			Msg("POLLHUP/POLLRDHUP", "DEBUG");
-	 		closeConnection(this->env.clients[i].getFD());
-		} else if (this->env.clients[i].checkRevent(POLLERR)) {
+	 		closeConnection(client.getFD());
+		} else if (client.checkRevent(POLLERR)) {
 			Msg("POLLERR", "DEBUG");
-	 		closeConnection(this->env.clients[i].getFD());
+	 		closeConnection(client.getFD());
 		} else {
-			if (this->env.clients[i].checkRevent(POLLIN)) {
+			if (client.checkRevent(POLLIN)) {
 				Msg("POLLIN", "DEBUG");
-				if (receivefromClient(this->env.clients[i]) == false)
-					closeConnection(this->env.clients[i].getFD());
+				if (receivefromClient(client) == false)
+					closeConnection(client.getFD());
 				// execute?
 
-				istringstream iss(this->env.clients[i].recvbuf);
-				string line;
-				while (getline(iss, line)) {
-					Command cmd(line);
-					ex.run(cmd, this->env.clients[i]);
-					std::cerr << "Input : " << line << endl;
-					std::cerr << "Output: " << this->env.clients[i].getDataToSend() << endl;
+				// Execute:
+				while (client.hasRecvData()) {
+					string receiveData = client.takeRecvData(); // Get the line. 
+					Command cmd(receiveData);					// Turn it into a command.
+					ex.run(cmd, client);						// Run the command.
 				}
-				// Outgoing lines (plural) are ready now in the client send buffer.
+				if (client.hasSendData())
+					client.addEvent(POLLOUT);
 			}
-			if (this->env.clients[i].checkRevent(POLLOUT)) {
+			if (client.checkRevent(POLLOUT)) {
 				Msg("POLLOUT", "DEBUG");
-				sendtoClient(this->env.clients[i]);
+				sendtoClient(client);
+
+				if (!client.hasSendData()) //check for more messages. If none, remove event.
+					client.removeEvent(POLLOUT);
 			}
 		}
 	}
 }
+
+#define BG_COLOR_MAGENTA "\033[45m" // #TODO delete
+#define COLOR_GREEN "\033[32m"
+#define COLOR_RESET "\033[0m"
 
 bool	Server::receivefromClient(Client &c) {
 	char	buf[BUFSIZE];
@@ -191,26 +205,32 @@ bool	Server::receivefromClient(Client &c) {
 	if (nbytes == 0) {
 		Msg("no connection with Client " + to_string(c.getFD()), "WARNING"); 
 		return (false);
-	} 
+	}
 
-	c.recvbuf += buf;
+	c.addRecvData(string(buf));
+
+	this->customOut << BG_COLOR_MAGENTA << "Received: [" << buf << "]" << COLOR_RESET << endl; // #TODO delete
+
 	return (true);
 }
 
 void	Server::sendtoClient(Client &c) {
 	// buf[BUFSIZE] = '\0';
-	string	dataToSend = c.getDataToSend();
+	string	dataToSend = c.takeSendData(); //Now also removes what you take from the client. No more cleaning necessary.
 	if (dataToSend.empty()) {
 		c.setEvents(POLLIN|POLLHUP|POLLRDHUP);
 		return ;
 	}
 	dataToSend = ":" + this->env.hostname + " " + dataToSend;
 	int nbytes = send(c.getFD(), dataToSend.c_str(), dataToSend.size(), 0);
+	
+	this->customOut << COLOR_GREEN << "Sending: [" << dataToSend << "]" << COLOR_RESET << endl; //#TODO delete
+
 	if (nbytes <= 0) {
 		Msg("error in sending data", "ERROR");
 		return ;
 	}
-	c.removeSuccesfullySentDataFromBuffer(nbytes);
+	// c.removeSuccesfullySentDataFromBuffer(nbytes);
 }
 
 int	Server::setPoll() {
@@ -259,3 +279,8 @@ std::ostream& operator<<(std::ostream& os, const Server& serv) {
 	os << "Server(" << serv.getName() << ", " << serv.getHostname() << ", " << serv.getIP() << ", " << serv.getPort() << ")";
 	return os;
 }
+
+std::ofstream Server::outputfile("output.txt");
+CustomOutputStream Server::customOut(std::cout);
+CustomOutputStream Server::customErr(std::cerr);
+

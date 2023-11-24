@@ -20,9 +20,38 @@ using std::vector;
 #include "Executor.hpp"
 #include "Env.hpp"
 
+#include <fstream>
+
 #define BUFSIZE 512
 
 #include <poll.h>
+
+class CustomOutputStream : public ostream {
+public:
+	CustomOutputStream(ostream& output) : ostream(output.rdbuf()), output_stream(output) {}
+
+	template <typename T>
+	CustomOutputStream& operator<<(const T& value) {
+		for (const auto& el : value) {
+			if (el == '\r')
+				output_stream << "\\r";
+			else if (el == '\n')
+				output_stream << "\\n";
+			else
+				output_stream << el;
+		}
+		return *this;
+	};
+
+	// Override the << operator for endl
+	CustomOutputStream& operator<<(ostream& (*manipulator)(ostream&)) {
+		manipulator(output_stream);
+		return *this;
+	};
+
+private:
+	ostream& output_stream;
+};
 
 class Server {
 	private :
@@ -45,9 +74,14 @@ class Server {
 		void	sendtoClient(Client &c);
 
 	public :
-		Server(Env& env);								//default constructor
+
+		static CustomOutputStream customOut; //#TODO delete all CustomOutput related code before handing in.
+		static CustomOutputStream customErr;
+		static std::ofstream outputfile;
+
+		Server(Env& env);								// default constructor
 		~Server();										// default destructor
-		Server(const Server &src);						//copy constructor
+		Server(const Server &src);						// copy constructor
 		Server &operator=(const Server &src);			// = sign operator
 		Server(const int port, const string pass);		// constructor (PORT, pass)
 		
@@ -59,33 +93,6 @@ class Server {
 		struct pollfd**				getPollFDS() const;
 		Client* 					getClientByFD(int fd);
 		vector<Client>::iterator	getItToClientByFD(int fd);
-};
-
-class CustomOutputStream : public ostream {
-public:
-	CustomOutputStream(ostream& output) : ostream(output.rdbuf()), output_stream(output) {}
-
-	template <typename T>
-	CustomOutputStream& operator<<(const T& value) {
-		for (const auto& el : value) {
-			if (el == '\n') {
-				// Special handling for printing the literal "\n"
-				output_stream << "\\n";
-			} else {
-				output_stream << el;
-			}
-		}
-		return *this;
-	};
-
-	// Override the << operator for endl
-	CustomOutputStream& operator<<(ostream& (*manipulator)(ostream&)) {
-		manipulator(output_stream);
-		return *this;
-	};
-
-private:
-	ostream& output_stream;
 };
 
 std::ostream& operator<<(std::ostream& os, const Server& server);
