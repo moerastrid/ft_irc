@@ -12,7 +12,6 @@ using std::to_string;
 
 #include <poll.h>
 
-
 #include "Channel.hpp"
 
 class Channel; // Forward declaration
@@ -27,7 +26,7 @@ private:
 	string			servername;
 	string			realname;
 	string			password;
-	// bool			sending;
+
 	string			datatosend; // to do astrid : []\n[]\n[]\n[]\n
 	string			datatorecv;
 
@@ -74,16 +73,16 @@ public:
 	bool					hasRecvData() const;
 	bool					isOperator(const Channel& c) const;
 	bool					isFounder(const Channel& c) const;
-	bool					checkEvent(short event);
-	bool					checkRevent(short revent);
+	bool					checkEvent(short event) const;
+	bool					checkRevent(short revent) const;
+	bool					isRegistered() const;
 
 	// Changers (set values on some other object)
 	void					makeOperator(Channel& c);
 	void					takeOperator(Channel& c);
-	
 
 	// Old
-	void					removeSuccesfullySentDataFromBuffer(size_t	nbytes);
+	void					removeSuccesfullySentDataFromBuffer(size_t	nbytes); //deprecated by takeSendData()
 };
 
 bool operator==(const Client& lhs, const Client& rhs);

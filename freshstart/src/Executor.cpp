@@ -51,6 +51,32 @@ vector<string> split_args(const string& args) {
 	return res;
 }
 
+bool compare_lowercase(const string& a, const string& b) {
+	string ac = a;
+	string bc = b;
+
+	std::transform(ac.begin(), ac.end(), ac.begin(), [](unsigned char c) {
+		return std::tolower(c);
+	});
+
+	std::transform(bc.begin(), bc.end(), bc.begin(), [](unsigned char c) {
+		return std::tolower(c);
+	});
+
+	return ac == bc;
+}
+
+bool Executor::name_exists(const string& name) { // #TODO improve: Case Insensitive
+	for (const Client& c : this->e.clients) {
+		std::string clientName = c.getNickname();
+
+		if (compare_lowercase(name, clientName)) {
+			return true;
+		}
+	}
+	return false;
+}
+
 // Executor class
 
 Executor::Executor(Env& e) : e(e) {
@@ -151,7 +177,10 @@ void Executor::run(const Command& cmd, Client& caller) {
  * Responses not (yet) handled:
  */
 string Executor::run_CAP([[maybe_unused]]const vector<string>& args, [[maybe_unused]]Client& caller) {
-	return "CAP NAK :-\n";
+	return "";
+	// return "CAP NAK :-\n";
+	return "CAP * LS :-\n"; // Correct reply for the correct case, but if the client starts doing weird things, capability negotiation does not follow protocol. 
+	//We probably just want to ignore CAP completely. :(
 }
 
 /*
@@ -182,32 +211,6 @@ string Executor::run_PASS(const vector<string>& args, Client& caller) {
 	return build_reply(NOTICE, "PASS", "PASS", "Remember to set your username and nickname with USER and PASS.");
 }
 
-bool compare_lowercase(const string& a, const string& b) {
-	string ac = a;
-	string bc = b;
-
-	std::transform(ac.begin(), ac.end(), ac.begin(), [](unsigned char c) {
-		return std::tolower(c);
-	});
-
-	std::transform(bc.begin(), bc.end(), bc.begin(), [](unsigned char c) {
-		return std::tolower(c);
-	});
-
-	return ac == bc;
-}
-
-bool Executor::name_exists(const string& name) { // #TODO improve: Case Insensitive
-	for (const Client& c : this->e.clients) {
-		std::string clientName = c.getNickname();
-
-		if (compare_lowercase(name, clientName)) {
-			return true;
-		}
-	}
-	return false;
-}
-
 /*
  * Incoming message: NICK <nickname>
  * Parameters: Your new nickname.
@@ -236,20 +239,20 @@ string Executor::run_NICK(const vector<string>& args, Client& caller) {
 		return build_reply(ERR_ERRONEOUSNICKNAME, "NICK", nickname, "Erroneous nickname");
 	}
 
-	if (caller == NULL) {
-		// addClient(nickname, "", "", "", "", fd);
+	bool first_time = caller.getNickname().empty();
+	caller.setNickname(nickname);
+
+	if (!caller.isRegistered()) {
 		return build_reply(NOTICE, nickname, nickname, "Remember to set your username using the USER command");
 	}
 
 	string message;
-
-	if (caller.getNickname().empty()) { //first time connection part 2: electric boogaloo. Accepting connection and sending welcome message.
+	if (first_time) { // First time connection part 2: electric boogaloo. Accepting connection and sending welcome message.
 		message = build_reply(RPL_WELCOME, nickname, nickname, "Welcome to Astrid's & Thibauld's IRC server, " + caller.getUsername() + "!");
 	} else {
 		message = build_reply(RPL_WELCOME, nickname, nickname, "Nickname changed to " + nickname);
 	}
 
-	caller.setNickname(nickname);
 	return message;
 }
 
@@ -378,6 +381,16 @@ string Executor::run_PING([[maybe_unused]]const vector<string>& args, [[maybe_un
  */
 string Executor::run_PRIVMSG(const vector<string>& args, Client& caller) {
 	string target = args[0];
+
+	// const vector<Client>& targetlist;
+
+	if (is_channel(target)) {
+		Channel& target_channel = getChannelByName(target);
+		if (target_channel == Channel::nullchan)
+			return build_reply(ERR_NOSUCHNICK, caller.getNickname(), target, "No such recipient");
+		
+		// const vector<Client>& targetlist = target_channel.getClients();
+	}
 
 	string message;
 	Client& recipient = getClientByNickname(target);

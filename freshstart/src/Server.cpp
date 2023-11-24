@@ -221,7 +221,7 @@ void	Server::sendtoClient(Client &c) {
 		c.setEvents(POLLIN|POLLHUP|POLLRDHUP);
 		return ;
 	}
-	dataToSend = ":" + this->env.hostname + " " + dataToSend;
+	// dataToSend = ":" + this->env.hostname + " " + dataToSend; // Leaving this out for now, there's an issue (PONG)
 	int nbytes = send(c.getFD(), dataToSend.c_str(), dataToSend.size(), 0);
 	
 	this->customOut << COLOR_GREEN << "Sending: [" << dataToSend << "]" << COLOR_RESET << endl; //#TODO delete
@@ -280,7 +280,7 @@ std::ostream& operator<<(std::ostream& os, const Server& serv) {
 	return os;
 }
 
-std::ofstream Server::outputfile("output.txt");
 CustomOutputStream Server::customOut(std::cout);
 CustomOutputStream Server::customErr(std::cerr);
+// std::ofstream Server::outputfile("output.txt");
 

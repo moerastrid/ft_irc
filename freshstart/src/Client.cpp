@@ -1,7 +1,7 @@
 #include "Client.hpp"
 
 Client::Client(int fd) {
-	this->pfd.fd = fd; // effectively const
+	this->pfd.fd = fd;
 	this->pfd.events = POLLIN|POLLHUP|POLLRDHUP;
 };
 
@@ -105,7 +105,7 @@ const string Client::takeSendData() { //was GetSendData(). I've changed it to re
 	}
 	return res;
 }
-const string Client::takeRecvData() { //was GetSendData(). I've changed it to return just one full line, or an empty string if there is no newline, and it also removes the line from the buffer if it has taken one.
+const string Client::takeRecvData() {
 	string res = "";
 	size_t pos = this->datatorecv.find('\n');
 	if (pos != string::npos) {
@@ -128,11 +128,14 @@ bool Client::isOperator(const Channel& c) const {
 bool Client::isFounder(const Channel& c) const {
 	return c.hasFounder(*this);
 }
-bool Client::checkEvent(short event) {
+bool Client::checkEvent(short event) const {
 	return this->pfd.events & event;
 }
-bool Client::checkRevent(short revent) {
+bool Client::checkRevent(short revent) const {
 	return this->pfd.revents & revent;
+}
+bool Client::isRegistered() const {
+	return !username.empty() && !nickname.empty();
 }
 
 // Changers
