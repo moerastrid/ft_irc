@@ -157,9 +157,6 @@ int Executor::run(const Command& cmd, Client& caller) {
 		return false;
 	}
 
-	// if (command != CAP && command != PASS && client.password().empty) pseudo
-		// return false;
-
 	int numArgs = cmd.getArgs().size();
 
 	int res = validateArguments(command, numArgs);
