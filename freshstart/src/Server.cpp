@@ -208,8 +208,6 @@ bool	Server::receivefromClient(Client &c) {
 	}
 	c.addRecvData(string(buf));
 
-	// this->customOut << BG_COLOR_MAGENTA << "Received: [" << buf << "]" << COLOR_RESET << endl; // #TODO delete
-
 	return (true);
 }
 

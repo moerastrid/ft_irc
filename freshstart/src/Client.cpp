@@ -6,10 +6,7 @@ Client::Client(int fd) {
 	this->pfd.events = POLLIN|POLLHUP|POLLRDHUP;
 };
 
-Client::~Client() {
-	// if (this->pfd.fd != -1)
-	// 	close(this->pfd.fd);
-}
+Client::~Client() { }
 
 Client::Client(const Client& other) {
 	this->nickname = other.nickname;
