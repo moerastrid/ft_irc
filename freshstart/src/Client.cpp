@@ -4,6 +4,7 @@
 Client::Client(int fd) {
 	this->pfd.fd = fd;
 	this->pfd.events = POLLIN|POLLHUP|POLLRDHUP;
+	this->pfd.revents = 0;
 };
 
 Client::~Client() { }

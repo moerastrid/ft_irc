@@ -125,7 +125,8 @@ void	Server::addConnection() { // This or the function that calls it should prob
 			return ;
 	} else {
 		Msg("Connection accepted on " + std::to_string(new_fd), "INFO");
-		this->env.clients.push_back(Client(new_fd));
+		Client temp(new_fd);
+		this->env.clients.push_back(temp);
 	}
 }
 
@@ -146,6 +147,7 @@ void	Server::run(Executor& ex) {
 	
 	if (sockfd.revents & POLLIN) {
 		addConnection();
+		return ;
 	} else if (sockfd.revents & POLLERR ) {
 		Msg("HELP", "ERROR");
 		exit(-1) ;
@@ -174,7 +176,6 @@ void	Server::run(Executor& ex) {
 					string receiveData = client.takeRecvData(); // Get the line. 
 					this->customOut << BG_COLOR_MAGENTA << "EXECUTING: [" << receiveData << "]" << COLOR_RESET << endl; // #TODO delete
 					Command cmd(receiveData);					// Turn it into a command.
-					// ex.run(cmd, client);
 					if (ex.run(cmd, client) == false)			// Run the command.
 						closeConnection(client.getFD());
 				}
