@@ -140,7 +140,7 @@ int Executor::validateArguments(const string& command, int numArgs) {
 	return 0;
 }
 
-void Executor::run(const Command& cmd, Client& caller) {
+int Executor::run(const Command& cmd, Client& caller) {
 	string message;
 	string command = cmd.getCommand();
 	mbrFuncPtr ptr;
@@ -150,8 +150,15 @@ void Executor::run(const Command& cmd, Client& caller) {
 	catch (std::out_of_range& e) {
 		message = build_reply(ERR_UNKNOWNCOMMAND, caller.getNickname(), command, "Unknown command from client");
 		caller.addSendData(message);
-		return;
+		return true;
 	}
+
+	if (command != "PASS" && command != "CAP" && caller.getPassword().empty()) {
+		return false;
+	}
+
+	// if (command != CAP && command != PASS && client.password().empty) pseudo
+		// return false;
 
 	int numArgs = cmd.getArgs().size();
 
@@ -165,6 +172,8 @@ void Executor::run(const Command& cmd, Client& caller) {
 	}
 
 	caller.addSendData(message);
+
+	return true;
 }
 
 /*
@@ -230,6 +239,10 @@ string Executor::run_PASS(const vector<string>& args, Client& caller) {
  */
 string Executor::run_NICK(const vector<string>& args, Client& caller) {
 	const string& nickname = args[0];
+
+	if (caller.getPassword().empty())
+		return build_notice_reply(caller.getNickname(), caller.getNickname(), "Enter the server password first with PASS to start connection registration");
+
 
 	if (name_exists(nickname)) { // #TODO Figure out nickcollision vs nicknameinuse
 		return build_reply(ERR_NICKCOLLISION, "NICK", nickname, "Nickname collision KILL from "+ caller.getUsername() + "@" + caller.getHostname());

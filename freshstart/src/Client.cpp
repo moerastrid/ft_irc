@@ -5,7 +5,9 @@ Client::Client(int fd) {
 	this->pfd.events = POLLIN|POLLHUP|POLLRDHUP;
 };
 
-Client::~Client() {}
+Client::~Client() {
+	close(pfd.fd);
+}
 
 Client::Client(const Client& other) {
 	this->nickname = other.nickname;
@@ -13,6 +15,7 @@ Client::Client(const Client& other) {
 	this->hostname = other.hostname;
 	this->servername = other.servername;
 	this->realname = other.realname;
+	this->password = other.password;
 	this->pfd = other.pfd;
 }
 
@@ -23,6 +26,7 @@ Client& Client::operator=(const Client& other) {
 		this->hostname = other.hostname;
 		this->servername = other.servername;
 		this->realname = other.realname;
+		this->password = other.password;
 		this->pfd = other.pfd;
 	}
 	return *this;

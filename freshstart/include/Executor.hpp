@@ -86,7 +86,7 @@ class Executor {
 		~Executor();
 
 		int validateArguments(const string& command, int numArgs);
-		void run(const Command& cmd, Client& caller);
+		int run(const Command& cmd, Client& caller);
 
 		string run_CAP(const vector<string>& args, Client& caller);
 		string run_PASS(const vector<string>& args, Client& caller);

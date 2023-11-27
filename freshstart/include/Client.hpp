@@ -11,6 +11,7 @@ using std::ostream;
 using std::to_string;
 
 #include <poll.h>
+#include <unistd.h>
 
 #include "Channel.hpp"
 
