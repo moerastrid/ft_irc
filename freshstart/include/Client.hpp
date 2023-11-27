@@ -14,6 +14,7 @@ using std::to_string;
 #include <unistd.h>
 
 #include "Channel.hpp"
+#include <unistd.h>
 
 class Channel; // Forward declaration
 

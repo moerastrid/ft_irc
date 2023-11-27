@@ -77,7 +77,6 @@ class Server {
 
 		static CustomOutputStream customOut; //#TODO delete all CustomOutput related code before handing in.
 		static CustomOutputStream customErr;
-		// static std::ofstream outputfile;
 
 		Server(Env& env);								// default constructor
 		~Server();										// default destructor
