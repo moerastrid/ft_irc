@@ -180,7 +180,8 @@ void	Server::run([[maybe_unused]] Executor& ex) {
 			}
 			if (client.checkRevent(POLLOUT)) {
 				Msg("POLLOUT", "DEBUG");
-				sendtoClient(client);
+				if (sendtoClient(client) == false)
+					closeConnection(client.getFD());
 
 				if (!client.hasSendData()) //check for more messages. If none, remove event.
 					client.removeEvent(POLLOUT);
@@ -214,23 +215,20 @@ bool	Server::receivefromClient(Client &c) {
 	return (true);
 }
 
-void	Server::sendtoClient(Client &c) {
-	// buf[BUFSIZE] = '\0';
-	string	dataToSend = c.takeSendData(); //Now also removes what you take from the client. No more cleaning necessary.
+bool	Server::sendtoClient(Client &c) {
+	string	dataToSend = c.takeSendData();
 	if (dataToSend.empty()) {
 		c.setEvents(POLLIN|POLLHUP|POLLRDHUP);
-		return ;
+		return (true);
 	}
 	// dataToSend = ":" + this->env.hostname + " " + dataToSend; // Leaving this out for now, there's an issue (PONG)
 	int nbytes = send(c.getFD(), dataToSend.c_str(), dataToSend.size(), 0);
-	
-	this->customOut << COLOR_GREEN << "Sending: [" << dataToSend << "]" << COLOR_RESET << endl; //#TODO delete
-
 	if (nbytes <= 0) {
 		Msg("error in sending data", "ERROR");
-		return ;
+		return (false);
 	}
-	// c.removeSuccesfullySentDataFromBuffer(nbytes);
+	this->customOut << COLOR_GREEN << "Sending: [" << dataToSend << "]" << COLOR_RESET << endl; //#TODO delete
+	return (true);
 }
 
 int	Server::setPoll() {

@@ -68,10 +68,10 @@ class Server {
 		int		setPoll();
 		// void	incomingConnection();
 		void	addConnection();
-		void	closeConnection(const int i);
-		string	receive(int fd);
+		void	closeConnection(const int fd);
+		// string	receive(int fd);
 		bool	receivefromClient(Client &c);
-		void	sendtoClient(Client &c);
+		bool	sendtoClient(Client &c);
 
 	public :
 
