@@ -3,9 +3,6 @@
 /* 
 TO DO (astrid)
 	-	try-catch blokken maken voor server setup (& die koppelen aan main?)
-	-	when shutting down server (???) (closing client connections?)
-	-	recv returned -1 -> dan wat?
-	quit cmd
 */
 
 // Server::Server() {
@@ -173,7 +170,9 @@ void	Server::run([[maybe_unused]] Executor& ex) {
 				while (client.hasRecvData()) {
 					string receiveData = client.takeRecvData(); // Get the line. 
 					Command cmd(receiveData);					// Turn it into a command.
-					ex.run(cmd, client);						// Run the command.
+					ex.run(cmd, client);
+					// if (ex.run(cmd, client) == false)			// Run the command.
+					// 	closeConnection(client.getFD());
 				}
 				if (client.hasSendData())
 					client.addEvent(POLLOUT);

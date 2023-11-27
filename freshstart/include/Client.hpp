@@ -13,6 +13,7 @@ using std::to_string;
 #include <poll.h>
 
 #include "Channel.hpp"
+#include <unistd.h>
 
 class Channel; // Forward declaration
 
