@@ -2,7 +2,7 @@ NAME := ircserver
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -Iinclude
 CXXFLAGS += -g -fsanitize=address
-
+MAKEFLAGS += --no-print-directory
 
 SRC_DIR = src
 OBJ_DIR = obj
