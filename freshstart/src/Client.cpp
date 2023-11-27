@@ -6,7 +6,8 @@ Client::Client(int fd) {
 };
 
 Client::~Client() {
-	close(pfd.fd);
+	if (this->pfd.fd != -1)
+		close(this->pfd.fd);
 }
 
 Client::Client(const Client& other) {
