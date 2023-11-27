@@ -174,7 +174,7 @@ void	Server::run(Executor& ex) {
 					string receiveData = client.takeRecvData(); // Get the line. 
 					this->customOut << BG_COLOR_MAGENTA << "EXECUTING: [" << receiveData << "]" << COLOR_RESET << endl; // #TODO delete
 					Command cmd(receiveData);					// Turn it into a command.
-					ex.run(cmd, client);
+					// ex.run(cmd, client);
 					if (ex.run(cmd, client) == false)			// Run the command.
 						closeConnection(client.getFD());
 				}
@@ -238,8 +238,9 @@ int	Server::setPoll() {
 	}
 	int ret = poll(pollFds.data(), pollFds.size(), -1);
 	if (ret < 0) {
-		perror("ERROR\tpoll :");
-		exit(EXIT_FAILURE);
+		// perror("ERROR\tpoll :");
+		// exit(EXIT_FAILURE);
+		return (0);
 	} else if (ret == 0) {
 		Msg("None of the FD's are ready", "INFO");
 	}

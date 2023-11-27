@@ -1,8 +1,5 @@
 #include "ircserver.hpp"
 
-#include "Executor.hpp"
-#include "Env.hpp"
-
 int main(int argc, char **argv) {
 	int	port = parse(argc, argv);
 	if (port < 0) {
@@ -15,11 +12,20 @@ int main(int argc, char **argv) {
 	Server ircServer(env);
 	std::cout << "Successfully booted the " << ircServer << " \\^.^/" << std::endl;
 	
-	while (1) {
+
+
+	SignalHandler	sh;
+	sh.setCustom();
+
+	while (sh.getInterrupted() == false) {
 		ircServer.run(ex);
 	}
+	if (!env.clients.empty())
+		env.clients.clear();
+	if (!env.channels.empty())
+		env.channels.clear();
 	std::cout << "Successfully ended the " << ircServer << " \\^.^/" << std::endl;
-	env.clients.clear();
+	sh.setDefault();
 	
 	return (EXIT_SUCCESS);
 }

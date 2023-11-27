@@ -214,7 +214,7 @@ string Executor::run_PASS(const vector<string>& args, Client& caller) {
 
 	caller.setPassword(newpassword);
 
-	return build_reply(NOTICE, "PASS", "PASS", "Remember to set your username and nickname with USER and PASS.");
+	return ""; // build_reply(NOTICE, "PASS", "PASS", "Remember to set your username and nickname with USER and PASS.");
 }
 
 /*
@@ -253,7 +253,7 @@ string Executor::run_NICK(const vector<string>& args, Client& caller) {
 	caller.setNickname(nickname);
 
 	if (!caller.isRegistered()) {
-		return build_reply(NOTICE, nickname, nickname, "Remember to set your username using the USER command");
+		return "";//build_reply(NOTICE, nickname, nickname, "Remember to set your username using the USER command");
 	}
 
 	string message;

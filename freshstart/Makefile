@@ -14,7 +14,8 @@ HDR = include/ircserver.hpp \
 	include/Client.hpp \
 	include/Command.hpp \
 	include/Env.hpp \
-	include/Executor.hpp
+	include/Executor.hpp \
+	include/SignalHandler.hpp
 
 SRC = $(SRC_DIR)/main.cpp \
 	$(SRC_DIR)/parse.cpp \
@@ -25,7 +26,8 @@ SRC = $(SRC_DIR)/main.cpp \
 	$(SRC_DIR)/Command.cpp \
 	$(SRC_DIR)/Env.cpp \
 	$(SRC_DIR)/Executor.cpp \
-	$(SRC_DIR)/Executor_mode.cpp
+	$(SRC_DIR)/Executor_mode.cpp \
+	$(SRC_DIR)/SignalHandler.cpp \
 
 
 OBJ = $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRC))
