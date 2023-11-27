@@ -175,8 +175,8 @@ void	Server::run(Executor& ex) {
 					this->customOut << BG_COLOR_MAGENTA << "EXECUTING: [" << receiveData << "]" << COLOR_RESET << endl; // #TODO delete
 					Command cmd(receiveData);					// Turn it into a command.
 					ex.run(cmd, client);
-					// if (ex.run(cmd, client) == false)			// Run the command.
-					// 	closeConnection(client.getFD());
+					if (ex.run(cmd, client) == false)			// Run the command.
+						closeConnection(client.getFD());
 				}
 				if (client.hasSendData())
 					client.addEvent(POLLOUT);
