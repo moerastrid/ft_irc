@@ -20,8 +20,12 @@ int main(int argc, char **argv) {
 	while (sh.getInterrupted() == false) {
 		ircServer.run(ex);
 	}
-	if (!env.clients.empty())
+	if (!env.clients.empty()) {
+		for (const auto &client : env.clients) {
+			close(client.getFD());
+		}
 		env.clients.clear();
+	}
 	if (!env.channels.empty())
 		env.channels.clear();
 	std::cout << "Successfully ended the " << ircServer << " \\^.^/" << std::endl;

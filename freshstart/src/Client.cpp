@@ -4,12 +4,10 @@
 Client::Client(int fd) {
 	this->pfd.fd = fd;
 	this->pfd.events = POLLIN|POLLHUP|POLLRDHUP;
+	this->pfd.revents = 0;
 };
 
-Client::~Client() {
-	// if (this->pfd.fd != -1)
-	// 	close(this->pfd.fd);
-}
+Client::~Client() { }
 
 Client::Client(const Client& other) {
 	this->nickname = other.nickname;
