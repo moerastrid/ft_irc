@@ -114,7 +114,7 @@ vector<Client>::iterator	Server::getItToClientByFD(int fd) {
 	return clients.end();
 }
 
-void	Server::addConnection() { // This or the function that calls it should probably check if a connection for the same user already exists.
+void	Server::addConnection() {
 	socklen_t	tempSize = sizeof(sockin);
 	int new_fd;
 	memset(&new_fd, 0, sizeof(new_fd));
