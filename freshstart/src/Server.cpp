@@ -136,8 +136,11 @@ void	Server::closeConnection(const int fd) {
 }
 
 #include <string>
+#define BG_COLOR_MAGENTA "\033[45m" // #TODO delete
+#define COLOR_GREEN "\033[32m"
+#define COLOR_RESET "\033[0m"
 
-void	Server::run([[maybe_unused]] Executor& ex) {
+void	Server::run(Executor& ex) {
 	if (setPoll() == 0)
 		return;
 	
@@ -169,6 +172,7 @@ void	Server::run([[maybe_unused]] Executor& ex) {
 				// Execute:
 				while (client.hasRecvData()) {
 					string receiveData = client.takeRecvData(); // Get the line. 
+					this->customOut << BG_COLOR_MAGENTA << "EXECUTING: [" << receiveData << "]" << COLOR_RESET << endl; // #TODO delete
 					Command cmd(receiveData);					// Turn it into a command.
 					ex.run(cmd, client);
 					// if (ex.run(cmd, client) == false)			// Run the command.
@@ -189,10 +193,6 @@ void	Server::run([[maybe_unused]] Executor& ex) {
 	}
 }
 
-#define BG_COLOR_MAGENTA "\033[45m" // #TODO delete
-#define COLOR_GREEN "\033[32m"
-#define COLOR_RESET "\033[0m"
-
 bool	Server::receivefromClient(Client &c) {
 	char	buf[BUFSIZE];
 	memset(&buf, 0, sizeof(buf));
@@ -206,10 +206,9 @@ bool	Server::receivefromClient(Client &c) {
 		Msg("no connection with Client " + to_string(c.getFD()), "WARNING"); 
 		return (false);
 	}
-
 	c.addRecvData(string(buf));
 
-	this->customOut << BG_COLOR_MAGENTA << "Received: [" << buf << "]" << COLOR_RESET << endl; // #TODO delete
+	// this->customOut << BG_COLOR_MAGENTA << "Received: [" << buf << "]" << COLOR_RESET << endl; // #TODO delete
 
 	return (true);
 }

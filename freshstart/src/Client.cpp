@@ -1,4 +1,5 @@
 #include "Client.hpp"
+#include "Msg.hpp"
 
 Client::Client(int fd) {
 	this->pfd.fd = fd;
@@ -6,8 +7,8 @@ Client::Client(int fd) {
 };
 
 Client::~Client() {
-	if (this->pfd.fd != -1)
-		close(this->pfd.fd);
+	// if (this->pfd.fd != -1)
+	// 	close(this->pfd.fd);
 }
 
 Client::Client(const Client& other) {
