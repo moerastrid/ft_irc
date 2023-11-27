@@ -11,7 +11,6 @@ class SignalHandler
 
 		static void	sigintHandler(int signum){
 			Msg("Interrupted signal (" + std::to_string(signum) + ") received", "WARNING");
-			// std::cout << "Interrupted signal (" << signum << ") received\n";
 			interrupted = true;
 		}
 		

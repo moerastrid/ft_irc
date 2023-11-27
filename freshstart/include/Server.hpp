@@ -55,7 +55,6 @@ private:
 
 class Server {
 	private :
-
 		const string	name = "REAL TALK IRC";
 		const string	slogan = "Now we're talking";
 		Env& 			env;
@@ -92,6 +91,12 @@ class Server {
 		struct pollfd**				getPollFDS() const;
 		Client* 					getClientByFD(int fd);
 		vector<Client>::iterator	getItToClientByFD(int fd);
+
+		class ServerException : public std::runtime_error {
+		public:
+			ServerException(const std::string& message) : std::runtime_error(message) {}
+			//virtual const char * what() const throw();
+		};
 };
 
 std::ostream& operator<<(std::ostream& os, const Server& server);

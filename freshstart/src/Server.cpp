@@ -57,73 +57,43 @@ Server::Server(Env& env) : env(env) {
 void	Server::setInfo() {
 	char	hostname[MAXHOSTNAMELEN];
 	bzero(hostname, sizeof(hostname));
-	if (gethostname(hostname, MAXHOSTNAMELEN) != 0) {
-		perror("Server::setHostInfo gethostname");
-		exit(EXIT_FAILURE);
-	}
+	if (gethostname(hostname, MAXHOSTNAMELEN) != 0)
+		throw ServerException("error inServer::setInfo - gethostname");
 	this->env.hostname = hostname;
 	struct hostent *host_entry;
 	host_entry = gethostbyname(hostname);
-	if (host_entry == NULL) {
-		perror("Server::setHostInfo gethostbyname");
-		exit(EXIT_FAILURE);
-	}
+	if (host_entry == NULL)
+		throw ServerException("error inServer::setInfo - gethostbyname");
 	string ip = inet_ntoa(*((struct in_addr*)host_entry->h_addr_list[0]));
 	this->env.ip = ip;
 }
 
 void	Server::setUp() {
 	this->sockfd.fd = socket(AF_INET, SOCK_STREAM|SOCK_NONBLOCK, 0);
-	if (this->sockfd.fd == -1) {
-		perror("ERROR\tServer::setUp socket()");
-		exit(EXIT_FAILURE);
-	}
+	if (this->sockfd.fd == -1)
+		throw ServerException("error in Server::setUp - socket");
 	fcntl(this->sockfd.fd, F_SETFL, O_NONBLOCK);
 	int yes = 1;
-	if (setsockopt(this->sockfd.fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1) {
-		perror("ERROR\tServer::setUp setsockopt()");
-		exit(EXIT_FAILURE);
-	}
+	if (setsockopt(this->sockfd.fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1)
+		throw ServerException("error in Server::setUp - setsockopt");
 	if (bind(this->sockfd.fd, (struct sockaddr *) &this->sockin, sizeof(this->sockin)) == -1) {
 		if (this->env.port < 1024)
 			Msg("If you're not superuser: no permission to use ports under 1024", "WARNING");
-		perror("ERROR\tServer::setUp bind()");
-		exit(EXIT_FAILURE);
+		throw ServerException("error in Server::setUp - bind");
 	}
-	if (listen(this->sockfd.fd, SOMAXCONN) == -1) {
-		perror("ERROR\tServer::setUp listen()");
-		exit(EXIT_FAILURE);
-	}
+	if (listen(this->sockfd.fd, SOMAXCONN) == -1)
+		throw ServerException("error in Server::setUp - listen");
 }
 
-Client* Server::getClientByFD(int fd) {
-	vector<Client>& clients = this->env.clients;
-	for (vector<Client>::iterator it = clients.begin(); it != clients.end(); it++) {
-		if (it->getFD() == fd)
-			return &(*it);
-	}
-	return NULL;
-}
-
-vector<Client>::iterator	Server::getItToClientByFD(int fd) {
-	vector<Client>& clients = this->env.clients;
-	for (vector<Client>::iterator it = clients.begin(); it != clients.end(); it++) {
-		if (it->getFD() == fd)
-			return (it);
-	}
-	return clients.end();
-}
-
-void	Server::addConnection() { // This or the function that calls it should probably check if a connection for the same user already exists.
+void	Server::addConnection() {
 	socklen_t	tempSize = sizeof(sockin);
 	int new_fd;
 	memset(&new_fd, 0, sizeof(new_fd));
 
 	new_fd = accept(sockfd.fd, (struct sockaddr *)&sockin, (socklen_t *)&tempSize);
-	if (new_fd == -1) {
-			perror("accept");
-			return ;
-	} else {
+	if (new_fd == -1) 
+		throw ServerException("error in Server::addConnection - accept");
+	else {
 		Msg("Connection accepted on " + std::to_string(new_fd), "INFO");
 		Client temp(new_fd);
 		this->env.clients.push_back(temp);
@@ -148,10 +118,8 @@ void	Server::run(Executor& ex) {
 	if (sockfd.revents & POLLIN) {
 		addConnection();
 		return ;
-	} else if (sockfd.revents & POLLERR ) {
-		Msg("HELP", "ERROR");
-		exit(-1) ;
-	}
+	} else if (sockfd.revents & POLLERR )
+		throw ServerException("error in Server::run - sockfd.revents & POLLERR");
 
 	for (size_t	i = 0; i < this->env.clients.size(); i++) {
 		Client& client = this->env.clients[i];
@@ -237,11 +205,14 @@ int	Server::setPoll() {
 	}
 	int ret = poll(pollFds.data(), pollFds.size(), -1);
 	if (ret < 0) {
-		// perror("ERROR\tpoll :");
-		// exit(EXIT_FAILURE);
+		if (errno == EINTR)
+			Msg("poll returned -1", "INFO");
+		else
+			throw ServerException("error in Server::setPoll - poll");
 		return (0);
 	} else if (ret == 0) {
 		Msg("None of the FD's are ready", "INFO");
+		return (ret);
 	}
 
 	for (const auto &pollFd : pollFds) {
@@ -254,6 +225,25 @@ int	Server::setPoll() {
 	}
 	return(ret);
 }
+
+Client* Server::getClientByFD(int fd) {
+	vector<Client>& clients = this->env.clients;
+	for (vector<Client>::iterator it = clients.begin(); it != clients.end(); it++) {
+		if (it->getFD() == fd)
+			return &(*it);
+	}
+	return NULL;
+}
+
+vector<Client>::iterator	Server::getItToClientByFD(int fd) {
+	vector<Client>& clients = this->env.clients;
+	for (vector<Client>::iterator it = clients.begin(); it != clients.end(); it++) {
+		if (it->getFD() == fd)
+			return (it);
+	}
+	return clients.end();
+}
+
 
 const string	Server::getHostname() const {
 	return this->env.hostname;
@@ -280,3 +270,7 @@ CustomOutputStream Server::customOut(std::cout);
 CustomOutputStream Server::customErr(std::cerr);
 // std::ofstream Server::outputfile("output.txt");
 
+
+// const char * Server::ServerException::what() const throw() {
+// 	return ("Server custom exception");
+// }

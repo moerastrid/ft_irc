@@ -14,14 +14,9 @@ void	SignalHandler::setDefault(void) {
 	signal(SIGINT, SIG_DFL);
 }
 
-SignalHandler::SignalHandler()
-{
-	std::cout << "hey\n";
-}
+SignalHandler::SignalHandler() {}
 
-SignalHandler::~SignalHandler()
-{
-}
+SignalHandler::~SignalHandler() {}
 
 bool	SignalHandler::getInterrupted() {
 	return (interrupted);
