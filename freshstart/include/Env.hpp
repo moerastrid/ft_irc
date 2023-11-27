@@ -28,7 +28,7 @@ class Env {
 	
 	public:
 		Env(int port, string pass);
-		const Client& getClientByFD(int fd);
+		const Client& getClientByFD(int fd) const;
 		vector<Client>& getClients();
 };
 

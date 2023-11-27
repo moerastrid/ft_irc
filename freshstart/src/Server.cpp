@@ -121,8 +121,10 @@ void	Server::run(Executor& ex) {
 	} else if (sockfd.revents & POLLERR )
 		throw ServerException("error in Server::run - sockfd.revents & POLLERR");
 
-	for (size_t	i = 0; i < this->env.clients.size(); i++) {
-		Client& client = this->env.clients[i];
+	vector<Client>& clients = this->env.getClients();
+
+	for (size_t	i = 0; i < clients.size(); i++) {
+		Client& client = clients[i];
 
 		if (client.getPFD().revents == 0) {
 			continue ;
@@ -219,8 +221,8 @@ int	Server::setPoll() {
 		if (pollFd.fd == sockfd.fd) {
 			sockfd.revents = pollFd.revents;
 		} else {
-			Client *c = getClientByFD(pollFd.fd);
-			c->setRevents(pollFd.revents);
+			Client& c = getClientByFD(pollFd.fd);
+			c.setRevents(pollFd.revents);
 		}
 	}
 	return(ret);

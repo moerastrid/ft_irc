@@ -7,6 +7,8 @@ const Client& Env::getClientByFD(int fd) const {
 		if (el.getPFD().fd == fd)
 			return el;
 	}
+
+	return Client::nullclient;
 }
 
 vector<Client>& Env::getClients() {
