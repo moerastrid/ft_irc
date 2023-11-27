@@ -17,7 +17,7 @@ using std::string;
 #include "Channel.hpp"
 
 class Env {
-	public:
+	private:
 		vector<Client>		clients;
 		vector<Channel>		channels;
 
@@ -25,8 +25,11 @@ class Env {
 		string				hostname = "localhost";
 		string				ip = "0.0.0.0";
 		int					port;
-
+	
+	public:
 		Env(int port, string pass);
+		const Client& getClientByFD(int fd);
+		vector<Client>& getClients();
 };
 
 #endif /* end of include guard: ENV_HPP */
