@@ -45,7 +45,7 @@ Server::Server(Env& env) : env(env) {
 
 	this->sockfd.events = POLLIN|POLLHUP|POLLRDHUP;
 	this->sockin.sin_family = AF_INET;
-	this->sockin.sin_port = htons(this->env.port);
+	this->sockin.sin_port = htons(this->env.getPort());
 	this->sockin.sin_addr.s_addr = INADDR_ANY;
 
 	Server::setUp();
@@ -59,13 +59,13 @@ void	Server::setInfo() {
 	bzero(hostname, sizeof(hostname));
 	if (gethostname(hostname, MAXHOSTNAMELEN) != 0)
 		throw ServerException("error inServer::setInfo - gethostname");
-	this->env.hostname = hostname;
+	this->env.setHostname(hostname);
 	struct hostent *host_entry;
 	host_entry = gethostbyname(hostname);
 	if (host_entry == NULL)
 		throw ServerException("error inServer::setInfo - gethostbyname");
 	string ip = inet_ntoa(*((struct in_addr*)host_entry->h_addr_list[0]));
-	this->env.ip = ip;
+	this->env.setIP(ip);
 }
 
 void	Server::setUp() {
@@ -77,7 +77,7 @@ void	Server::setUp() {
 	if (setsockopt(this->sockfd.fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1)
 		throw ServerException("error in Server::setUp - setsockopt");
 	if (bind(this->sockfd.fd, (struct sockaddr *) &this->sockin, sizeof(this->sockin)) == -1) {
-		if (this->env.port < 1024)
+		if (this->env.getPort() < 1024)
 			Msg("If you're not superuser: no permission to use ports under 1024", "WARNING");
 		throw ServerException("error in Server::setUp - bind");
 	}
@@ -96,14 +96,14 @@ void	Server::addConnection() {
 	else {
 		Msg("Connection accepted on " + std::to_string(new_fd), "INFO");
 		Client temp(new_fd);
-		this->env.clients.push_back(temp);
+		this->env.getClients().push_back(temp);
 	}
 }
 
 void	Server::closeConnection(const int fd) {
 	Msg("Connection closed on " + std::to_string(fd), "INFO");
 	close(fd);
-	this->env.clients.erase(getItToClientByFD(fd));
+	this->env.getClients().erase(this->env.getItToClientByFD(fd));
 }
 
 #include <string>
@@ -202,7 +202,7 @@ int	Server::setPoll() {
 	vector<struct pollfd>	pollFds;
 
 	pollFds.push_back(sockfd);
-	for (const auto& client : this->env.clients) {
+	for (const auto& client : this->env.getClients()) {
 		pollFds.push_back(client.getPFD());
 	}
 	int ret = poll(pollFds.data(), pollFds.size(), -1);
@@ -221,52 +221,21 @@ int	Server::setPoll() {
 		if (pollFd.fd == sockfd.fd) {
 			sockfd.revents = pollFd.revents;
 		} else {
-			Client& c = getClientByFD(pollFd.fd);
+			Client& c = this->env.getClientByFD(pollFd.fd);
 			c.setRevents(pollFd.revents);
 		}
 	}
 	return(ret);
 }
 
-Client* Server::getClientByFD(int fd) {
-	vector<Client>& clients = this->env.clients;
-	for (vector<Client>::iterator it = clients.begin(); it != clients.end(); it++) {
-		if (it->getFD() == fd)
-			return &(*it);
-	}
-	return NULL;
-}
-
-vector<Client>::iterator	Server::getItToClientByFD(int fd) {
-	vector<Client>& clients = this->env.clients;
-	for (vector<Client>::iterator it = clients.begin(); it != clients.end(); it++) {
-		if (it->getFD() == fd)
-			return (it);
-	}
-	return clients.end();
-}
-
-
-const string	Server::getHostname() const {
-	return this->env.hostname;
-}
-
-const string	Server::getIP() const {
-	return this->env.ip;
-}
-
-int	Server::getPort() const {
-	return this->env.port;
-}
-
 const string	Server::getName() const {
 	return name;
 }
 
-std::ostream& operator<<(std::ostream& os, const Server& serv) {
-	os << "Server(" << serv.getName() << ", " << serv.getHostname() << ", " << serv.getIP() << ", " << serv.getPort() << ")";
-	return os;
-}
+// std::ostream& operator<<(std::ostream& os, const Server& serv) {
+// 	//os << "Server(" << serv.getName() << ", " << env.getHostname() << ", " << serv.getIP() << ", " << serv.getPort() << ")";
+// 	return os;
+// }
 
 CustomOutputStream Server::customOut(std::cout);
 CustomOutputStream Server::customErr(std::cerr);

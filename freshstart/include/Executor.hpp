@@ -115,11 +115,9 @@ class Executor {
 
 		bool name_exists(const string& name);
 
-		Client& getClientByFD(const int fd);
 		Client& getClientByNickname(const string& nickname);
 		vector<Client>::iterator getItToClientByNickname(string nickname);
 		Channel& getChannelByName(const string& name);
-		string getServerPassword();
 
 		bool parseUserArguments(const vector<string>& args, string& username,
 								string& hostname, string& servername, string& realname);

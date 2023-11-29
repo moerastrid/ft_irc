@@ -65,10 +65,8 @@ class Server {
 		void	setUp();
 		void	setInfo();
 		int		setPoll();
-		// void	incomingConnection();
 		void	addConnection();
 		void	closeConnection(const int fd);
-		// string	receive(int fd);
 		bool	receivefromClient(Client &c);
 		bool	sendtoClient(Client &c);
 
@@ -84,19 +82,12 @@ class Server {
 		Server(const int port, const string pass);		// constructor (PORT, pass)
 		
 		void						run(Executor& ex);
-		const string				getIP() const;
-		int							getPort() const;
 		const string				getName() const;
-		const string				getHostname() const;
-		struct pollfd**				getPollFDS() const;
-		Client* 					getClientByFD(int fd);
-		vector<Client>::iterator	getItToClientByFD(int fd);
 
 		class ServerException : public std::runtime_error {
 		public:
 			ServerException(const std::string& message) : std::runtime_error(message) {}
-			//virtual const char * what() const throw();
 		};
 };
 
-std::ostream& operator<<(std::ostream& os, const Server& server);
+//std::ostream& operator<<(std::ostream& os, const Server& server);

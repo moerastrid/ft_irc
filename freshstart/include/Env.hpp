@@ -28,8 +28,21 @@ class Env {
 	
 	public:
 		Env(int port, string pass);
-		const Client& getClientByFD(int fd) const;
-		vector<Client>& getClients();
+
+		//getters
+		Client&						getClientByFD(int fd);
+		Client&						getClientByNick(const string& nick);
+		vector<Client>::iterator	getItToClientByFD(int fd);
+		vector<Client>&				getClients();
+		vector<Channel>& 			getChannels();
+		int							getPort() const;
+		const string&				getPass() const;
+		const string&				getHostname() const;
+		const string&				getIP() const;
+
+		//setters
+		void				setHostname(const string &hostname);
+		void				setIP(const string &ip);
 };
 
 #endif /* end of include guard: ENV_HPP */

@@ -67,7 +67,7 @@ bool compare_lowercase(const string& a, const string& b) {
 }
 
 bool Executor::name_exists(const string& name) { // #TODO improve: Case Insensitive
-	for (const Client& c : this->e.clients) {
+	for (const Client& c : this->e.getClients()) {
 		std::string clientName = c.getNickname();
 
 		if (compare_lowercase(name, clientName)) {
@@ -207,7 +207,7 @@ string Executor::run_PASS(const vector<string>& args, Client& caller) {
 
 	string newpassword = args[0];
 
-	if (getServerPassword().compare(newpassword) != 0) {
+	if (e.getPass().compare(newpassword) != 0) {
 		// #TODO close connection? and send ERROR
 		return build_reply(ERR_PASSWDMISMATCH, "PASS", "PASS", "Password incorrect"); //# TODO FIX MESSAGE FORMAT
 	}
@@ -358,7 +358,7 @@ string Executor::run_USER(const vector<string>& args, Client& caller) {
  * Responses not (yet) handled:
  */
 string Executor::run_PING([[maybe_unused]]const vector<string>& args, [[maybe_unused]]Client& caller) {
-	return "PONG " + this->e.hostname + "\n";
+	return "PONG " + this->e.getHostname() + "\n";
 }
 
 /*
@@ -403,7 +403,7 @@ string Executor::run_PRIVMSG(const vector<string>& args, Client& caller) {
 	}
 
 	string message;
-	Client& recipient = getClientByNickname(target);
+	Client& recipient = e.getClientByNick(target);
 	if (recipient == Client::nullclient) {
 		return build_reply(ERR_NOSUCHNICK, caller.getNickname(), target, "No such recipient");
 	}
@@ -453,7 +453,7 @@ string Executor::run_WHOIS(const vector<string>& args, Client& caller) {
 	string message;
 
 	for (vector<string>::const_iterator it = args.begin(); it != args.end(); it++) {
-		Client& requestee = getClientByNickname(*it);
+		Client& requestee = e.getClientByNick(*it);
 		if (requestee == NULL) {
 			message += build_reply(ERR_NOSUCHNICK, caller.getNickname(), *it, "No such nickname");
 		} else {
@@ -577,7 +577,7 @@ string Executor::run_KICK(const vector<string>& args, Client& caller) {
 	vector<string>::const_iterator reason_start = find_if(args.begin(), args.end(), find_reason);
 
 	for (vector<string>::const_iterator name_it = next(args.begin()); name_it != reason_start; name_it++) {
-		Client& client = getClientByNickname(*name_it);
+		Client& client = e.getClientByNick(*name_it);
 		if (client == Client::nullclient) {
 			message += build_reply(ERR_NOSUCHNICK, caller.getNickname(), *name_it, "No such nickname");
 			continue;
@@ -683,7 +683,7 @@ string Executor::run_INVITE(const vector<string>& args, Client& caller) {
 		return build_reply(ERR_CHANOPRIVSNEEDED, caller.getNickname(), target_channel, "You're not a channel operator");
 	}
 
-	Client& target = this->getClientByNickname(target_client);
+	Client& target = this->e.getClientByNick(target_client);
 	if (target == NULL) {
 		return build_reply(ERR_NOSUCHNICK, caller.getNickname(), target_client, "No such client");
 	}
@@ -785,36 +785,17 @@ string Executor::run_QUIT(const vector<string>& args, Client& caller) {
 	return "";
 }
 
-Client& Executor::getClientByFD(const int fd) {
-	vector<Client>& clients = this->e.clients;
-	for (vector<Client>::iterator it = clients.begin(); it != clients.end(); it++) {
-		if (it->getFD() == fd)
-			return *it;
-	}
-
-	return Client::nullclient;
-}
-
-Client& Executor::getClientByNickname(const string& nickname) {
-	vector<Client>& clients = this->e.clients;
-	for (vector<Client>::iterator it = clients.begin(); it != clients.end(); it++) {
-		if (it->getNickname() == nickname)
-			return *it;
-	}
-	return Client::nullclient;
-}
-
 vector<Client>::iterator Executor::getItToClientByNickname(string nickname) {
-	vector<Client>& clients = this->e.clients;
+	vector<Client>& clients = this->e.getClients();
 	for (vector<Client>::iterator it = clients.begin(); it != clients.end(); it++) {
 		if (it->getNickname() == nickname)
 			return it;
 	}
-	return this->e.clients.end();
+	return this->e.getClients().end();
 }
 
 Channel& Executor::getChannelByName(const string& name) {
-	for (Channel& ch : this->e.channels) {
+	for (Channel& ch : this->e.getChannels()) {
 		if (ch.getName() == name) {
 			return ch;
 		}
@@ -838,7 +819,7 @@ bool Executor::parseUserArguments(const vector<string>& args, string& username, 
 void Executor::addChannel(const string& name, const string& password, const Client& caller) {
 	Channel c(name, password, caller.getFD());
 	c.addClient(caller);
-	this->e.channels.push_back(c);
+	this->e.getChannels().push_back(c);
 }
 
 string Executor::format_reason(vector<string>::iterator& reason_start, vector<string>& args) {
@@ -876,9 +857,9 @@ string Executor::build_channel_reply(int response_code, string callername, strin
 	return response.str() + " " + callername + " " + target + " " + channel + " :" + message + "\n";
 }
 
-string Executor::getServerPassword() {
-	return this->e.pass;
-}
+// string Executor::getServerPassword() {
+// 	return this->e.pass;
+// }
 
 string Executor::build_WHOIS_reply(int response_code, string callername, string target, string userinfo) {
 	stringstream response;

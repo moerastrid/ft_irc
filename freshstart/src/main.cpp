@@ -12,25 +12,24 @@ int main(int argc, char **argv) {
 	Env env(port, argv[2]);
 	Executor	ex(env);
 
-
 	try {
 		Server ircServer(env);
-		std::cout << "Successfully booted the " << ircServer << " \\^.^/" << std::endl;
+		//std::cout << "Successfully booted the " << ircServer << " \\^.^/" << std::endl;
 		
 		while (sh.getInterrupted() == false) {
 				ircServer.run(ex);
 		}
 
-		if (!env.clients.empty()) {
-			for (const auto &client : env.clients) {
+		if (!env.getClients().empty()) {
+			for (const auto &client : env.getClients()) {
 				close(client.getFD());
 			}
-			env.clients.clear();
+			env.getClients().clear();
 		}
-		if (!env.channels.empty())
-			env.channels.clear();
+		if (!env.getChannels().empty())
+			env.getChannels().clear();
 
-		std::cout << "Successfully ended the " << ircServer << " \\^.^/" << std::endl;	
+		//std::cout << "Successfully ended the " << ircServer << " \\^.^/" << std::endl;	
 	} catch (const Server::ServerException &ex) {
 		Msg("ServerException caught: ", "ERROR");
 		std::cerr << ex.what() << std::endl;

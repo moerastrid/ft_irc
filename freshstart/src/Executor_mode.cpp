@@ -124,7 +124,7 @@ void Executor::handle_k_mode(const bool add, const string& arg, Channel& target)
 void Executor::handle_o_mode(const bool add, const string& arg, Channel& target) {
 	if (!arg.size())
 		return;
-	Client& c = this->getClientByNickname(arg);
+	Client& c = e.getClientByNick(arg);
 	if (c == NULL)
 		return ;
 	if (add)
@@ -282,7 +282,7 @@ string Executor::run_MODE(const vector<string>& args, Client& caller) {
 }
 
 string Executor::build_mode_reply(string callername, string target_channel, string modestring, string modeargs) {
-	string message = ":" + this->e.hostname + " " + to_string(RPL_CHANNELMODEIS) + " " + callername + " " + target_channel + " " + modestring;
+	string message = ":" + this->e.getHostname() + " " + to_string(RPL_CHANNELMODEIS) + " " + callername + " " + target_channel + " " + modestring;
 	if (!modeargs.empty()) {
 		 message += " " + modeargs;
 	}
