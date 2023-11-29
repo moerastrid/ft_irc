@@ -16,8 +16,9 @@ bool is_channel(const string& name) {
 	return !name.empty() && name.front() == '#';
 }
 
-bool is_nickname_character(char c) {
-	if (isalnum(c) || c == '_' || c == '-' || c == '[' || c == ']' || c == '\\' || c == '^' || c == '{' || c == '}')
+bool is_nickname_character(const char c) {
+	string valid = "_-[]\\^{}";
+	if (isalnum(c) || valid.find(c) != string::npos)
 		return true;
 	return false;
 }
@@ -66,7 +67,7 @@ bool compare_lowercase(const string& a, const string& b) {
 	return ac == bc;
 }
 
-bool Executor::name_exists(const string& name) { // #TODO improve: Case Insensitive
+bool Executor::name_exists(const string& name) {
 	for (const Client& c : this->e.getClients()) {
 		std::string clientName = c.getNickname();
 
@@ -116,12 +117,6 @@ Executor::~Executor() {}
 #include <iostream>
 using std::cout;
 using std::endl;
-
-void Executor::send_to_client(Client& caller, string message) {
-	cout << endl << "Sending [" << message << "] to client" << endl;
-	const char* c_message = message.c_str();
-	send(caller.getFD(), c_message, sizeof c_message, 0);
-}
 
 int Executor::validateArguments(const string& command, int numArgs) {
 	if (this->argCount.find(command) != this->argCount.end()) {
@@ -176,10 +171,10 @@ int Executor::run(const Command& cmd, Client& caller) {
 /*
  * Incoming message: CAP LS
  * Possible replies: :<server=localhost> CAP NAK :<list of capabilities=->
- * 
+ *
  * Responses handled:
  * :<server=localhost> CAP NAK :-
- * 
+ *
  * Responses not (yet) handled:
  */
 string Executor::run_CAP([[maybe_unused]]const vector<string>& args, [[maybe_unused]]Client& caller) {
@@ -192,12 +187,12 @@ string Executor::run_CAP([[maybe_unused]]const vector<string>& args, [[maybe_unu
 /*
  * Incoming message: PASS <password> (not a user command, sent by the server if a password is supplied)
  * Possible replies: ???
- * 
+ *
  * Responses handled:
  * ERR_NEEDMOREPARAMS
  * ERR_ALREADYREGISTRED
  * ERR_PASSWDMISMATCH
- * 
+ *
  * Responses not (yet) handled:
  */
 string Executor::run_PASS(const vector<string>& args, Client& caller) {
@@ -222,11 +217,11 @@ string Executor::run_PASS(const vector<string>& args, Client& caller) {
  * Parameters: Your new nickname.
  * Description: Changes your nickname on the active server.
  * Possible replies:
- * 
+ *
  * Responses handled:
  * ERR_NICKCOLLISION
  * ERR_ERRONEUSNICKNAME
- * 
+ *
  * Responses not yet handled:
  *
  * Responses not handled:
@@ -301,19 +296,19 @@ RFC 1459
 /*
  * Incoming message: USER <username> <hostname> <servername> :<realname> (Not a user command, but automatically sent by the client on a new connection.)
  * Possible replies:
- * 
+ *
  * Responses added:
  * ERR_ERRONEOUSNICKNAME
  * RPL_WELCOME
- * 
+ *
  * Responses handled:
  * ERR_NEEDMOREPARAMS
  * ERR_ALREADYREGISTRED
- * 
+ *
  * Responses not yet handled:
- * 
+ *
  * Responses not handled:
- * 
+ *
  */
 string Executor::run_USER(const vector<string>& args, Client& caller) {
 	string username, hostname, servername, realname;
@@ -351,10 +346,10 @@ string Executor::run_USER(const vector<string>& args, Client& caller) {
 /*
  * Incoming message: PING {no args} (not a user command, just a reply to the automatic PING request from the server to indicate the connection is alive)
  * Possible replies: PONG <server=:localhost>
- * 
+ *
  * Responses handled:
  * PONG <server=:localhost>
- * 
+ *
  * Responses not (yet) handled:
  */
 string Executor::run_PING([[maybe_unused]]const vector<string>& args, [[maybe_unused]]Client& caller) {
@@ -384,7 +379,7 @@ string Executor::run_PING([[maybe_unused]]const vector<string>& args, [[maybe_un
  * ERR_CANNOTSENDTOCHAN
  * ERR_TOOMANYTARGETS
  * RPL_AWAY
- * 
+ *
  * Responses not handled:
  * ERR_NOTOPLEVEL
  * ERR_WILDTOPLEVEL
@@ -434,7 +429,7 @@ string Executor::run_PRIVMSG(const vector<string>& args, Client& caller) {
  * ERR_NOSUCHNICK (Used to indicate the nickname parameter supplied to a command is currently unused.)
  *
  * Responses not yet handled:
- * 
+ *
  * Responses not handled:
  * ERR_TOOMANYTARGETS 	(Returned to a client which is attempting to send a PRIVMSG/NOTICE using the user@host destination format and for a user@host which has several occurrences.)
  * RPL_AWAY 			(Sent as a reply to a PRIVMSG when the client has set themselves to AWAY)
@@ -477,11 +472,11 @@ string Executor::run_WHOIS(const vector<string>& args, Client& caller) {
  * ERR_BADCHANNELKEY	()
  * ERR_CHANNELISFULL	()
  * ERR_NOSUCHCHANNEL	()
- * 
+ *
  * Not yet handled:
  * ERR_INVITEONLYCHAN	("<channel> :Cannot join channel (+i)"  Any command requiring operator privileges to operate must return this error to indicate the attempt was unsuccessful.)
  * ERR_TOOMANYCHANNELS	(Sent to a user when they have joined the maximum number of allowed channels and they try to join another channel.)
- * 
+ *
  * Not handled:
  * ERR_BADCHANMASK		(???)
  * ERR_BANNEDFROMCHAN	()
@@ -553,7 +548,7 @@ string Executor::run_JOIN(const vector<string>& args, Client& caller) {
  * Incoming message: KICK [<channel>] <nick>[,<nick>] [<reason>]
  * Parameters: The channel and the nicknames, separated by a comma, to kick from the channel and the reason thereof; if no channel is given, the active channel will be used.
  * Description: Removes the given nicknames from the specified channel; this command is typically used to remove troublemakers, flooders or people otherwise making a nuisance of themselves.
- * 
+ *
  * Possible replies:
  * Handled:
  *
@@ -562,7 +557,7 @@ string Executor::run_JOIN(const vector<string>& args, Client& caller) {
  * ERR_NOSUCHCHANNEL	(Used to indicate the given channel name is invalid.)
  * ERR_CHANOPRIVSNEEDED (Any command requiring 'chanop' privileges (such as MODE messages) must return this error if the client making the attempt is not a chanop on the specified channel.)
  * ERR_NOTONCHANNEL		(Returned by the server whenever a client tries to perform a channel effecting command for which the client isn't a member.)
- * 
+ *
  * Not handled:
  * ERR_BADCHANMASK		(???)
  */
@@ -598,7 +593,7 @@ string Executor::run_KICK(const vector<string>& args, Client& caller) {
  * Incoming message: PART [<channel>[,<channel>]] [<message>] 
  * Parameters: The channels, separated by a comma, to leave and the message to advertise.
  * Description: Leaves the given channels.
- * 
+ *
  * Possible replies:
  * Handled:addChannel
  *

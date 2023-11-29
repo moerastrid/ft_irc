@@ -2,16 +2,14 @@
 #define ENV_HPP
 
 #include <string.h>
-
-#include <string>
-	using std::string;
-
 #include <poll.h>
-
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/param.h>
 #include <netdb.h>
+
+#include <string>
+	using std::string;
 
 #include "Client.hpp"
 #include "Channel.hpp"

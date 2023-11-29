@@ -2,7 +2,7 @@
 
 Env::Env(int port, string pass) : pass(pass), port(port) {};
 
-Client& Env::getClientByFD(int fd) {
+Client&	Env::getClientByFD(int fd) {
 	for(auto& el : this->clients) {
 		if (el.getPFD().fd == fd)
 			return el;
@@ -10,7 +10,7 @@ Client& Env::getClientByFD(int fd) {
 	return Client::nullclient;
 }
 
-Client& Env::getClientByNick(const string& nick) {
+Client&	Env::getClientByNick(const string& nick) {
 	for (auto& el : this->clients) {
 		if (el.getNickname() == nick)
 			return el;
@@ -18,7 +18,7 @@ Client& Env::getClientByNick(const string& nick) {
 	return Client::nullclient;
 }
 
-Channel& Env::getChannelByName(const string& name) {
+Channel&	Env::getChannelByName(const string& name) {
 	for (Channel& ch : getChannels()) {
 		if (ch.getName() == name) {
 			return ch;
@@ -35,7 +35,7 @@ vector<Client>::iterator	Env::getItToClientByFD(int fd) {
 	return clients.end();
 }
 
-vector<Client>::iterator Env::getItToClientByNick(string nick) {
+vector<Client>::iterator	Env::getItToClientByNick(string nick) {
 	for (vector<Client>::iterator it = clients.begin(); it != clients.end(); it++) {
 		if (it->getNickname() == nick)
 			return it;
@@ -43,35 +43,35 @@ vector<Client>::iterator Env::getItToClientByNick(string nick) {
 	return clients.end();
 }
 
-vector<Client>& Env::getClients() {
+vector<Client>&	Env::getClients() {
 	return this->clients;
 }
 
-vector<Channel>& Env::getChannels() {
+vector<Channel>&	Env::getChannels() {
 	return this->channels;
 }
 
 int	Env::getPort() const {
-	return (this->port);
+	return this->port;
 }
 
-const string&	Env::getPass() const {
-	return (this->pass);
+const	string&	Env::getPass() const {
+	return this->pass;
 }
 
-const string&	Env::getHostname() const {
-	return (this->hostname);
+const	string&	Env::getHostname() const {
+	return this->hostname;
 }
 
-const string&	Env::getIP() const {
-	return (this->ip);
+const	string&	Env::getIP() const {
+	return this->ip;
 }
 
 //setters
-void				Env::setHostname(const string &hostname) {
+void	Env::setHostname(const string &hostname) {
 	this->hostname = hostname;
 }
 
-void				Env::setIP(const string &ip) {
+void	Env::setIP(const string &ip) {
 	this->ip = ip;
 }
