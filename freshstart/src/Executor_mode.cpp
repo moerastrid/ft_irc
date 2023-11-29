@@ -124,7 +124,7 @@ void Executor::handle_k_mode(const bool add, const string& arg, Channel& target)
 void Executor::handle_o_mode(const bool add, const string& arg, Channel& target) {
 	if (!arg.size())
 		return;
-	Client& c = e.getClientByNick(arg);
+	Client& c = this->getClientByNick(arg);
 	if (c == NULL)
 		return ;
 	if (add)
@@ -240,12 +240,12 @@ string Executor::handle_modes(const Client& caller, const vector<tuple<bool, sig
 string Executor::run_MODE(const vector<string>& args, Client& caller) {
 
 	string target = args[0];
-	// Client* target_client = getClientByNickname(target);
-	Channel& channel = e.getChannelByName(target);
+	// Client& target_client = this->getClientByNick(target);
+	Channel& channel = this->getChannelByName(target);
 	bool target_is_channel = is_channel(target);
 
 	if (!target_is_channel) { // If target is a user. (Commented code checks properly, but we don't support modes on users, only channels)
-		return build_reply(ERR_NOSUCHCHANNEL, caller.getNickname(), target, "No such channel (we don't support changing modes for users)");
+		return build_reply(ERR_NOSUCHCHANNEL, caller.getNickname(), target, "No such channel as we don't support changing modes for users");
 		// if (target_client == NULL) // if target doesn't exist
 		// 	return build_reply(ERR_NOSUCHNICK, caller.getNickname(), target, "No such nick/channel");
 		// else if (caller.getNickname().compare(target) != 0) // if target doesn't match caller.
@@ -289,7 +289,3 @@ string Executor::build_mode_reply(string callername, string target_channel, stri
 	message += "\n";
 	return message;
 }
-
-//void messageDispatch() {
-//	map<string, string> m = {"RPL_CHANNELMODEIS","build-a-string magic"};
-//}
