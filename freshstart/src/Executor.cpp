@@ -395,7 +395,7 @@ string Executor::run_PRIVMSG(const vector<string>& args, Client& caller) {
 	// const vector<Client>& targetlist;
 
 	if (is_channel(target)) {
-		Channel& target_channel = getChannelByName(target);
+		Channel& target_channel = e.getChannelByName(target);
 		if (target_channel == Channel::nullchan)
 			return build_reply(ERR_NOSUCHNICK, caller.getNickname(), target, "No such recipient");
 		
@@ -512,7 +512,7 @@ string Executor::run_JOIN(const vector<string>& args, Client& caller) {
 	for (const auto& pair : joininfo) {
 		const string& channelname = pair.first;
 		const string& channelpassword = pair.second;
-		Channel& ch = getChannelByName(channelname);
+		Channel& ch = e.getChannelByName(channelname);
 
 		if (ch == Channel::nullchan) { // Create new channel and have user join as the first member.
 			addChannel(channelname, channelpassword, caller);
@@ -569,7 +569,7 @@ string Executor::run_JOIN(const vector<string>& args, Client& caller) {
 string Executor::run_KICK(const vector<string>& args, Client& caller) {
 	string message;
 	string channelname = args[0];
-	Channel& ch = getChannelByName(channelname);
+	Channel& ch = e.getChannelByName(channelname);
 	if (ch == Channel::nullchan) {
 		return build_reply(ERR_NOSUCHCHANNEL, caller.getNickname(), channelname, "No such channel");
 	}
@@ -600,7 +600,7 @@ string Executor::run_KICK(const vector<string>& args, Client& caller) {
  * Description: Leaves the given channels.
  * 
  * Possible replies:
- * Handled:
+ * Handled:addChannel
  *
  * Not yet handled:
  * ERR_NEEDMOREPARAMS	()
@@ -615,7 +615,7 @@ string Executor::run_PART(const vector<string>& args, Client& caller) {
 	string message = "";
 
 	for (vector<string>::iterator it = channelnames.begin(); it != channelnames.end(); it++) {
-		Channel& ch = getChannelByName(*it);
+		Channel& ch = e.getChannelByName(*it);
 		if (ch == Channel::nullchan) {
 			message += build_reply(ERR_NOSUCHCHANNEL, caller.getNickname(), *it, "No such channel");
 			continue;
@@ -670,7 +670,7 @@ string Executor::run_PART(const vector<string>& args, Client& caller) {
 string Executor::run_INVITE(const vector<string>& args, Client& caller) {
 	string target_client = args[0];
 	string target_channel = args[1];
-	Channel& channel = this->getChannelByName(target_channel);
+	Channel& channel = e.getChannelByName(target_channel);
 	if (channel == Channel::nullchan) {
 		return build_reply(ERR_NOSUCHCHANNEL, caller.getNickname(), target_channel, "No such channel");
 	}
@@ -734,7 +734,7 @@ string Executor::run_TOPIC(const vector<string>& args, Client& caller) {
 		newtopic = args[1];
 	}
 
-	Channel& channel = getChannelByName(target_channel);
+	Channel& channel = e.getChannelByName(target_channel);
 
 	const string& oldtopic = channel.getTopic();
 
@@ -785,24 +785,6 @@ string Executor::run_QUIT(const vector<string>& args, Client& caller) {
 	return "";
 }
 
-vector<Client>::iterator Executor::getItToClientByNickname(string nickname) {
-	vector<Client>& clients = this->e.getClients();
-	for (vector<Client>::iterator it = clients.begin(); it != clients.end(); it++) {
-		if (it->getNickname() == nickname)
-			return it;
-	}
-	return this->e.getClients().end();
-}
-
-Channel& Executor::getChannelByName(const string& name) {
-	for (Channel& ch : this->e.getChannels()) {
-		if (ch.getName() == name) {
-			return ch;
-		}
-	}
-	return Channel::nullchan;
-}
-
 bool Executor::parseUserArguments(const vector<string>& args, string& username, string& hostname, string& servername, string& realname) {
 	username = args[0];
 	hostname = args[1];
@@ -817,9 +799,9 @@ bool Executor::parseUserArguments(const vector<string>& args, string& username, 
 }
 
 void Executor::addChannel(const string& name, const string& password, const Client& caller) {
-	Channel c(name, password, caller.getFD());
-	c.addClient(caller);
-	this->e.getChannels().push_back(c);
+	Channel ch(name, password, caller.getFD());
+	ch.addClient(caller);
+	this->e.getChannels().push_back(ch);
 }
 
 string Executor::format_reason(vector<string>::iterator& reason_start, vector<string>& args) {
@@ -857,13 +839,16 @@ string Executor::build_channel_reply(int response_code, string callername, strin
 	return response.str() + " " + callername + " " + target + " " + channel + " :" + message + "\n";
 }
 
-// string Executor::getServerPassword() {
-// 	return this->e.pass;
-// }
 
 string Executor::build_WHOIS_reply(int response_code, string callername, string target, string userinfo) {
 	stringstream response;
 	response << setw(3) << setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
 
 	return response.str() + " " + callername + " " + target + " " + userinfo + "\n";
+}
+
+
+std::ostream& operator<<(std::ostream& os, const Env& e) {
+	os << "env(" << e.getHostname() << ", " << e.getIP() << ", "<< e.getPort() << ")";
+	return os;
 }

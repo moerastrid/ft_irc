@@ -241,7 +241,7 @@ string Executor::run_MODE(const vector<string>& args, Client& caller) {
 
 	string target = args[0];
 	// Client* target_client = getClientByNickname(target);
-	Channel& channel = getChannelByName(target);
+	Channel& channel = e.getChannelByName(target);
 	bool target_is_channel = is_channel(target);
 
 	if (!target_is_channel) { // If target is a user. (Commented code checks properly, but we don't support modes on users, only channels)

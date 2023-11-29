@@ -10,10 +10,10 @@
 #include <cstring>
 
 #include <string>
-using std::string;
+	using std::string;
 
 #include <vector>
-using std::vector;
+	using std::vector;
 
 #include "Msg.hpp"
 #include "Client.hpp"
@@ -55,10 +55,9 @@ private:
 
 class Server {
 	private :
-		const string	name = "REAL TALK IRC";
-		const string	slogan = "Now we're talking";
-		Env& 			env;
-
+		const string			name	= "REAL TALK IRC";
+		const string			slogan	= "Now we're talking";
+		Env& 					env;
 		struct sockaddr_in		sockin;
 		struct pollfd			sockfd;
 
@@ -71,7 +70,6 @@ class Server {
 		bool	sendtoClient(Client &c);
 
 	public :
-
 		static CustomOutputStream customOut; //#TODO delete all CustomOutput related code before handing in.
 		static CustomOutputStream customErr;
 
@@ -90,4 +88,4 @@ class Server {
 		};
 };
 
-//std::ostream& operator<<(std::ostream& os, const Server& server);
+std::ostream& operator<<(std::ostream& os, const Server& server);

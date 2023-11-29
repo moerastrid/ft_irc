@@ -232,10 +232,10 @@ const string	Server::getName() const {
 	return name;
 }
 
-// std::ostream& operator<<(std::ostream& os, const Server& serv) {
-// 	//os << "Server(" << serv.getName() << ", " << env.getHostname() << ", " << serv.getIP() << ", " << serv.getPort() << ")";
-// 	return os;
-// }
+std::ostream& operator<<(std::ostream& os, const Server& serv) {
+	os << "Server(" << serv.getName() << ")";
+	return os;
+}
 
 CustomOutputStream Server::customOut(std::cout);
 CustomOutputStream Server::customErr(std::cerr);

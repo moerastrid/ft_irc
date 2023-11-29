@@ -35,34 +35,34 @@
 #define ERR_USERSDONTMATCH 502 // Cant change mode for other users
 
 #include <utility>
-using std::pair;
+	using std::pair;
 
 #include <tuple>
-using std::tuple;
+	using std::tuple;
 
 #include <string>
-using std::string;
-using std::getline;
+	using std::string;
+	using std::getline;
 
 #include <map>
-using std::map;
+	using std::map;
 
 #include <cctype>
-using std::isspace;
+	using std::isspace;
 
 #include <iterator>
-using std::next;
+	using std::next;
 
 #include <sstream>
-using std::istringstream;
+	using std::istringstream;
 
 #include <algorithm>
-using std::find;
-using std::find_if;
+	using std::find;
+	using std::find_if;
 
 #include <iomanip>
-using std::setw;
-using std::setfill;
+	using std::setw;
+	using std::setfill;
 
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -114,11 +114,6 @@ class Executor {
 		void addChannel(const string& name, const string& password, const Client& caller);
 
 		bool name_exists(const string& name);
-
-		Client& getClientByNickname(const string& nickname);
-		vector<Client>::iterator getItToClientByNickname(string nickname);
-		Channel& getChannelByName(const string& name);
-
 		bool parseUserArguments(const vector<string>& args, string& username,
 								string& hostname, string& servername, string& realname);
 

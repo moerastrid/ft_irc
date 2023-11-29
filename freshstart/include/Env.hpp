@@ -4,7 +4,7 @@
 #include <string.h>
 
 #include <string>
-using std::string;
+	using std::string;
 
 #include <poll.h>
 
@@ -22,8 +22,8 @@ class Env {
 		vector<Channel>		channels;
 
 		string				pass;
-		string				hostname = "localhost";
-		string				ip = "0.0.0.0";
+		string				hostname	= "localhost";
+		string				ip			= "0.0.0.0";
 		int					port;
 	
 	public:
@@ -32,7 +32,9 @@ class Env {
 		//getters
 		Client&						getClientByFD(int fd);
 		Client&						getClientByNick(const string& nick);
+		Channel&					getChannelByName(const string& name);
 		vector<Client>::iterator	getItToClientByFD(int fd);
+		vector<Client>::iterator	getItToClientByNick(string nick);
 		vector<Client>&				getClients();
 		vector<Channel>& 			getChannels();
 		int							getPort() const;
@@ -41,8 +43,10 @@ class Env {
 		const string&				getIP() const;
 
 		//setters
-		void				setHostname(const string &hostname);
-		void				setIP(const string &ip);
+		void						setHostname(const string &hostname);
+		void						setIP(const string &ip);
 };
+
+std::ostream& operator<<(std::ostream& os, const Env& e);
 
 #endif /* end of include guard: ENV_HPP */
