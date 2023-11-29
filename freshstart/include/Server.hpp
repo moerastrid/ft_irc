@@ -66,18 +66,17 @@ class Server {
 		int		setPoll();
 		void	addConnection();
 		void	closeConnection(const int fd);
-		bool	receivefromClient(Client &c);
-		bool	sendtoClient(Client &c);
+		bool	receivefromClient(Client &cl);
+		bool	sendtoClient(Client &cl);
 
 	public :
 		static CustomOutputStream customOut; //#TODO delete all CustomOutput related code before handing in.
 		static CustomOutputStream customErr;
 
-		Server(Env& env);								// default constructor
+		Server(Env& env);								// constructor (env)
 		~Server();										// default destructor
 		Server(const Server &src);						// copy constructor
 		Server &operator=(const Server &src);			// = sign operator
-		Server(const int port, const string pass);		// constructor (PORT, pass)
 		
 		void						run(Executor& ex);
 		const string				getName() const;

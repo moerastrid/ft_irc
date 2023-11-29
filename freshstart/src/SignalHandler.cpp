@@ -1,9 +1,5 @@
 #include "SignalHandler.hpp"
 
-// void SignalHandler::sigintHandler(int signum) {
-// 	std::cout << "Interrupted signal (" << signum << ") received";
-// }
-
 bool SignalHandler::interrupted = false;
 
 void	SignalHandler::setCustom(void) {
