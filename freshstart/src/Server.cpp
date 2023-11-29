@@ -23,7 +23,7 @@ Server::~Server() {
 	close(sockfd.fd);
 }
 
-Server::Server(const Server &src) : env(src.env) {
+Server::Server(const Server &src) : e(src.e) {
 	Msg("Server copy contructor", "DEBUG");
 	*this = src;
 }
@@ -31,21 +31,21 @@ Server::Server(const Server &src) : env(src.env) {
 Server &Server::operator=(const Server &src) {
 	Msg("Server assignment operator", "DEBUG");
 	if (this != &src) {
-		this->env = src.env;
+		this->e = src.e;
 		this->sockin = src.sockin;
 		this->sockfd = src.sockfd;
 	}
 	return (*this);
 }
 
-Server::Server(Env& env) : env(env) {
-	Msg("Server constructor (env)", "DEBUG");
+Server::Server(Env& e) : e(e) {
+	Msg("Server constructor (e)", "DEBUG");
 	memset(&this->sockin, 0, sizeof(this->sockin));
 	memset(&this->sockfd, 0, sizeof(this->sockfd));
 
 	this->sockfd.events = POLLIN|POLLHUP|POLLRDHUP;
 	this->sockin.sin_family = AF_INET;
-	this->sockin.sin_port = htons(this->env.getPort());
+	this->sockin.sin_port = htons(this->e.getPort());
 	this->sockin.sin_addr.s_addr = INADDR_ANY;
 
 	Server::setUp();
@@ -59,13 +59,13 @@ void	Server::setInfo() {
 	bzero(hostname, sizeof(hostname));
 	if (gethostname(hostname, MAXHOSTNAMELEN) != 0)
 		throw ServerException("error inServer::setInfo - gethostname");
-	this->env.setHostname(hostname);
+	this->e.setHostname(hostname);
 	struct hostent *host_entry;
 	host_entry = gethostbyname(hostname);
 	if (host_entry == NULL)
 		throw ServerException("error inServer::setInfo - gethostbyname");
 	string ip = inet_ntoa(*((struct in_addr*)host_entry->h_addr_list[0]));
-	this->env.setIP(ip);
+	this->e.setIP(ip);
 }
 
 void	Server::setUp() {
@@ -77,7 +77,7 @@ void	Server::setUp() {
 	if (setsockopt(this->sockfd.fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1)
 		throw ServerException("error in Server::setUp - setsockopt");
 	if (bind(this->sockfd.fd, (struct sockaddr *) &this->sockin, sizeof(this->sockin)) == -1) {
-		if (this->env.getPort() < 1024)
+		if (this->e.getPort() < 1024)
 			Msg("If you're not superuser: no permission to use ports under 1024", "WARNING");
 		throw ServerException("error in Server::setUp - bind");
 	}
@@ -96,14 +96,14 @@ void	Server::addConnection() {
 	else {
 		Msg("Connection accepted on " + std::to_string(new_fd), "INFO");
 		Client temp(new_fd);
-		this->env.getClients().push_back(temp);
+		this->e.getClients().push_back(temp);
 	}
 }
 
 void	Server::closeConnection(const int fd) {
 	Msg("Connection closed on " + std::to_string(fd), "INFO");
 	close(fd);
-	this->env.getClients().erase(this->env.getItToClientByFD(fd));
+	this->e.getClients().erase(this->e.getItToClientByFD(fd));
 }
 
 #include <string>
@@ -121,7 +121,7 @@ void	Server::run(Executor& ex) {
 	} else if (sockfd.revents & POLLERR )
 		throw ServerException("error in Server::run - sockfd.revents & POLLERR");
 
-	vector<Client>& clients = this->env.getClients();
+	vector<Client>& clients = this->e.getClients();
 
 	for (size_t	i = 0; i < clients.size(); i++) {
 		Client& client = clients[i];
@@ -188,7 +188,7 @@ bool	Server::sendtoClient(Client &c) {
 		c.setEvents(POLLIN|POLLHUP|POLLRDHUP);
 		return (true);
 	}
-	// dataToSend = ":" + this->env.hostname + " " + dataToSend; // Leaving this out for now, there's an issue (PONG)
+	// dataToSend = ":" + this->e.hostname + " " + dataToSend; // Leaving this out for now, there's an issue (PONG)
 	int nbytes = send(c.getFD(), dataToSend.c_str(), dataToSend.size(), 0);
 	if (nbytes <= 0) {
 		Msg("error in sending data", "ERROR");
@@ -202,7 +202,7 @@ int	Server::setPoll() {
 	vector<struct pollfd>	pollFds;
 
 	pollFds.push_back(sockfd);
-	for (const auto& client : this->env.getClients()) {
+	for (const auto& client : this->e.getClients()) {
 		pollFds.push_back(client.getPFD());
 	}
 	int ret = poll(pollFds.data(), pollFds.size(), -1);
@@ -221,7 +221,7 @@ int	Server::setPoll() {
 		if (pollFd.fd == sockfd.fd) {
 			sockfd.revents = pollFd.revents;
 		} else {
-			Client& c = this->env.getClientByFD(pollFd.fd);
+			Client& c = this->e.getClientByFD(pollFd.fd);
 			c.setRevents(pollFd.revents);
 		}
 	}

@@ -57,7 +57,7 @@ class Server {
 	private :
 		const string			name	= "REAL TALK IRC";
 		const string			slogan	= "Now we're talking";
-		Env& 					env;
+		Env& 					e;
 		struct sockaddr_in		sockin;
 		struct pollfd			sockfd;
 
