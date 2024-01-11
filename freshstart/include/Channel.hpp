@@ -42,40 +42,22 @@ public:
 	Channel& operator=(const Channel& other);
 	Channel(string name, string password);
 
-<<<<<<< HEAD
-	Client& getJoinedUser(string nickname);
+	//Client&			getJoinedUser(string nickname);
 
-	const string& getName() const;
-	const string& getPassword() const;
-	const string& getTopic() const;
-	vector<Client>& getClients();
-	const vector<Client>& getClientsConst() const;
-	const vector<Client>& getOperators() const;
-	size_t getUserLimit() const;
-	pair<string,string> getModes() const;
-	int getFounderFD() const;
-	bool isInviteOnly() const;
-	bool hasTopicRestricted() const;
-	bool hasMode(char mode) const;
-
-	bool hasOperator(const Client& client) const;
-	bool hasFounder(const Client& client) const;
-	bool hasUser(const Client& client) const;
-=======
-	//Client&					getJoinedUser(string nickname);
 	const string&			getName() const;
 	const string&			getPassword() const;
 	const string&			getTopic() const;
-	const vector<Client>&	getClients() const;
+	vector<Client>&			getClients();
+	const vector<Client>&	getClientsConst() const;
 	const vector<Client>&	getOperators() const;
 	size_t					getUserLimit() const;
 	pair<string,string>		getModes() const;
+
 	bool	isInviteOnly() const;
 	bool	hasTopicRestricted() const;
 	bool	hasMode(char mode) const;
 	bool	hasOperator(const Client& client) const;
 	bool	hasUser(const Client& client) const;
->>>>>>> 13979e8126e56ef74897cafd8adba4e1ac14183c
 
 	void	setPassword(string password);
 	void	setTopic(string topic);
