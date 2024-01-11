@@ -1,4 +1,5 @@
 #include "Channel.hpp"
+#include "Msg.hpp"
 
 Channel::Channel() {
 	this->name = "";
@@ -7,9 +8,12 @@ Channel::Channel() {
 	this->inviteOnly = false;
 	this->operatorOnly = false;
 	this->userLimit = 0;
+	Msg("channel - default constructor", "CLASS");
 };
 
-Channel::~Channel() {};
+Channel::~Channel() {
+	Msg("channel - default destructor", "CLASS");
+};
 
 Channel::Channel(const Channel& other) {
 	this->name = other.name;
@@ -19,6 +23,7 @@ Channel::Channel(const Channel& other) {
 	this->inviteOnly = other.inviteOnly;
 	this->operatorOnly = other.operatorOnly;
 	this->userLimit = other.userLimit;
+	Msg("channel - copy constructor", "CLASS");
 }
 
 Channel& Channel::operator=(const Channel& other) {
@@ -32,6 +37,7 @@ Channel& Channel::operator=(const Channel& other) {
 		this->userLimit = other.userLimit;
 	}
 	return *this;
+	Msg("channel - assignation operator", "CLASS");
 }
 
 Channel::Channel(string name, string password) {
@@ -41,6 +47,7 @@ Channel::Channel(string name, string password) {
 	this->inviteOnly = false;
 	this->operatorOnly = false;
 	this->userLimit = 0;
+	Msg("channel - constructor(name, pass)", "CLASS");
 }
 
 

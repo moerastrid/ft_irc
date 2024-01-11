@@ -5,9 +5,6 @@ TO DO (astrid)
 	-	try-catch blokken maken voor server setup (& die koppelen aan main?)
 */
 
-// Server::Server() {
-// 	Msg("Server default constructor", "DEBUG");
-// }
 
 
 // #TODO delete
@@ -19,17 +16,17 @@ void printHex(const std::string& str) {
 }
 
 Server::~Server() {
-	Msg("Server default destructor", "DEBUG");
+	Msg("Server - default destructor", "CLASS");
 	close(sockfd.fd);
 }
 
 Server::Server(const Server &src) : e(src.e) {
-	Msg("Server copy contructor", "DEBUG");
+	Msg("Server - copy contructor", "CLASS");
 	*this = src;
 }
 
 Server &Server::operator=(const Server &src) {
-	Msg("Server assignment operator", "DEBUG");
+	Msg("Server - assignment operator", "CLASS");
 	if (this != &src) {
 		this->e = src.e;
 		this->sockin = src.sockin;
@@ -39,7 +36,7 @@ Server &Server::operator=(const Server &src) {
 }
 
 Server::Server(Env& e) : e(e) {
-	Msg("Server constructor (e)", "DEBUG");
+	Msg("Server - constructor (e)", "CLASS");
 	memset(&this->sockin, 0, sizeof(this->sockin));
 	memset(&this->sockfd, 0, sizeof(this->sockfd));
 
