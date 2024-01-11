@@ -134,7 +134,7 @@ void	Server::run(Executor& ex) {
 			continue ;
 		} else {
 			if (client.checkRevent(POLLIN)) {
-				Msg("POLLIN", "DEBUG");
+				Msg("POLLIN " + to_string(client.getFD()), "DEBUG");
 				if (receivefromClient(client) == false) {
 					closeConnection(client.getFD());
 					continue ;
@@ -153,11 +153,9 @@ void	Server::run(Executor& ex) {
 				}
 				if (closed_connecion == true)
 					continue ;
-				if (client.hasSendData())
-					client.addEvent(POLLOUT);
 			}
 			if (client.checkRevent(POLLOUT)) {
-				Msg("POLLOUT", "DEBUG");
+				Msg("POLLOUT " + to_string(client.getFD()), "DEBUG");
 				if (sendtoClient(client) == false) {
 					closeConnection(client.getFD());
 					continue ;
@@ -211,7 +209,7 @@ int	Server::setPoll() {
 	for (const auto& client : this->e.getClients()) {
 		pollFds.push_back(client.getPFD());
 	}
-	int ret = poll(pollFds.data(), pollFds.size(), -1);
+	int ret = poll(pollFds.data(), pollFds.size(), 0);
 	if (ret < 0) {
 		if (errno == EINTR)
 			Msg("poll returned -1", "INFO");
@@ -219,7 +217,7 @@ int	Server::setPoll() {
 			throw ServerException("error in Server::setPoll - poll");
 		return (0);
 	} else if (ret == 0) {
-		Msg("None of the FD's are ready", "INFO");
+		//Msg("None of the FD's are ready", "INFO");
 		return (ret);
 	}
 
