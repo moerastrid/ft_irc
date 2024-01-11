@@ -16,12 +16,11 @@ static bool hasArg(char mode) {
 }
 
 /*
- * Tuple parameters: 
+ * Tuple parameters:
  * bool: add or remove option for mode.
  * char: the mode
  * string: mode argument
  */
-
 static vector<tuple<bool, signed char, string>> parse_modestring(string modestring, vector<string> modeargs) {
 	bool add = true;
 	int argcounter = 0;

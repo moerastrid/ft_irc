@@ -49,6 +49,7 @@
 
 #include <cctype>
 	using std::isspace;
+	using std::tolower;
 
 #include <iterator>
 	using std::next;
@@ -59,6 +60,11 @@
 #include <algorithm>
 	using std::find;
 	using std::find_if;
+	using std::transform;
+
+#include <iostream>
+	using std::cout;
+	using std::endl;
 
 #include <iomanip>
 	using std::setw;
@@ -85,49 +91,49 @@ class Executor {
 		Executor(Env& e);
 		~Executor();
 
-		int			validateArguments(const string& command, int numArgs);
-		int			run(const Command& cmd, Client& caller);
+		int					validateArguments(const string& command, int numArgs);
+		int					run(const Command& cmd, Client& caller);
 
-		string		run_CAP(const vector<string>& args, Client& caller);
-		string		run_PASS(const vector<string>& args, Client& caller);
-		string		run_NICK(const vector<string>& args, Client& caller);
-		string		run_USER(const vector<string>& args, Client& caller);
-		string		run_MODE(const vector<string>& args, Client& caller);
-		string		run_PING(const vector<string>& args, Client& caller);
-		string		run_PRIVMSG(const vector<string>& args, Client& caller);
-		string		run_WHOIS(const vector<string>& args, Client& caller);
-		string		run_JOIN(const vector<string>& args, Client& caller);
-		string		run_KICK(const vector<string>& args, Client& caller);
-		string		run_PART(const vector<string>& args, Client& caller);
-		string		run_INVITE(const vector<string>& args, Client& caller);
-		string		run_TOPIC(const vector<string>& args, Client& caller);
-		string		run_QUIT(const vector<string>& args, Client& caller);
+		string				run_CAP(const vector<string>& args, Client& caller);
+		string				run_PASS(const vector<string>& args, Client& caller);
+		string				run_NICK(const vector<string>& args, Client& caller);
+		string				run_USER(const vector<string>& args, Client& caller);
+		string				run_MODE(const vector<string>& args, Client& caller);
+		string				run_PING(const vector<string>& args, Client& caller);
+		string				run_PRIVMSG(const vector<string>& args, Client& caller);
+		string				run_WHOIS(const vector<string>& args, Client& caller);
+		string				run_JOIN(const vector<string>& args, Client& caller);
+		string				run_KICK(const vector<string>& args, Client& caller);
+		string				run_PART(const vector<string>& args, Client& caller);
+		string				run_INVITE(const vector<string>& args, Client& caller);
+		string				run_TOPIC(const vector<string>& args, Client& caller);
+		string				run_QUIT(const vector<string>& args, Client& caller);
 
-		string		handle_modes(const Client& caller, const vector<tuple<bool, signed char, string>>& mode_cmds, Channel& target);
-		void		handle_i_mode(const bool add, Channel& target);
-		void		handle_t_mode(const bool add, Channel& target);
-		void		handle_k_mode(const bool add, const string& arg, Channel& target);
-		void		handle_o_mode(const bool add, const string& arg, Channel& target);
-		void		handle_l_mode(const bool add, const string& arg, Channel& target);
+		string				handle_modes(const Client& caller, const vector<tuple<bool, signed char, string>>& mode_cmds, Channel& target);
+		void				handle_i_mode(const bool add, Channel& target);
+		void				handle_t_mode(const bool add, Channel& target);
+		void				handle_k_mode(const bool add, const string& arg, Channel& target);
+		void				handle_o_mode(const bool add, const string& arg, Channel& target);
+		void				handle_l_mode(const bool add, const string& arg, Channel& target);
 
-		// void		addClient(string username, string nickname, string hostname, string servername, string realname, int fd);
-		void		addChannel(const string& name, const string& password, const Client& caller);
+		// void				addClient(string username, string nickname, string hostname, string servername, string realname, int fd);
+		void				addChannel(const string& name, const string& password, const Client& caller);
 
-		bool		name_exists(const string& name);
-		bool		parseUserArguments(const vector<string>& args, string& username,
+		bool				name_exists(const string& name);
+		bool				parseUserArguments(const vector<string>& args, string& username,
 								string& hostname, string& servername, string& realname);
 
-		string		format_reason(vector<string>::iterator& reason_it, vector<string>& args);
-		string		build_reply(int response_code, string callername, string target, string message);
-		string		build_notice_reply(string callername, string target, string message);
-		string		build_channel_reply(int response_code, string callername, string target, string channel, string message);
-		string		build_WHOIS_reply(int response_code, string callername, string target, string userinfo);
-		string		build_mode_reply(string callername, string target_channel, string modestring, string modeargs);
+		string				format_reason(vector<string>::iterator& reason_it, vector<string>& args);
+		string				build_reply(int response_code, string callername, string target, string message);
+		string				build_notice_reply(string callername, string target, string message);
+		string				build_channel_reply(int response_code, string callername, string target, string channel, string message);
+		string				build_WHOIS_reply(int response_code, string callername, string target, string userinfo);
+		string				build_mode_reply(string callername, string target_channel, string modestring, string modeargs);
 
-		Client&		getClientByNick(const string nick);
-		Channel&	getChannelByName(const string name);
-		vector<Client>& getClients();
-		vector<Channel>& getChannels();
+		Client&				getClientByNick(const string nick);
+		Channel&			getChannelByName(const string name);
+		vector<Client>&		getClients();
+		vector<Channel>&	getChannels();
 };
 
 bool			is_channel(const string& name);

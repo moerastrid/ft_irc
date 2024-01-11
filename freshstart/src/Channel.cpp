@@ -63,7 +63,10 @@ bool Channel::isInviteOnly() const {
 bool Channel::hasTopicRestricted() const {
 	return this->operatorOnly;
 }
-const vector<Client>& Channel::getClients() const {
+vector<Client>& Channel::getClients() {
+	return this->clients;
+}
+const vector<Client>& Channel::getClientsConst() const {
 	return this->clients;
 }
 size_t Channel::getUserLimit() const {
@@ -227,7 +230,7 @@ Channel Channel::nullchan;
 
 ostream& operator<<(ostream& os, const Channel& channel) {
 	os << "Channel(" << channel.getName() << ", [";
-	const vector<Client>& clients = channel.getClients();
+	const vector<Client>& clients = channel.getClientsConst();
 	for (vector<Client>::const_iterator it = clients.begin(); it != clients.end(); it++) {
 		os << *it;
 		if (it + 1 != clients.end()) {

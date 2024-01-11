@@ -71,7 +71,6 @@ void Client::addEvent(const short event) {
 void Client::removeEvent(const short event) {
 	this->pfd.events &= ~event; // bitwise AND with bitwise negation (~).
 }
-
 void Client::setNickname(const string& nickname) {
 	this->nickname = nickname;
 }

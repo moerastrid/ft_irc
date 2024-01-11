@@ -52,16 +52,17 @@ vector<string> split_args(const string& args) {
 	return res;
 }
 
+//case insensitive string comparison
 bool compare_lowercase(const string& a, const string& b) {
 	string ac = a;
 	string bc = b;
 
-	std::transform(ac.begin(), ac.end(), ac.begin(), [](unsigned char c) {
-		return std::tolower(c);
+	transform(ac.begin(), ac.end(), ac.begin(), [](unsigned char c) {
+		return tolower(c);
 	});
 
-	std::transform(bc.begin(), bc.end(), bc.begin(), [](unsigned char c) {
-		return std::tolower(c);
+	transform(bc.begin(), bc.end(), bc.begin(), [](unsigned char c) {
+		return tolower(c);
 	});
 
 	return ac == bc;
@@ -69,7 +70,7 @@ bool compare_lowercase(const string& a, const string& b) {
 
 bool Executor::name_exists(const string& name) {
 	for (const Client& c : this->getClients()) {
-		std::string clientName = c.getNickname();
+		const string& clientName = c.getNickname();
 
 		if (compare_lowercase(name, clientName)) {
 			return true;
@@ -114,10 +115,6 @@ Executor::Executor(Env& e) : e(e) {
 
 Executor::~Executor() {}
 
-#include <iostream>
-using std::cout;
-using std::endl;
-
 int Executor::validateArguments(const string& command, int numArgs) {
 	if (this->argCount.find(command) != this->argCount.end()) {
 		pair<int, int> argCounts = this->argCount[command];
@@ -139,6 +136,8 @@ int Executor::run(const Command& cmd, Client& caller) {
 	string message;
 	string command = cmd.getCommand();
 	mbrFuncPtr ptr;
+	
+	// Handle unknown commands
 	try {
 		ptr = this->funcMap.at(command);
 	}
@@ -148,8 +147,17 @@ int Executor::run(const Command& cmd, Client& caller) {
 		return true;
 	}
 
-	if (command != "PASS" && command != "CAP" && caller.getPassword().empty()) {
+	// Check password on commands other than PASS and CAP
+	static vector<string> passcmds = {"PASS", "CAP"};
+	if (find(passcmds.begin(), passcmds.end(), command) == passcmds.end() && caller.getPassword().empty()) {
 		return false;
+	}
+
+	// Check user is registered for commands other than PASS, CAP, NICK, USER.
+	static vector<string> regcmds = {"PASS", "CAP", "NICK", "USER"};
+	if (find(regcmds.begin(), regcmds.end(), command) == regcmds.end()) {
+		if (!caller.isRegistered())
+			return false;
 	}
 
 	int numArgs = cmd.getArgs().size();
@@ -232,14 +240,12 @@ string Executor::run_PASS(const vector<string>& args, Client& caller) {
 string Executor::run_NICK(const vector<string>& args, Client& caller) {
 	const string& nickname = args[0];
 
-	if (caller.getPassword().empty())
-		return build_notice_reply(caller.getNickname(), caller.getNickname(), "Enter the server password first with PASS to start connection registration");
-
+	// if (caller.getPassword().empty()) // Checked in run().
+	// 	return build_notice_reply(caller.getNickname(), caller.getNickname(), "Enter the server password first with PASS to start connection registration");
 
 	if (name_exists(nickname)) { // #TODO Figure out nickcollision vs nicknameinuse
 		return build_reply(ERR_NICKCOLLISION, "NICK", nickname, "Nickname collision KILL from "+ caller.getUsername() + "@" + caller.getHostname());
 	}
-
 	if (nickname.empty() || !verify_name(nickname)) {
 		return build_reply(ERR_ERRONEOUSNICKNAME, "NICK", nickname, "Erroneous nickname");
 	}
@@ -247,18 +253,13 @@ string Executor::run_NICK(const vector<string>& args, Client& caller) {
 	bool first_time = caller.getNickname().empty();
 	caller.setNickname(nickname);
 
-	if (!caller.isRegistered()) {
-		return "";//build_reply(NOTICE, nickname, nickname, "Remember to set your username using the USER command");
-	}
-
-	string message;
-	if (first_time) { // First time connection part 2: electric boogaloo. Accepting connection and sending welcome message.
-		message = build_reply(RPL_WELCOME, nickname, nickname, "Welcome to Astrid's & Thibauld's IRC server, " + caller.getUsername() + "!");
+	if (first_time && !caller.getUsername().empty()) { // First time connection part 2: electric boogaloo. Accepting connection and sending welcome message.
+		return build_reply(RPL_WELCOME, nickname, nickname, "Welcome to Astrid's & Thibauld's IRC server, " + caller.getUsername() + "!");
+	} else if (first_time) {
+		return "";
 	} else {
-		message = build_reply(RPL_WELCOME, nickname, nickname, "Nickname changed to " + nickname);
+		return build_reply(RPL_WELCOME, nickname, nickname, "Nickname changed to " + nickname);
 	}
-
-	return message;
 }
 
 /*
@@ -319,28 +320,17 @@ string Executor::run_USER(const vector<string>& args, Client& caller) {
 		return build_reply(ERR_ERRONEOUSNICKNAME, caller.getNickname(), "USER", "Invalid user arguments");
 	}
 
-	string message;
+	if (caller.getUsername().empty()) {// first time connec part 2
+		caller.setUsername(username);
+		caller.setHostname(hostname);
+		caller.setServername(servername);
+		caller.setRealname(realname);
+	} else
+		return build_reply(ERR_ALREADYREGISTERED, caller.getNickname(), username, "You may not reregister");
 
-	if (1) { //Existing connection.
-		if (caller.getUsername().empty()) {// first time connec part 2
-			message = build_reply(RPL_WELCOME, caller.getNickname(), username, "Welcome to Astrid's & Thibauld's IRC server, " + username + "!");
-		} else {
-			return build_reply(ERR_ALREADYREGISTERED, caller.getNickname(), username, "You may not reregister");
-		}
-		caller.setUsername(username);
-		caller.setHostname(hostname);
-		caller.setServername(servername);
-		caller.setRealname(realname);
-	}
-	else { //first time connection.
-		// addClient("", username, hostname, servername, realname, fd);
-		caller.setUsername(username);
-		caller.setHostname(hostname);
-		caller.setServername(servername);
-		caller.setRealname(realname);
-		message = build_reply(NOTICE, username, username, "Remember to set your nickname using the NICK command");
-	}
-	return message;
+	if (!caller.getNickname().empty())
+		return build_reply(RPL_WELCOME, caller.getNickname(), username, "Welcome to Astrid's & Thibauld's IRC server, " + username + "!");
+	return "";
 }
 
 /*
@@ -387,33 +377,31 @@ string Executor::run_PING([[maybe_unused]]const vector<string>& args, [[maybe_un
 string Executor::run_PRIVMSG(const vector<string>& args, Client& caller) {
 	string target = args[0];
 
-	// const vector<Client>& targetlist;
+	stringstream data;
+	for (vector<string>::const_iterator it = args.begin(); it != args.end(); it++) {
+		data << *it;
+		if (next(it) != args.end())
+			data << " ";
+	}
+	data << "\n";
 
 	if (is_channel(target)) {
 		Channel& target_channel = this->getChannelByName(target);
 		if (target_channel == Channel::nullchan)
-			return build_reply(ERR_NOSUCHNICK, caller.getNickname(), target, "No such recipient");
-		
-		// const vector<Client>& targetlist = target_channel.getClients();
+			return build_reply(ERR_NOSUCHNICK, caller.getNickname(), target, "No such channel");
+		std::vector<Client>& channel_members = target_channel.getClients();
+		for (Client& member: channel_members) {
+			member.addSendData(data.str());
+		}
+		return "";
 	}
 
-	string message;
 	Client& recipient = this->getClientByNick(target);
 	if (recipient == Client::nullclient) {
 		return build_reply(ERR_NOSUCHNICK, caller.getNickname(), target, "No such recipient");
 	}
 
-	stringstream ss;
-
-	for (vector<string>::const_iterator it = args.begin(); it != args.end(); it++) {
-		ss << *it;
-		if (next(it) != args.end())
-			ss << " ";
-	}
-	ss << "\n";
- 
-	recipient.addSendData(ss.str());
-	// send_to_client(recipient->getFD(), ss.str());
+	recipient.addSendData(data.str());
 	return "";
 }
 

@@ -26,7 +26,7 @@ private:
 	string			password;
 	string			topic;
 	vector<Client>	clients;
-	vector<Client>	operators;
+	vector<Client>	operators; // merge with clients?
 	vector<Client>	invited;
 
 	bool			inviteOnly;
@@ -49,7 +49,8 @@ public:
 	const string& getName() const;
 	const string& getPassword() const;
 	const string& getTopic() const;
-	const vector<Client>& getClients() const;
+	vector<Client>& getClients();
+	const vector<Client>& getClientsConst() const;
 	const vector<Client>& getOperators() const;
 	size_t getUserLimit() const;
 	pair<string,string> getModes() const;
