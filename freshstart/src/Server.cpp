@@ -92,8 +92,7 @@ void	Server::addConnection() {
 		throw ServerException("error in Server::addConnection - accept");
 	else {
 		Msg("Connection accepted on " + std::to_string(new_fd), "INFO");
-		Client temp(new_fd);
-		this->e.getClients().push_back(temp);
+		this->e.getClients().emplace_back(new_fd);
 	}
 }
 

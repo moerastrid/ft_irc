@@ -22,15 +22,15 @@ class Client {
 private:
 	struct pollfd	pfd;
 
-	string			nickname;
-	string			username;
-	string			hostname;
-	string			servername;
-	string			realname;
-	string			password;
+	string			nickname = "";
+	string			username = "";
+	string			hostname = "";
+	string			servername = "";
+	string			realname = "";
+	string			password = "";
 
-	string			datatosend; // data we need to send to this client
-	string			datatorecv; // data we need to recv from this client
+	string			datatosend = ""; // data we need to send to this client
+	string			datatorecv = ""; // data we need to recv from this client
 
 public:
 	static Client	nullclient;

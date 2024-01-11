@@ -778,9 +778,12 @@ bool Executor::parseUserArguments(const vector<string>& args, string& username, 
 }
 
 void Executor::addChannel(const string& name, const string& password, Client& caller) {
-	Channel ch(name, password);
-	ch.addClient(caller);
-	this->getChannels().push_back(ch);
+	// Channel ch(name, password);
+	// ch.addClient(caller);
+	// this->getChannels().push_back(ch);
+
+	this->getChannels().emplace_back(name, password);
+	this->getChannels().back().addClient(caller);
 }
 
 string Executor::format_reason(vector<string>::iterator& reason_start, vector<string>& args) {
