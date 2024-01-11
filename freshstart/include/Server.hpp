@@ -68,6 +68,7 @@ class Server {
 		void	closeConnection(const int fd);
 		bool	receivefromClient(Client &cl);
 		bool	sendtoClient(Client &cl);
+		bool	communication_pollin(Executor& ex, Client &client);
 
 	public :
 		static CustomOutputStream customOut; //#TODO delete all CustomOutput related code before handing in.
