@@ -12,6 +12,14 @@ To start the server, make the program and run "./ircserv [port] [password]".
 
 Our IRC server has the following features implemented:
 
+◦ Ability to authenticate, set a nickname, a username, join a channel, send and receive private messages using IRSSI.
+
+◦ All the messages sent from one client to a channel are forwarded to every other client that joined the channel.
+
+◦ Operators and regular users are implemented.
+
+◦ Implementation of the following features:
+
 	* KICK - Eject a client from the channel
  
 	* INVITE - Invite a client to a channel
