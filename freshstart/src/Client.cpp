@@ -96,6 +96,7 @@ void Client::setPassword(const string& password) {
 }
 
 void Client::addSendData(const string& message) {
+	addEvent(POLLOUT);
 	this->datatosend += message;
 }
 void Client::addRecvData(const string& message) {
