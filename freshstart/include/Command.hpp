@@ -28,7 +28,7 @@ public:
 	~Command();
 	const Command& operator=(const Command& other);
 
-	void addArg(string arg);
+	void	addArg(string arg);
 	void setCmd(string cmd);
 	
 	const string getCommand() const;

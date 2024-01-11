@@ -29,8 +29,8 @@ private:
 	string			realname;
 	string			password;
 
-	string			datatosend; // to do astrid : []\n[]\n[]\n[]\n
-	string			datatorecv;
+	string			datatosend; // data we need to send to this client
+	string			datatorecv; // data we need to recv from this client
 
 public:
 	static Client	nullclient;
