@@ -128,31 +128,41 @@ void	Server::run(Executor& ex) {
 		} else if (client.checkRevent(POLLHUP|POLLRDHUP)) {
 			Msg("POLLHUP/POLLRDHUP", "DEBUG");
 	 		closeConnection(client.getFD());
+			continue ;
 		} else if (client.checkRevent(POLLERR)) {
 			Msg("POLLERR", "DEBUG");
 	 		closeConnection(client.getFD());
+			continue ;
 		} else {
 			if (client.checkRevent(POLLIN)) {
 				Msg("POLLIN", "DEBUG");
-				if (receivefromClient(client) == false)
+				if (receivefromClient(client) == false) {
 					closeConnection(client.getFD());
-				// execute?
-
+					continue ;
+				}
 				// Execute:
+				bool	closed_connecion = false;
 				while (client.hasRecvData()) {
 					string receiveData = client.takeRecvData(); // Get the line. 
 					this->customOut << BG_COLOR_MAGENTA << "EXECUTING: [" << receiveData << "]" << COLOR_RESET << endl; // #TODO delete
 					Command cmd(receiveData);					// Turn it into a command.
-					if (ex.run(cmd, client) == false)			// Run the command.
+					if (ex.run(cmd, client) == false) {			// Run the command.
 						closeConnection(client.getFD());
+						closed_connecion = true;
+						break ;
+					}
 				}
+				if (closed_connecion == true)
+					continue ;
 				if (client.hasSendData())
 					client.addEvent(POLLOUT);
 			}
 			if (client.checkRevent(POLLOUT)) {
 				Msg("POLLOUT", "DEBUG");
-				if (sendtoClient(client) == false)
+				if (sendtoClient(client) == false) {
 					closeConnection(client.getFD());
+					continue ;
+				}
 
 				if (!client.hasSendData()) //check for more messages. If none, remove event.
 					client.removeEvent(POLLOUT);
