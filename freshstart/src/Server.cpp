@@ -119,11 +119,9 @@ bool	Server::comm_pollin(Executor& ex, Client &client) {
 		this->customOut << BG_COLOR_MAGENTA << "EXECUTING: [" << receiveData << "]" << COLOR_RESET << endl; // #TODO delete
 		Command cmd(receiveData);					// Turn it into a command.
 		if (ex.run(cmd, client) == false) {			// Run the command.
-			cout << "EX.RUN RETURNED FALSE\n";
 			closeConnection(client.getFD());
 			return false ;
 		}
-		cout << "EX.RUN RETURNED TRUE\n";
 	}
 	return true ;
 }

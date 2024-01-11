@@ -173,7 +173,6 @@ int Executor::run(const Command& cmd, Client& caller) {
 
 	if (message.find("Nickname collision KILL") != string::npos)
 		return false;
-
 	caller.addSendData(message);
 
 	return true;
@@ -381,12 +380,14 @@ string Executor::run_PRIVMSG(const vector<string>& args, Client& caller) {
 	string target = args[0];
 
 	stringstream data;
-	for (vector<string>::const_iterator it = args.begin(); it != args.end(); it++) {
+	for (vector<string>::const_iterator it = next(args.begin()); it != args.end(); it++) {
 		data << *it;
 		if (next(it) != args.end())
 			data << " ";
 	}
 	data << "\n";
+
+	string sender = ":" + caller.getNickname() + "!" + caller.getUsername() + "@" + caller.getHostname();
 
 	if (is_channel(target)) {
 		Channel& target_channel = this->getChannelByName(target);
@@ -395,7 +396,7 @@ string Executor::run_PRIVMSG(const vector<string>& args, Client& caller) {
 		std::vector<Client *>& channel_members = target_channel.getMembers();
 		for (Client* member: channel_members) {
 			if (member != &caller)
-				member->addSendData("PRIVMSG " + target + " :" + data.str());
+				member->addSendData(sender + "PRIVMSG " + target + " " + data.str());
 		}
 		return "";
 	}
@@ -405,7 +406,8 @@ string Executor::run_PRIVMSG(const vector<string>& args, Client& caller) {
 		return build_reply(ERR_NOSUCHNICK, caller.getNickname(), target, "No such recipient");
 	}
 
-	recipient.addSendData(data.str());
+
+	recipient.addSendData(sender + " PRIVMSG " + target + " " + data.str());
 	return "";
 }
 
