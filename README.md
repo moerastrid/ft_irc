@@ -1,9 +1,14 @@
 # ft_irc
-Now we're talking! Internet real chat project of 42 / codam, made by tnuyten and ageels
+Now we're talking! Internet real chat project of 42 / codam, made by tnuyten and ageels. Several IRC clients exist, we used IRSSI as a reference. 
 
-Several IRC clients exist, we used IRSSI as a reference. 
 
-To start the server, make the program and run "./ircserv <port> <password>". <port>: The port number on which our IRC server will be listening to for incoming IRC connections. <password>: The connection password. It will be needed by any IRC client that tries to connect to our server.
+
+To start the server, make the program and run "./ircserv [port] [password]".
+
+* Port: The port number on which our IRC server will be listening to for incoming IRC connections.
+* Password: The connection password. It will be needed by any IRC client that tries to connect to our server.
+
+
 
 Our IRC server has the following features implemented:
 
