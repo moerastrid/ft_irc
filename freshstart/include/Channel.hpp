@@ -46,21 +46,21 @@ public:
 
 	Client& getJoinedUser(string nickname);
 
-	const string& getName() const;
-	const string& getPassword() const;
-	const string& getTopic() const;
-	const vector<Client>& getClients() const;
-	const vector<Client>& getOperators() const;
-	size_t getUserLimit() const;
-	pair<string,string> getModes() const;
-	int getFounderFD() const;
-	bool isInviteOnly() const;
-	bool hasTopicRestricted() const;
-	bool hasMode(char mode) const;
+	const string&			getName() const;
+	const string&			getPassword() const;
+	const string&			getTopic() const;
+	const vector<Client>&	getClients() const;
+	const vector<Client>&	getOperators() const;
+	size_t					getUserLimit() const;
+	pair<string,string>		getModes() const;
+	int						getFounderFD() const;
 
-	bool hasOperator(const Client& client) const;
-	bool hasFounder(const Client& client) const;
-	bool hasUser(const Client& client) const;
+	bool	isInviteOnly() const;
+	bool	hasTopicRestricted() const;
+	bool	hasMode(char mode) const;
+	bool	hasOperator(const Client& client) const;
+	bool	hasFounder(const Client& client) const;
+	bool	hasUser(const Client& client) const;
 
 	void	setPassword(string password);
 	void	setTopic(string topic);
