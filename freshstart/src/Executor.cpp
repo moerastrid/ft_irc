@@ -172,6 +172,8 @@ int Executor::run(const Command& cmd, Client& caller) {
 	}
 
 	if (message.find("Nickname collision KILL") != string::npos)
+		return false;	
+	if (message.find("QUITTING") != string::npos)
 		return false;
 	caller.addSendData(message);
 
@@ -396,7 +398,7 @@ string Executor::run_PRIVMSG(const vector<string>& args, Client& caller) {
 		std::vector<Client *>& channel_members = target_channel.getMembers();
 		for (Client* member: channel_members) {
 			if (member != &caller)
-				member->addSendData(sender + "PRIVMSG " + target + " " + data.str());
+				member->addSendData(sender + " PRIVMSG " + target + " " + data.str());
 		}
 		return "";
 	}
@@ -767,7 +769,7 @@ string Executor::run_QUIT(const vector<string>& args, Client& caller) {
 	(void)args;
 	(void)caller;
 
-	return "";
+	return "QUITTING";
 }
 
 bool Executor::parseUserArguments(const vector<string>& args, string& username, string& hostname, string& servername, string& realname) {
