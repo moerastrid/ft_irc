@@ -117,7 +117,7 @@ class Executor {
 		void				handle_l_mode(const bool add, const string& arg, Channel& target);
 
 		// void				addClient(string username, string nickname, string hostname, string servername, string realname, int fd);
-		void				addChannel(const string& name, const string& password, const Client& caller);
+		void				addChannel(const string& name, const string& password, Client& caller);
 
 		bool				name_exists(const string& name);
 		bool				parseUserArguments(const vector<string>& args, string& username,

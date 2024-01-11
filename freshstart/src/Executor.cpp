@@ -389,9 +389,9 @@ string Executor::run_PRIVMSG(const vector<string>& args, Client& caller) {
 		Channel& target_channel = this->getChannelByName(target);
 		if (target_channel == Channel::nullchan)
 			return build_reply(ERR_NOSUCHNICK, caller.getNickname(), target, "No such channel");
-		std::deque<Client>& channel_members = target_channel.getClients();
-		for (Client& member: channel_members) {
-			member.addSendData(data.str());
+		std::vector<Client *>& channel_members = target_channel.getMembers();
+		for (Client* member: channel_members) {
+			member->addSendData(data.str());
 		}
 		return "";
 	}
@@ -502,14 +502,14 @@ string Executor::run_JOIN(const vector<string>& args, Client& caller) {
 			message += build_reply(RPL_TOPIC, caller.getNickname(), channelname, "Welcome to channel " + channelname); //if succesfull, reply with channel topic.
 		} else {
 			string password = ch.getPassword();
-			const deque<Client>& clients = ch.getClients();
+			const vector<Client *>& clients = ch.getMembers();
 			size_t userLimit = ch.getUserLimit();
 			if (userLimit != 0 && clients.size() >= userLimit) {
 				message += build_reply(ERR_CHANNELISFULL, caller.getNickname(), ch.getName(), "Cannot join channel (+l)");
 				continue;
 			}
 
-			if (find(clients.begin(), clients.end(), caller) != clients.end()) {
+			if (find(clients.begin(), clients.end(), &caller) != clients.end()) {
 				message += build_reply(ERR_USERONCHANNEL, caller.getNickname(), ch.getName(), "is already on channel");
 				continue;
 			}
@@ -617,11 +617,11 @@ string Executor::run_PART(const vector<string>& args, Client& caller) {
 
 		// If there's a reason:
 		// Send reason to all other users in channel, to inform them why the user left. //#TODO PROBABLY SHOULD USE SEND DIRECTLY TO FD INSTEAD OF SENDING A REPLY TO THE CLIENT.
-		for (const Client& user : ch.getClients()) {
-			if (user.getFD() == caller.getFD())
+		for (Client* user : ch.getMembers()) {
+			if (user->getFD() == caller.getFD())
 				continue;
 			string 	reasonmessage  = ":" + caller.getNickname() + "!" + caller.getUsername() + "@" + caller.getHostname() + " ";
-					reasonmessage += "PRIVMSG " + user.getNickname() + " " + *reason_it + "\n";
+					reasonmessage += "PRIVMSG " + user->getNickname() + " " + *reason_it + "\n";
 			// send_to_client(fd, reasonmessage); #TODO fix
 		}
 	}
@@ -777,7 +777,7 @@ bool Executor::parseUserArguments(const vector<string>& args, string& username, 
 	return !username.empty() && verify_name(username) && !hostname.empty() && !servername.empty() && (!realname.empty() || args[3] != ":");
 }
 
-void Executor::addChannel(const string& name, const string& password, const Client& caller) {
+void Executor::addChannel(const string& name, const string& password, Client& caller) {
 	Channel ch(name, password);
 	ch.addClient(caller);
 	this->getChannels().push_back(ch);

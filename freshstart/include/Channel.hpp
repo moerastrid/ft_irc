@@ -25,19 +25,19 @@ class Client; // Forward declaration;
 
 class Channel {
 private:
-	string			name;
-	string			password;
-	string			topic;
-	deque<Client>	clients;
-	deque<Client>	operators; // merge with clients?
-	deque<Client>	invited;
+	string				name;
+	string				password;
+	string				topic;
+	vector<Client *>	members;
+	vector<Client *>	operators; // merge with clients?
+	vector<Client *>	invited;
 
-	bool			inviteOnly;
-	bool			operatorOnly;
-	size_t			userLimit;
+	bool				inviteOnly;
+	bool				operatorOnly;
+	size_t				userLimit;
 
 public:
-	static Channel	nullchan;
+	static Channel		nullchan;
 
 	Channel();
 	~Channel();
@@ -50,9 +50,9 @@ public:
 	const string&			getName() const;
 	const string&			getPassword() const;
 	const string&			getTopic() const;
-	deque<Client>&			getClients();
-	const deque<Client>&	getClientsConst() const;
-	const deque<Client>&	getOperators() const;
+	vector<Client *>&		getMembers();
+	const vector<Client *>&	getMembersConst() const;
+	const vector<Client *>&	getOperators() const;
 	size_t					getUserLimit() const;
 	pair<string,string>		getModes() const;
 
@@ -70,8 +70,8 @@ public:
 	void	makeTopicOperatorOnly();
 	void	makeInviteOnly();
 	void	addMode(char mode, string password, size_t userlimit);
-	void	addOperator(const Client& client);
-	void	addClient(const Client& client);
+	void	addOperator(Client& client);
+	void	addClient(Client& client);
 
 	void	takeTopicOperatorOnly();
 	void	takeInviteOnly();

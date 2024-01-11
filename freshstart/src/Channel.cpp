@@ -15,7 +15,7 @@ Channel::Channel(const Channel& other) {
 	this->name = other.name;
 	this->password = other.password;
 	this->topic = other.topic;
-	this->clients = other.clients;
+	this->members = other.members;
 	this->inviteOnly = other.inviteOnly;
 	this->operatorOnly = other.operatorOnly;
 	this->userLimit = other.userLimit;
@@ -26,7 +26,7 @@ Channel& Channel::operator=(const Channel& other) {
 		this->name = other.name;
 		this->password = other.password;
 		this->topic = other.topic;
-		this->clients = other.clients;
+		this->members = other.members;
 		this->inviteOnly = other.inviteOnly;
 		this->operatorOnly = other.operatorOnly;
 		this->userLimit = other.userLimit;
@@ -59,11 +59,11 @@ bool Channel::isInviteOnly() const {
 bool Channel::hasTopicRestricted() const {
 	return this->operatorOnly;
 }
-deque<Client>& Channel::getClients() {
-	return this->clients;
+vector<Client *>& Channel::getMembers() {
+	return this->members;
 }
-const deque<Client>& Channel::getClientsConst() const {
-	return this->clients;
+const vector<Client *>& Channel::getMembersConst() const {
+	return this->members;
 }
 size_t Channel::getUserLimit() const {
 	return this->userLimit;
@@ -122,7 +122,7 @@ bool Channel::hasMode(char mode) const {
 }
 
 bool Channel::hasOperator(const Client &client) const {
-	if (find(this->operators.begin(), this->operators.end(), client) != this->operators.end()) {
+	if (find(this->operators.begin(), this->operators.end(), &client) != this->operators.end()) {
 		return true;
 	}
 	return false;
@@ -130,7 +130,7 @@ bool Channel::hasOperator(const Client &client) const {
 
 
 bool Channel::hasUser(const Client& client) const {
-	if (find(clients.begin(), clients.end(), client) != clients.end()) {
+	if (find(this->members.begin(), this->members.end(), &client) != this->members.end()) {
 		return true;
 	}
 	return false;
@@ -187,32 +187,32 @@ void Channel::removeMode(char mode) {
 	}
 }
 
-void Channel::addOperator(const Client &client) {
-	if (find(this->operators.begin(), this->operators.end(), client) == this->operators.end()) {
-		this->operators.push_back(client);
+void Channel::addOperator(Client &client) {
+	if (find(operators.begin(), operators.end(), &client) == operators.end()) {
+		this->operators.push_back(&client);
 	}
 }
 
 void Channel::removeOperator(const Client &client) {
-	deque<Client>::iterator it = find(operators.begin(), operators.end(), client);
+	auto it = find(operators.begin(), operators.end(), &client);
 	if (it != operators.end()) {
 		this->operators.erase(it);
 	}
 	return;
 }
 
-void Channel::addClient(const Client& client) {
-	if (find(this->clients.begin(), this->clients.end(), client) == this->clients.end()) {
-		this->clients.push_back(client);
+void Channel::addClient(Client& client) {
+	if (find(this->members.begin(), this->members.end(), &client) == this->members.end()) {
+		this->members.push_back(&client);
 	}
 }
 
 int Channel::removeClient(const Client& client) {
-	deque<Client>::iterator it = find(clients.begin(), clients.end(), client);
-	if (it == clients.end()) {
+	auto it = find(members.begin(), members.end(), &client);
+	if (it == members.end()) {
 		return 1;
 	}
-	this->clients.erase(it);
+	this->members.erase(it);
 	return 0;
 }
 
@@ -220,10 +220,10 @@ Channel Channel::nullchan;
 
 ostream& operator<<(ostream& os, const Channel& channel) {
 	os << "Channel(" << channel.getName() << ", [";
-	const deque<Client>& clients = channel.getClientsConst();
-	for (deque<Client>::const_iterator it = clients.begin(); it != clients.end(); it++) {
+	const vector<Client *>& members = channel.getMembersConst();
+	for (vector<Client *>::const_iterator it = members.begin(); it != members.end(); it++) {
 		os << *it;
-		if (it + 1 != clients.end()) {
+		if (it + 1 != members.end()) {
 			os << ", ";
 		}
 	}
@@ -245,6 +245,6 @@ void Channel::toggleInviteOnly()
 	}
 }
 
-const deque<Client> &Channel::getOperators() const {
+const vector<Client *>& Channel::getOperators() const {
 	return this->operators;
 }
