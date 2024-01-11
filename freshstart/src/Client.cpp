@@ -5,9 +5,12 @@ Client::Client(int fd) {
 	this->pfd.fd = fd;
 	this->pfd.events = POLLIN|POLLHUP|POLLRDHUP;
 	this->pfd.revents = 0;
+	Msg("client - default constructor", "CLASS");
 };
 
-Client::~Client() { }
+Client::~Client() { 
+	Msg("client - default destructor", "CLASS");
+}
 
 Client::Client(const Client& other) {
 	this->nickname = other.nickname;
@@ -17,6 +20,7 @@ Client::Client(const Client& other) {
 	this->realname = other.realname;
 	this->password = other.password;
 	this->pfd = other.pfd;
+	Msg("client - copy costructor", "CLASS");
 }
 
 Client& Client::operator=(const Client& other) {
@@ -29,6 +33,7 @@ Client& Client::operator=(const Client& other) {
 		this->password = other.password;
 		this->pfd = other.pfd;
 	}
+	Msg("client - assignation operator", "CLASS");
 	return *this;
 }
 

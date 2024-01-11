@@ -1,5 +1,9 @@
 #include "Msg.hpp"
 
+void	Msg::structure(string text) {
+	cout << "\x1B[35m" << "CLASS-\t\t" << text << "\x1B[0m" << endl;
+}
+
 void	Msg::debug(string text) {
 	cout << "\x1B[36m" << "DEBUG-\t\t" << text << "\x1B[0m" << endl;
 }
@@ -32,10 +36,10 @@ typedef void (Msg::*Msgptr)(void);
 Msg::~Msg() { }
 
 Msg::Msg(string text, string level) {
-	void	(Msg::*Msgptr[])(string) = {&Msg::debug, &Msg::info, &Msg::warning, &Msg::error};
-	string severity[] = {"DEBUG", "INFO", "WARNING", "ERROR"};
+	void	(Msg::*Msgptr[])(string) = {&Msg::structure, &Msg::debug, &Msg::info, &Msg::warning, &Msg::error};
+	string severity[] = {"CLASS", "DEBUG", "INFO", "WARNING", "ERROR"};
 
-	for (int i(0); i < 4; i++)
+	for (int i(0); i < 5; i++)
 	{
 		if (level.compare(severity[i]) == 0)
 		{

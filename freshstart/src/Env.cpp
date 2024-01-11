@@ -1,6 +1,9 @@
 #include "Env.hpp"
+#include "Msg.hpp"
 
-Env::Env(int port, string pass) : pass(pass), port(port) {};
+Env::Env(int port, string pass) : pass(pass), port(port) {
+	Msg("env - constructor(port, pass)", "CLASS");
+};
 
 Client&	Env::getClientByFD(int fd) {
 	for(auto& el : this->clients) {

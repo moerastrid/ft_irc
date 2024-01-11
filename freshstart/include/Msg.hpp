@@ -8,6 +8,7 @@ using std::string;
 
 class Msg {
 	private	:
+		void	structure(string text);
 		void	debug(string text);
 		void	info(string text);
 		void	warning(string text);
