@@ -389,7 +389,7 @@ string Executor::run_PRIVMSG(const vector<string>& args, Client& caller) {
 		Channel& target_channel = this->getChannelByName(target);
 		if (target_channel == Channel::nullchan)
 			return build_reply(ERR_NOSUCHNICK, caller.getNickname(), target, "No such channel");
-		std::vector<Client>& channel_members = target_channel.getClients();
+		std::deque<Client>& channel_members = target_channel.getClients();
 		for (Client& member: channel_members) {
 			member.addSendData(data.str());
 		}
@@ -502,7 +502,7 @@ string Executor::run_JOIN(const vector<string>& args, Client& caller) {
 			message += build_reply(RPL_TOPIC, caller.getNickname(), channelname, "Welcome to channel " + channelname); //if succesfull, reply with channel topic.
 		} else {
 			string password = ch.getPassword();
-			const vector<Client>& clients = ch.getClients();
+			const deque<Client>& clients = ch.getClients();
 			size_t userLimit = ch.getUserLimit();
 			if (userLimit != 0 && clients.size() >= userLimit) {
 				message += build_reply(ERR_CHANNELISFULL, caller.getNickname(), ch.getName(), "Cannot join channel (+l)");
@@ -838,10 +838,10 @@ Channel& Executor::getChannelByName(const string name) {
 	return this->e.getChannelByName(name);
 }
 
-vector<Client>& Executor::getClients() {
+deque<Client>& Executor::getClients() {
 	return this->e.getClients();
 }
 
-vector<Channel>& Executor::getChannels() {
+deque<Channel>& Executor::getChannels() {
 	return this->e.getChannels();
 }

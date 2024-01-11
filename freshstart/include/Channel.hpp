@@ -16,6 +16,9 @@ using std::pair;
 #include <string>
 using std::to_string;
 
+#include <deque>
+using std::deque;
+
 #include "Client.hpp"
 
 class Client; // Forward declaration;
@@ -25,9 +28,9 @@ private:
 	string			name;
 	string			password;
 	string			topic;
-	vector<Client>	clients;
-	vector<Client>	operators; // merge with clients?
-	vector<Client>	invited;
+	deque<Client>	clients;
+	deque<Client>	operators; // merge with clients?
+	deque<Client>	invited;
 
 	bool			inviteOnly;
 	bool			operatorOnly;
@@ -47,9 +50,9 @@ public:
 	const string&			getName() const;
 	const string&			getPassword() const;
 	const string&			getTopic() const;
-	vector<Client>&			getClients();
-	const vector<Client>&	getClientsConst() const;
-	const vector<Client>&	getOperators() const;
+	deque<Client>&			getClients();
+	const deque<Client>&	getClientsConst() const;
+	const deque<Client>&	getOperators() const;
 	size_t					getUserLimit() const;
 	pair<string,string>		getModes() const;
 
