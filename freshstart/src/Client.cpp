@@ -128,9 +128,7 @@ bool Client::hasRecvData() const {
 bool Client::isOperator(const Channel& c) const {
 	return c.hasOperator(*this);
 }
-bool Client::isFounder(const Channel& c) const {
-	return c.hasFounder(*this);
-}
+
 bool Client::checkEvent(short event) const {
 	return this->pfd.events & event;
 }

@@ -29,8 +29,8 @@ private:
 	string			realname;
 	string			password;
 
-	string			datatosend; // to do astrid : []\n[]\n[]\n[]\n
-	string			datatorecv;
+	string			datatosend; // data we need to send to this client
+	string			datatorecv; // data we need to recv from this client
 
 public:
 	static Client	nullclient;
@@ -74,7 +74,6 @@ public:
 	bool					hasSendData() const;
 	bool					hasRecvData() const;
 	bool					isOperator(const Channel& c) const;
-	bool					isFounder(const Channel& c) const;
 	bool					checkEvent(short event) const;
 	bool					checkRevent(short revent) const;
 	bool					isRegistered() const;
