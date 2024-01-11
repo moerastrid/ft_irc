@@ -74,7 +74,6 @@ public:
 	bool					hasSendData() const;
 	bool					hasRecvData() const;
 	bool					isOperator(const Channel& c) const;
-	bool					isFounder(const Channel& c) const;
 	bool					checkEvent(short event) const;
 	bool					checkRevent(short revent) const;
 	bool					isRegistered() const;

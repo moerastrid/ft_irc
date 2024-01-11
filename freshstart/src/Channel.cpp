@@ -7,7 +7,6 @@ Channel::Channel() {
 	this->inviteOnly = false;
 	this->operatorOnly = false;
 	this->userLimit = 0;
-	this->founderFD = -1;
 };
 
 Channel::~Channel() {};
@@ -20,7 +19,6 @@ Channel::Channel(const Channel& other) {
 	this->inviteOnly = other.inviteOnly;
 	this->operatorOnly = other.operatorOnly;
 	this->userLimit = other.userLimit;
-	this->founderFD = other.founderFD;
 }
 
 Channel& Channel::operator=(const Channel& other) {
@@ -32,19 +30,17 @@ Channel& Channel::operator=(const Channel& other) {
 		this->inviteOnly = other.inviteOnly;
 		this->operatorOnly = other.operatorOnly;
 		this->userLimit = other.userLimit;
-		this->founderFD = other.founderFD;
 	}
 	return *this;
 }
 
-Channel::Channel(string name, string password, int founderFD) {
+Channel::Channel(string name, string password) {
 	this->name = name;
 	this->password = password;
 	this->topic = "Welcome to channel " + name;
 	this->inviteOnly = false;
 	this->operatorOnly = false;
 	this->userLimit = 0;
-	this->founderFD = founderFD;
 }
 
 
@@ -128,19 +124,13 @@ bool Channel::hasOperator(const Client &client) const {
 	}
 	return false;
 }
-bool Channel::hasFounder(const Client &client) const {
-	return client.getFD() == this->founderFD;
-}
+
 
 bool Channel::hasUser(const Client& client) const {
 	if (find(clients.begin(), clients.end(), client) != clients.end()) {
 		return true;
 	}
 	return false;
-}
-
-int Channel::getFounderFD() const {
-	return this->founderFD;
 }
 
 void Channel::setTopic(string topic) {

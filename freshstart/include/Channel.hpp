@@ -32,8 +32,6 @@ private:
 	bool			inviteOnly;
 	bool			operatorOnly;
 	size_t			userLimit;
-	int				founderFD; // Stores FD;
-	
 
 public:
 	static Channel	nullchan;
@@ -42,10 +40,9 @@ public:
 	~Channel();
 	Channel(const Channel& other);
 	Channel& operator=(const Channel& other);
-	Channel(string name, string password, int founderFD);
+	Channel(string name, string password);
 
-	Client& getJoinedUser(string nickname);
-
+	//Client&					getJoinedUser(string nickname);
 	const string&			getName() const;
 	const string&			getPassword() const;
 	const string&			getTopic() const;
@@ -53,13 +50,10 @@ public:
 	const vector<Client>&	getOperators() const;
 	size_t					getUserLimit() const;
 	pair<string,string>		getModes() const;
-	int						getFounderFD() const;
-
 	bool	isInviteOnly() const;
 	bool	hasTopicRestricted() const;
 	bool	hasMode(char mode) const;
 	bool	hasOperator(const Client& client) const;
-	bool	hasFounder(const Client& client) const;
 	bool	hasUser(const Client& client) const;
 
 	void	setPassword(string password);

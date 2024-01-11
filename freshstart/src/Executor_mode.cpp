@@ -65,7 +65,7 @@ static bool check_privileges(const Client& caller, const Channel& target, const 
 	if (modestring.find('k') != string::npos)
 		res = res && caller.isOperator(target);
 	if (modestring.find('o') != string::npos)
-		res = res && (caller.isFounder(target) || caller.isOperator(target));
+		res = res && (caller.isOperator(target));
 	if (modestring.find('l') != string::npos)
 		res = res && caller.isOperator(target);
 	return res;

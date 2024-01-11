@@ -790,7 +790,7 @@ bool Executor::parseUserArguments(const vector<string>& args, string& username, 
 }
 
 void Executor::addChannel(const string& name, const string& password, const Client& caller) {
-	Channel ch(name, password, caller.getFD());
+	Channel ch(name, password);
 	ch.addClient(caller);
 	this->getChannels().push_back(ch);
 }
