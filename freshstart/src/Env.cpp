@@ -30,27 +30,27 @@ Channel&	Env::getChannelByName(const string& name) {
 	return Channel::nullchan;
 }
 
-vector<Client>::iterator	Env::getItToClientByFD(int fd) {
-	for (vector<Client>::iterator it = clients.begin(); it != clients.end(); it++) {
+deque<Client>::iterator	Env::getItToClientByFD(int fd) {
+	for (deque<Client>::iterator it = clients.begin(); it != clients.end(); it++) {
 		if (it->getFD() == fd)
 			return (it);
 	}
 	return clients.end();
 }
 
-vector<Client>::iterator	Env::getItToClientByNick(string nick) {
-	for (vector<Client>::iterator it = clients.begin(); it != clients.end(); it++) {
+deque<Client>::iterator	Env::getItToClientByNick(string nick) {
+	for (deque<Client>::iterator it = clients.begin(); it != clients.end(); it++) {
 		if (it->getNickname() == nick)
 			return it;
 	}
 	return clients.end();
 }
 
-vector<Client>&	Env::getClients() {
+deque<Client>&	Env::getClients() {
 	return this->clients;
 }
 
-vector<Channel>&	Env::getChannels() {
+deque<Channel>&	Env::getChannels() {
 	return this->channels;
 }
 

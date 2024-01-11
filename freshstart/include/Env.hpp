@@ -16,8 +16,8 @@
 
 class Env {
 	private:
-		vector<Client>		clients;
-		vector<Channel>		channels;
+		deque<Client>		clients;
+		deque<Channel>		channels;
 
 		string				pass;
 		string				hostname	= "localhost";
@@ -31,10 +31,10 @@ class Env {
 		Client&						getClientByFD(int fd);
 		Client&						getClientByNick(const string& nick);
 		Channel&					getChannelByName(const string& name);
-		vector<Client>::iterator	getItToClientByFD(int fd);
-		vector<Client>::iterator	getItToClientByNick(string nick);
-		vector<Client>&				getClients();
-		vector<Channel>& 			getChannels();
+		deque<Client>::iterator		getItToClientByFD(int fd);
+		deque<Client>::iterator		getItToClientByNick(string nick);
+		deque<Client>&				getClients();
+		deque<Channel>& 			getChannels();
 		int							getPort() const;
 		const string&				getPass() const;
 		const string&				getHostname() const;

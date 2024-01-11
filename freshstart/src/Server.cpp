@@ -118,7 +118,7 @@ void	Server::run(Executor& ex) {
 	} else if (sockfd.revents & POLLERR )
 		throw ServerException("error in Server::run - sockfd.revents & POLLERR");
 
-	vector<Client>& clients = this->e.getClients();
+	deque<Client>& clients = this->e.getClients();
 
 	for (size_t	i = 0; i < clients.size(); i++) {
 		Client& client = clients[i];

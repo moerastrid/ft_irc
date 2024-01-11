@@ -132,8 +132,8 @@ class Executor {
 
 		Client&				getClientByNick(const string nick);
 		Channel&			getChannelByName(const string name);
-		vector<Client>&		getClients();
-		vector<Channel>&	getChannels();
+		deque<Client>&		getClients();
+		deque<Channel>&		getChannels();
 };
 
 bool			is_channel(const string& name);
