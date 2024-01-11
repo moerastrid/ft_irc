@@ -171,6 +171,9 @@ int Executor::run(const Command& cmd, Client& caller) {
 		message = (this->*ptr)(cmd.getArgs(), caller);
 	}
 
+	if (message.find("Nickname collision KILL") != string::npos)
+		return false;
+
 	caller.addSendData(message);
 
 	return true;
