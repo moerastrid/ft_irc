@@ -107,6 +107,27 @@ void	Server::closeConnection(const int fd) {
 #define COLOR_GREEN "\033[32m"
 #define COLOR_RESET "\033[0m"
 
+bool	Server::communication_pollin(Executor& ex, Client &client) {
+
+	Msg("POLLIN " + to_string(client.getFD()), "DEBUG");
+	if (receivefromClient(client) == false) {
+		closeConnection(client.getFD());
+		return false;
+	}
+
+	// Execute:
+	while (client.hasRecvData()) {
+		string receiveData = client.takeRecvData(); // Get the line. 
+		this->customOut << BG_COLOR_MAGENTA << "EXECUTING: [" << receiveData << "]" << COLOR_RESET << endl; // #TODO delete
+		Command cmd(receiveData);					// Turn it into a command.
+		if (ex.run(cmd, client) == false) {			// Run the command.
+			closeConnection(client.getFD());
+			return false ;
+		}
+	}
+	return true ;
+}
+
 void	Server::run(Executor& ex) {
 	if (setPoll() == 0)
 		return;
@@ -127,32 +148,14 @@ void	Server::run(Executor& ex) {
 		} else if (client.checkRevent(POLLHUP|POLLRDHUP)) {
 			Msg("POLLHUP/POLLRDHUP", "DEBUG");
 	 		closeConnection(client.getFD());
-			continue ;
 		} else if (client.checkRevent(POLLERR)) {
 			Msg("POLLERR", "DEBUG");
 	 		closeConnection(client.getFD());
-			continue ;
 		} else {
 			if (client.checkRevent(POLLIN)) {
-				Msg("POLLIN " + to_string(client.getFD()), "DEBUG");
-				if (receivefromClient(client) == false) {
-					closeConnection(client.getFD());
+				if (!communication_pollin(ex, client)) 
 					continue ;
-				}
-				// Execute:
-				bool	closed_connecion = false;
-				while (client.hasRecvData()) {
-					string receiveData = client.takeRecvData(); // Get the line. 
-					this->customOut << BG_COLOR_MAGENTA << "EXECUTING: [" << receiveData << "]" << COLOR_RESET << endl; // #TODO delete
-					Command cmd(receiveData);					// Turn it into a command.
-					if (ex.run(cmd, client) == false) {			// Run the command.
-						closeConnection(client.getFD());
-						closed_connecion = true;
-						break ;
-					}
-				}
-				if (closed_connecion == true)
-					continue ;
+				
 			}
 			if (client.checkRevent(POLLOUT)) {
 				Msg("POLLOUT " + to_string(client.getFD()), "DEBUG");
@@ -192,7 +195,6 @@ bool	Server::sendtoClient(Client &c) {
 		c.setEvents(POLLIN|POLLHUP|POLLRDHUP);
 		return (true);
 	}
-	// dataToSend = ":" + this->e.hostname + " " + dataToSend; // Leaving this out for now, there's an issue (PONG)
 	int nbytes = send(c.getFD(), dataToSend.c_str(), dataToSend.size(), 0);
 	if (nbytes <= 0) {
 		Msg("error in sending data", "ERROR");
