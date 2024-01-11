@@ -107,9 +107,7 @@ void	Server::closeConnection(const int fd) {
 #define COLOR_GREEN "\033[32m"
 #define COLOR_RESET "\033[0m"
 
-bool	Server::communication_pollin(Executor& ex, Client &client) {
-
-	Msg("POLLIN " + to_string(client.getFD()), "DEBUG");
+bool	Server::comm_pollin(Executor& ex, Client &client) {
 	if (receivefromClient(client) == false) {
 		closeConnection(client.getFD());
 		return false;
@@ -121,11 +119,21 @@ bool	Server::communication_pollin(Executor& ex, Client &client) {
 		this->customOut << BG_COLOR_MAGENTA << "EXECUTING: [" << receiveData << "]" << COLOR_RESET << endl; // #TODO delete
 		Command cmd(receiveData);					// Turn it into a command.
 		if (ex.run(cmd, client) == false) {			// Run the command.
+			cout << "EX.RUN RETURNED FALSE\n";
 			closeConnection(client.getFD());
 			return false ;
 		}
+		cout << "EX.RUN RETURNED TRUE\n";
 	}
 	return true ;
+}
+
+void	Server::comm_pollout(Client &client) {
+	if (sendtoClient(client) == false) {
+		closeConnection(client.getFD());
+	}
+	if (!client.hasSendData()) //check for more messages. If none, remove event.
+		client.removeEvent(POLLOUT);
 }
 
 void	Server::run(Executor& ex) {
@@ -149,23 +157,17 @@ void	Server::run(Executor& ex) {
 			Msg("POLLHUP/POLLRDHUP", "DEBUG");
 	 		closeConnection(client.getFD());
 		} else if (client.checkRevent(POLLERR)) {
-			Msg("POLLERR", "DEBUG");
+			Msg("POLLERR" + to_string(client.getFD()), "DEBUG");
 	 		closeConnection(client.getFD());
 		} else {
 			if (client.checkRevent(POLLIN)) {
-				if (!communication_pollin(ex, client)) 
+				Msg("POLLIN " + to_string(client.getFD()), "DEBUG");
+				if (!comm_pollin(ex, client)) 
 					continue ;
-				
 			}
 			if (client.checkRevent(POLLOUT)) {
 				Msg("POLLOUT " + to_string(client.getFD()), "DEBUG");
-				if (sendtoClient(client) == false) {
-					closeConnection(client.getFD());
-					continue ;
-				}
-
-				if (!client.hasSendData()) //check for more messages. If none, remove event.
-					client.removeEvent(POLLOUT);
+				comm_pollout(client);
 			}
 		}
 	}
