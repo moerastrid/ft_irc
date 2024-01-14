@@ -101,8 +101,8 @@ void	Server::closeConnection(const int fd) {
 	close(fd);
 	if (!this->e.getChannels().empty()) {
 		for (auto i = this->e.getChannels().begin(); i != this->e.getChannels().end(); i++) {
-			if ((*i).hasUser(*(this->e.getItToClientByFD(fd))))
-				(*i).removeClient(*(this->e.getItToClientByFD(fd)));
+			if ((*i).hasMember(*(this->e.getItToClientByFD(fd))))
+				(*i).removeMember(*(this->e.getItToClientByFD(fd)));
 		}
 	}
 	this->e.getClients().erase(this->e.getItToClientByFD(fd));

@@ -523,7 +523,7 @@ string Executor::run_JOIN(const vector<string>& args, Client& caller) {
 			}
 
 			if (password.empty()) {
-				ch.addClient(caller);
+				ch.addMember(caller);
 				message += build_reply(RPL_TOPIC, caller.getNickname(), channelname, ch.getTopic()); //if succesfull, reply with channel topic.
 				continue;
 			}
@@ -532,7 +532,7 @@ string Executor::run_JOIN(const vector<string>& args, Client& caller) {
 				message += build_reply(ERR_BADCHANNELKEY, caller.getNickname(), channelname, "Cannot join channel (+k)");
 				continue;
 			}
-			ch.addClient(caller);
+			ch.addMember(caller);
 			message += build_reply(RPL_TOPIC, caller.getNickname(), channelname, ch.getTopic()); //if succesfull, reply with channel topic.
 		}
 	}
@@ -574,7 +574,7 @@ string Executor::run_KICK(const vector<string>& args, Client& caller) {
 			continue;
 		}
 
-		else if (ch.removeClient(client) == 1) {
+		else if (ch.removeMember(client) == 1) {
 			message += build_channel_reply(ERR_USERNOTINCHANNEL, caller.getNickname(), *name_it, channelname, "Cannot kick user from a channel that they have not joined");
 			continue;
 		}
@@ -612,7 +612,7 @@ string Executor::run_PART(const vector<string>& args, Client& caller) {
 			continue;
 		}
 
-		if (ch.removeClient(caller) == 1) {
+		if (ch.removeMember(caller) == 1) {
 			message += build_reply(ERR_USERNOTINCHANNEL, caller.getNickname(), *it, "You haven't joined that channel");
 			continue;
 		}
@@ -666,7 +666,7 @@ string Executor::run_INVITE(const vector<string>& args, Client& caller) {
 		return build_reply(ERR_NOSUCHCHANNEL, caller.getNickname(), target_channel, "No such channel");
 	}
 
-	if (!channel.hasUser(caller)) {
+	if (!channel.hasMember(caller)) {
 		return build_reply(ERR_NOTONCHANNEL, caller.getNickname(), target_channel, "Not on channel");
 	}
 
@@ -679,7 +679,7 @@ string Executor::run_INVITE(const vector<string>& args, Client& caller) {
 		return build_reply(ERR_NOSUCHNICK, caller.getNickname(), target_client, "No such client");
 	}
 
-	if (channel.hasUser(target)) {
+	if (channel.hasMember(target)) {
 		return build_channel_reply(ERR_USERONCHANNEL, caller.getNickname(), target_client, target_channel, "is already on channel");
 	}
 
@@ -728,7 +728,7 @@ string Executor::run_TOPIC(const vector<string>& args, Client& caller) {
 
 	const string& oldtopic = channel.getTopic();
 
-	if (!channel.hasUser(caller)) {
+	if (!channel.hasMember(caller)) {
 		return build_reply(ERR_NOTONCHANNEL, caller.getNickname(), target_channel, "You're not on that channel");
 	}
 
@@ -771,8 +771,8 @@ string Executor::run_QUIT([[maybe_unused]]const vector<string>& args,[[maybe_unu
 	for (auto& chan : channels) {
 		if (chan.hasOperator(caller))
 			chan.removeOperator(caller);
-		if (chan.hasUser(caller))
-			chan.removeClient(caller);
+		if (chan.hasMember(caller))
+			chan.removeMember(caller);
 	}
 
 	return "QUITTING";
@@ -793,13 +793,13 @@ bool Executor::parseUserArguments(const vector<string>& args, string& username, 
 
 void Executor::addChannel(const string& name, const string& password, Client& caller) {
 	// Channel ch(name, password);
-	// ch.addClient(caller);
+	// ch.addMember(caller);
 	// this->getChannels().push_back(ch);
 
 	this->getChannels().emplace_back(name, password);
 	Channel& chan = this->getChannels().back();
 	chan.addOperator(caller);
-	chan.addClient(caller);
+	chan.addMember(caller);
 }
 
 string Executor::format_reason(vector<string>::iterator& reason_start, vector<string>& args) {
