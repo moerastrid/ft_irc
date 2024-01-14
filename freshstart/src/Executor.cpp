@@ -408,7 +408,6 @@ string Executor::run_PRIVMSG(const vector<string>& args, Client& caller) {
 		return build_reply(ERR_NOSUCHNICK, caller.getNickname(), target, "No such recipient");
 	}
 
-
 	recipient.sendPrivMsg(caller, data.str(), false);
 	return "";
 }
@@ -576,12 +575,15 @@ string Executor::run_KICK(const vector<string>& args, Client& caller) {
 	vector<string>::const_iterator reason_start = find_if(args.begin(), args.end(), find_reason);
 
 	for (vector<string>::const_iterator name_it = next(args.begin()); name_it != reason_start; name_it++) {
+		if (!ch.hasOperator(caller)) {
+			message += build_reply(ERR_CHANOPRIVSNEEDED, caller.getNickname(), *name_it, "You're not the channel operator");
+			continue;
+		}
 		Client& client = this->getClientByNick(*name_it);
 		if (client == Client::nullclient) {
 			message += build_reply(ERR_NOSUCHNICK, caller.getNickname(), *name_it, "No such nickname");
 			continue;
 		}
-
 		else if (ch.removeMember(client) == 1) {
 			message += build_channel_reply(ERR_USERNOTINCHANNEL, caller.getNickname(), *name_it, channelname, "Cannot kick user from a channel that they have not joined");
 			continue;
@@ -591,6 +593,7 @@ string Executor::run_KICK(const vector<string>& args, Client& caller) {
 	}
 	if (ch.empty()) {
 		this->e.getChannels().erase(this->e.getItToChannelByName(ch.getName()));
+		// this->e.deleteChannel(ch);
 	}
 
 	return message;
