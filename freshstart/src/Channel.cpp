@@ -221,10 +221,9 @@ void Channel::removeOperator(const Client &client) {
 
 		Client* new_operator = *new_operator_it;
 		this->addOperator(**new_operator_it);
-		// (*new_operator_it)->sendPrivMsg("You've become the operator of the '" + this->getName() + "'-channel!\n");
 
 		for (auto member : members) {
-			member->sendPrivMsg(new_operator->getNickname() + " is the new operator of the '" + this->getName() + "'-channel.\n");
+			member->sendPrivMsg(new_operator->getNickname() + " is the new operator of the '" + this->getName() + "'-channel.\n", true);
 		}
 	}
 
@@ -250,11 +249,24 @@ int Channel::removeMember(const Client& client) {
 	return 0;
 }
 
-void	Channel::sendMessageToChannelMembers(const string& message) {
+void	Channel::sendMessageToChannelMembers(const Client& sender, const string& message, bool colon) {
+
 	vector<Client *> channel_members = this->getMembers();
-	for (auto member : channel_members) {
-		member->sendPrivMsg(message);
+
+	string prefix = ":" + sender.getNickname() + 
+					"!" + sender.getUsername() + 
+					"@" + sender.getHostname() + 
+					" PRIVMSG " + this->getName();
+	string colon_str = "";
+	if (colon)
+		colon_str = ":";
+	string reply = prefix + " " + colon_str + message;
+
+	for (Client * member : channel_members) {
+		if (member != &sender)
+			member->addSendData(reply);
 	}
+
 }
 
 

@@ -394,12 +394,8 @@ string Executor::run_PRIVMSG(const vector<string>& args, Client& caller) {
 		Channel& target_channel = this->getChannelByName(target);
 		if (target_channel == Channel::nullchan)
 			return build_reply(ERR_NOSUCHNICK, caller.getNickname(), target, "No such channel");
-		std::vector<Client *>& channel_members = target_channel.getMembers();
-		for (Client* member: channel_members) {
-			if (member != &caller)
-				member->sendPrivMsg(data.str());
-		}
-		return "";
+		target_channel.sendMessageToChannelMembers(caller, data.str(), false);
+		// return message;
 	}
 
 	Client& recipient = this->getClientByNick(target);
@@ -408,7 +404,7 @@ string Executor::run_PRIVMSG(const vector<string>& args, Client& caller) {
 	}
 
 
-	recipient.sendPrivMsg(data.str());
+	recipient.sendPrivMsg(data.str(), false);
 	return "";
 }
 

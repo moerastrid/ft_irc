@@ -95,11 +95,16 @@ void Client::setPassword(const string& password) {
 	this->password = password;
 }
 
-void Client::sendPrivMsg(const string& message) {
-	this->addSendData(":" + this->getNickname() + 
+// Send a privmsg to the client. If colon is true, add a colon before the actual message part.
+void Client::sendPrivMsg(const string& message, bool colon = false) {
+	string prefix = ":" + this->getNickname() + 
 					  "!" + this->getUsername() + 
 					  "@" + this->getHostname() + 
-					  " PRIVMSG " + this->getNickname() + " " + message);
+					  " PRIVMSG " + this->getNickname();
+	string colon_str = "";
+	if (colon)
+		colon_str = ":";
+	this->addSendData(prefix + " " + colon_str + message);
 }
 
 void Client::addSendData(const string& message) {
