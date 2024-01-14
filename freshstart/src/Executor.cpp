@@ -576,7 +576,8 @@ string Executor::run_KICK(const vector<string>& args, Client& caller) {
 
 	for (vector<string>::const_iterator name_it = next(args.begin()); name_it != reason_start; name_it++) {
 		if (!ch.hasOperator(caller)) {
-			message += build_reply(ERR_CHANOPRIVSNEEDED, caller.getNickname(), channelname, "You're not the channel operator");
+			string full_name = ":" + caller.getNickname() + "!" + caller.getUsername() + "@" + caller.getHostname();
+			message += build_reply(ERR_CHANOPRIVSNEEDED, full_name, channelname, "You're not the channel operator");
 			continue;
 		}
 		Client& victim = this->getClientByNick(*name_it);
