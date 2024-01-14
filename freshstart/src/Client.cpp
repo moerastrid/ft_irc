@@ -95,6 +95,13 @@ void Client::setPassword(const string& password) {
 	this->password = password;
 }
 
+void Client::sendPrivMsg(const string& message) {
+	this->addSendData(":" + this->getNickname() + 
+					  "!" + this->getUsername() + 
+					  "@" + this->getHostname() + 
+					  " PRIVMSG " + this->getNickname() + " " + message);
+}
+
 void Client::addSendData(const string& message) {
 	addEvent(POLLOUT);
 	this->datatosend += message;

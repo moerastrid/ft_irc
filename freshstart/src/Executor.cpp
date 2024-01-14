@@ -389,7 +389,6 @@ string Executor::run_PRIVMSG(const vector<string>& args, Client& caller) {
 	}
 	data << "\n";
 
-	string sender = ":" + caller.getNickname() + "!" + caller.getUsername() + "@" + caller.getHostname();
 
 	if (is_channel(target)) {
 		Channel& target_channel = this->getChannelByName(target);
@@ -398,7 +397,7 @@ string Executor::run_PRIVMSG(const vector<string>& args, Client& caller) {
 		std::vector<Client *>& channel_members = target_channel.getMembers();
 		for (Client* member: channel_members) {
 			if (member != &caller)
-				member->addSendData(sender + " PRIVMSG " + target + " " + data.str());
+				member->sendPrivMsg(data.str());
 		}
 		return "";
 	}
@@ -409,7 +408,7 @@ string Executor::run_PRIVMSG(const vector<string>& args, Client& caller) {
 	}
 
 
-	recipient.addSendData(sender + " PRIVMSG " + target + " " + data.str());
+	recipient.sendPrivMsg(data.str());
 	return "";
 }
 

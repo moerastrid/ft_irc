@@ -65,6 +65,8 @@ public:
 
 	void					addSendData(const string& message);
 	void					addRecvData(const string& message);
+	void					sendPrivMsg(const string& message);
+
 
 	// Takers (getters, but these also modifiy the class by deleting what is taken)
 	const string			takeSendData();

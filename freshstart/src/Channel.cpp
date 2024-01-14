@@ -211,12 +211,21 @@ void Channel::removeOperator(const Client &client) {
 	}
 
 	if (this->getOperators().empty()) {
-		// auto new_operator_it = this->getMembers().begin();
-		// while (new_operator_it) {
+		vector<Client *>members = this->getMembers();
+		std::vector<Client *>::iterator new_operator_it = members.begin();
+		while (*new_operator_it != &client && new_operator_it != members.end()) {
+			new_operator_it = next(new_operator_it);
+		}
+		if (new_operator_it == members.end())
+			return;
 
-		// }
-		// this->addOperator(*new_operator);
-		// new_operator->addSendData("You've become the operator of the '" + this->getName() + "'-channel!\n");
+		Client* new_operator = *new_operator_it;
+		this->addOperator(**new_operator_it);
+		// (*new_operator_it)->sendPrivMsg("You've become the operator of the '" + this->getName() + "'-channel!\n");
+
+		for (auto member : members) {
+			member->sendPrivMsg(new_operator->getNickname() + " is the new operator of the '" + this->getName() + "'-channel.\n");
+		}
 	}
 
 	return;
@@ -240,6 +249,14 @@ int Channel::removeMember(const Client& client) {
 	this->members.erase(it);
 	return 0;
 }
+
+void	Channel::sendMessageToChannelMembers(const string& message) {
+	vector<Client *> channel_members = this->getMembers();
+	for (auto member : channel_members) {
+		member->sendPrivMsg(message);
+	}
+}
+
 
 Channel Channel::nullchan;
 
