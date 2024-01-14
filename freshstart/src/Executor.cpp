@@ -576,8 +576,7 @@ string Executor::run_KICK(const vector<string>& args, Client& caller) {
 
 	for (vector<string>::const_iterator name_it = next(args.begin()); name_it != reason_start; name_it++) {
 		if (!ch.hasOperator(caller)) {
-			string full_name = ":" + caller.getNickname() + "!" + caller.getUsername() + "@" + caller.getHostname();
-			message += build_reply(ERR_CHANOPRIVSNEEDED, full_name, channelname, "You're not the channel operator");
+			message += build_reply(ERR_CHANOPRIVSNEEDED, caller.getFullName(), channelname, "You're not the channel operator");
 			continue;
 		}
 		Client& victim = this->getClientByNick(*name_it);
@@ -654,8 +653,8 @@ string Executor::run_PART(const vector<string>& args, Client& caller) {
 		for (Client* user : ch.getMembers()) {
 			if (user->getFD() == caller.getFD())
 				continue;
-			string 	reasonmessage  = ":" + caller.getNickname() + "!" + caller.getUsername() + "@" + caller.getHostname() + " ";
-					reasonmessage += "PRIVMSG " + user->getNickname() + " " + *reason_it + "\n";
+			string 	reasonmessage  = caller.getFullName();
+					reasonmessage += " PRIVMSG " + user->getNickname() + " " + *reason_it + "\n";
 			// send_to_client(fd, reasonmessage); #TODO fix
 		}
 	}

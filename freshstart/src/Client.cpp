@@ -62,6 +62,11 @@ const string& Client::getRealname() const {
 const string& Client::getPassword() const {
 	return this->password;
 }
+// full name : user!name@host 
+const string	Client::getFullName() const {
+	std::string temp = ":" + this->getNickname() + "!" + this->getUsername() + "@" + this->getHostname();
+	return(temp);
+}
 
 // Setters
 void Client::setEvents(const short events) {
@@ -98,10 +103,7 @@ void Client::setPassword(const string& password) {
 // Send a privmsg to the client.
 // If colon is true, add a colon before the actual message part.
 void Client::sendPrivMsg(const Client& sender, const string& message, bool colon = false) {
-	string prefix = ":" + sender.getNickname() + 
-					  "!" + sender.getUsername() + 
-					  "@" + sender.getHostname() + 
-					  " PRIVMSG " + this->getNickname();
+	string prefix = sender.getFullName() + " PRIVMSG " + this->getNickname();
 	string colon_str = "";
 	if (colon)
 		colon_str = ":";
