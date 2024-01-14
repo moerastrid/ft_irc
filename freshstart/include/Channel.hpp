@@ -56,6 +56,7 @@ public:
 	size_t					getUserLimit() const;
 	pair<string,string>		getModes() const;
 
+	bool	empty() const;
 	bool	isInviteOnly() const;
 	bool	hasTopicRestricted() const;
 	bool	hasMode(char mode) const;

@@ -63,6 +63,10 @@ const string& Channel::getTopic() const {
 bool Channel::isInviteOnly() const {
 	return this->inviteOnly;
 }
+bool	Channel::empty() const {
+	return (members.empty());
+}
+
 bool Channel::hasTopicRestricted() const {
 	return this->operatorOnly;
 }

@@ -32,7 +32,9 @@ class Env {
 		Client&						getClientByNick(const string& nick);
 		Channel&					getChannelByName(const string& name);
 		deque<Client>::iterator		getItToClientByFD(int fd);
-		deque<Client>::iterator		getItToClientByNick(string nick);
+		deque<Client>::iterator		getItToClientByNick(const string& nick);
+		deque<Channel>::iterator	getItToChannelByName(const string& name);
+		deque<Channel>::iterator	getItToChannels();
 		deque<Client>&				getClients();
 		deque<Channel>& 			getChannels();
 		int							getPort() const;
