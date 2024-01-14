@@ -580,14 +580,12 @@ string Executor::run_KICK(const vector<string>& args, Client& caller) {
 		if (client == Client::nullclient) {
 			message += build_reply(ERR_NOSUCHNICK, caller.getNickname(), *name_it, "No such nickname");
 			continue;
-		}
-
-		else if (ch.removeMember(client) == 1) {
+		} else if (ch.removeMember(client) == 1) {
 			message += build_channel_reply(ERR_USERNOTINCHANNEL, caller.getNickname(), *name_it, channelname, "Cannot kick user from a channel that they have not joined");
 			continue;
 		}
-
 		message += "KICK " + channelname + " " + *name_it + " " + *reason_start + "\n";
+		ch.sendMessageToChannelMembers(message);
 	}
 	if (ch.empty()) {
 		this->e.getChannels().erase(this->e.getItToChannelByName(ch.getName()));
