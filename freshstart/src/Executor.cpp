@@ -576,26 +576,32 @@ string Executor::run_KICK(const vector<string>& args, Client& caller) {
 
 	for (vector<string>::const_iterator name_it = next(args.begin()); name_it != reason_start; name_it++) {
 		if (!ch.hasOperator(caller)) {
-			message += build_reply(ERR_CHANOPRIVSNEEDED, caller.getNickname(), *name_it, "You're not the channel operator");
+			message += build_reply(ERR_CHANOPRIVSNEEDED, caller.getNickname(), channelname, "You're not the channel operator");
 			continue;
 		}
-		Client& client = this->getClientByNick(*name_it);
-		if (client == Client::nullclient) {
+		Client& victim = this->getClientByNick(*name_it);
+		if (victim == Client::nullclient) {
 			message += build_reply(ERR_NOSUCHNICK, caller.getNickname(), *name_it, "No such nickname");
 			continue;
 		}
-		else if (ch.removeMember(client) == 1) {
+		else if (ch.hasMember(victim)) {
 			message += build_channel_reply(ERR_USERNOTINCHANNEL, caller.getNickname(), *name_it, channelname, "Cannot kick user from a channel that they have not joined");
 			continue;
 		}
-
+		cout << "reason_start :" << *reason_start << ":\n";
+		if ((*reason_start).compare(":") == 0) {
+			//ch.kickMemberMessage
+			ch.sendMessageToChannelMembers(caller, ": default kick reason\n", false);
+		} else {
+			ch.sendMessageToChannelMembers(caller, ": hoi\n", false);
+		}
+		ch.removeMember(victim);
 		message += "KICK " + channelname + " " + *name_it + " " + *reason_start + "\n";
 	}
 	if (ch.empty()) {
 		this->e.getChannels().erase(this->e.getItToChannelByName(ch.getName()));
 		// this->e.deleteChannel(ch);
 	}
-
 	return message;
 }
 

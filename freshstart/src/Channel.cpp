@@ -252,6 +252,8 @@ int Channel::removeMember(const Client& client) {
 void	Channel::sendMessageToChannelMembers(const Client& sender, const string& message, bool colon) {
 
 	vector<Client *> channel_members = this->getMembers();
+	if (channel_members.empty())
+		return ;
 
 	string prefix = ":" + sender.getNickname() + 
 					"!" + sender.getUsername() + 
