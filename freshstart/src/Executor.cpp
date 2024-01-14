@@ -248,7 +248,6 @@ string Executor::run_NICK(const vector<string>& args, Client& caller) {
 	// 	return build_notice_reply(caller.getNickname(), caller.getNickname(), "Enter the server password first with PASS to start connection registration");
 
 	if (name_exists(nickname)) { // #TODO Figure out nickcollision vs nicknameinuse
-		cout << "caller name :" << caller.getNickname() << ":\n";
 		if (caller.getNickname().empty())
 			return build_reply(ERR_NICKCOLLISION, "NICK", nickname, "Nickname collision KILL from "+ caller.getUsername() + "@" + caller.getHostname());
 		else
