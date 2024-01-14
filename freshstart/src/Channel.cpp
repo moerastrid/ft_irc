@@ -209,6 +209,9 @@ void Channel::removeOperator(const Client &client) {
 	if (it != operators.end()) {
 		this->operators.erase(it);
 	}
+
+	// if ()
+
 	return;
 }
 
