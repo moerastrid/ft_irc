@@ -765,9 +765,15 @@ string Executor::run_TOPIC(const vector<string>& args, Client& caller) {
  *
  * Possible replies: NONE
  */
-string Executor::run_QUIT(const vector<string>& args, Client& caller) {
-	(void)args;
-	(void)caller;
+string Executor::run_QUIT([[maybe_unused]]const vector<string>& args,[[maybe_unused]] Client& caller) {
+	deque<Channel>& channels = this->getChannels();
+
+	for (auto& chan : channels) {
+		if (chan.hasOperator(caller))
+			chan.removeOperator(caller);
+		if (chan.hasUser(caller))
+			chan.removeClient(caller);
+	}
 
 	return "QUITTING";
 }
@@ -791,7 +797,9 @@ void Executor::addChannel(const string& name, const string& password, Client& ca
 	// this->getChannels().push_back(ch);
 
 	this->getChannels().emplace_back(name, password);
-	this->getChannels().back().addClient(caller);
+	Channel& chan = this->getChannels().back();
+	chan.addOperator(caller);
+	chan.addClient(caller);
 }
 
 string Executor::format_reason(vector<string>::iterator& reason_start, vector<string>& args) {

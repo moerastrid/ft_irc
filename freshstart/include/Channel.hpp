@@ -60,7 +60,7 @@ public:
 	bool	hasTopicRestricted() const;
 	bool	hasMode(char mode) const;
 	bool	hasOperator(const Client& client) const;
-	bool	hasUser(const Client& client) const;
+	bool	hasMember(const Client& client) const;
 
 	void	setPassword(string password);
 	void	setTopic(string topic);
@@ -71,14 +71,13 @@ public:
 	void	makeInviteOnly();
 	void	addMode(char mode, string password, size_t userlimit);
 	void	addOperator(Client& client);
-	void	addClient(Client& client);
+	void	addMember(Client& client);
 
 	void	takeTopicOperatorOnly();
 	void	takeInviteOnly();
 	void	removeMode(char mode);
 	void	removeOperator(const Client& client);
-	int		removeClient(const Client& client);
-
+	int		removeMember(const Client& client);
 };
 
 std::ostream& operator<<(std::ostream& os, const Channel& channel);

@@ -136,7 +136,7 @@ bool Channel::hasOperator(const Client &client) const {
 }
 
 
-bool Channel::hasUser(const Client& client) const {
+bool Channel::hasMember(const Client& client) const {
 	if (find(this->members.begin(), this->members.end(), &client) != this->members.end()) {
 		return true;
 	}
@@ -208,17 +208,21 @@ void Channel::removeOperator(const Client &client) {
 	return;
 }
 
-void Channel::addClient(Client& client) {
+void Channel::addMember(Client& client) {
 	if (find(this->members.begin(), this->members.end(), &client) == this->members.end()) {
 		this->members.push_back(&client);
 	}
 }
 
-int Channel::removeClient(const Client& client) {
+int Channel::removeMember(const Client& client) {
 	auto it = find(members.begin(), members.end(), &client);
 	if (it == members.end()) {
 		return 1;
 	}
+
+	if (this->hasOperator(client))
+		this->removeOperator(client);
+
 	this->members.erase(it);
 	return 0;
 }
