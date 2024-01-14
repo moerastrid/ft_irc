@@ -480,6 +480,14 @@ string Executor::run_JOIN(const vector<string>& args, Client& caller) {
 	string target = args[0];
 	if (target[0] == '0') { // /JOIN 0 = leave all joined channels.
 		//#TODO leave all channels;
+		std::deque<Channel>& channels = this->e.getChannels();
+		for (Channel &chan : channels) {
+			if (chan.hasMember(caller)) {
+				chan.removeMember(caller);
+				if (chan.empty())
+					channels.erase(this->e.getItToChannelByName(chan.getName()));
+			}
+		}
 		return "";
 	}
 	string pwds = "";
@@ -579,10 +587,9 @@ string Executor::run_KICK(const vector<string>& args, Client& caller) {
 		}
 
 		message += "KICK " + channelname + " " + *name_it + " " + *reason_start + "\n";
-
-		if (ch.empty()) {
-			this->e.getChannels().erase(this->e.getItToChannelByName(ch.getName()));
-		}
+	}
+	if (ch.empty()) {
+		this->e.getChannels().erase(this->e.getItToChannelByName(ch.getName()));
 	}
 
 	return message;
@@ -620,17 +627,17 @@ string Executor::run_PART(const vector<string>& args, Client& caller) {
 			continue;
 		}
 
-		// TO DO : remove channel if empty - Thibauld help ik snap niet precies wat run_PART precies doet
-		// if (ch.empty()) {
-		// 	this->e.getChannels().erase(this->e.getItToChannelByName(ch.getName()));
-		// }
+		if (ch.empty()) {
+			this->e.getChannels().erase(this->e.getItToChannelByName(ch.getName()));
+			continue;
+		}
 
 		message += "PART " + *it + "\n";
 		if (reason_it == args.end()) {
 			cout << "skipping reason (#TODO change to default message)" << endl;
 			continue;
 		}
-
+		
 		// If there's a reason:
 		// Send reason to all other users in channel, to inform them why the user left. //#TODO PROBABLY SHOULD USE SEND DIRECTLY TO FD INSTEAD OF SENDING A REPLY TO THE CLIENT.
 		for (Client* user : ch.getMembers()) {
