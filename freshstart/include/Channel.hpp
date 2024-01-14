@@ -78,6 +78,7 @@ public:
 	void	removeMode(char mode);
 	void	removeOperator(const Client& client);
 	int		removeClient(const Client& client);
+	
 
 };
 
