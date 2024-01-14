@@ -580,6 +580,10 @@ string Executor::run_KICK(const vector<string>& args, Client& caller) {
 		}
 
 		message += "KICK " + channelname + " " + *name_it + " " + *reason_start + "\n";
+
+		if (ch.empty()) {
+			this->e.getChannels().erase(this->e.getItToChannelByName(ch.getName()));
+		}
 	}
 
 	return message;
@@ -616,6 +620,11 @@ string Executor::run_PART(const vector<string>& args, Client& caller) {
 			message += build_reply(ERR_USERNOTINCHANNEL, caller.getNickname(), *it, "You haven't joined that channel");
 			continue;
 		}
+
+		// TO DO : remove channel if empty - Thibauld help ik snap niet precies wat run_PART precies doet
+		// if (ch.empty()) {
+		// 	this->e.getChannels().erase(this->e.getItToChannelByName(ch.getName()));
+		// }
 
 		message += "PART " + *it + "\n";
 		if (reason_it == args.end()) {
@@ -773,6 +782,10 @@ string Executor::run_QUIT([[maybe_unused]]const vector<string>& args,[[maybe_unu
 			chan.removeOperator(caller);
 		if (chan.hasMember(caller))
 			chan.removeMember(caller);
+		
+		if (chan.empty()) {
+			this->e.getChannels().erase(this->e.getItToChannelByName(chan.getName()));
+		}
 	}
 
 	return "QUITTING";
