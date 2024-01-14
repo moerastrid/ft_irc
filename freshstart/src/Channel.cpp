@@ -206,7 +206,14 @@ void Channel::removeOperator(const Client &client) {
 		this->operators.erase(it);
 	}
 
-	// if ()
+	if (this->getOperators().empty()) {
+		// auto new_operator_it = this->getMembers().begin();
+		// while (new_operator_it) {
+
+		// }
+		// this->addOperator(*new_operator);
+		// new_operator->addSendData("You've become the operator of the '" + this->getName() + "'-channel!\n");
+	}
 
 	return;
 }

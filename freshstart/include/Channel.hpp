@@ -78,6 +78,8 @@ public:
 	void	removeMode(char mode);
 	void	removeOperator(const Client& client);
 	int		removeMember(const Client& client);
+
+	void	sendMessageToChannelMembers(const string& message);
 };
 
 std::ostream& operator<<(std::ostream& os, const Channel& channel);
