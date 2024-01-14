@@ -266,8 +266,23 @@ void	Channel::sendMessageToChannelMembers(const Client& sender, const string& me
 		if (member != &sender)
 			member->addSendData(reply);
 	}
-
 }
+
+// void	Channel::sendKickReasonToChannelMembers(const Client& sender, const Client& target, const string& message) {
+
+// 	vector<Client *> channel_members = this->getMembers();
+
+// 	string prefix = ":" + sender.getNickname() + 
+// 					"!" + sender.getUsername() + 
+// 					"@" + sender.getHostname() + 
+// 					" KICK " + this->getName() + " " + target.getNickname();
+// 	string reply = prefix + " " + message;
+
+// 	for (Client * member : channel_members) {
+// 		if (member != &sender)
+// 			member->addSendData(reply);
+// 	}
+// }
 
 
 Channel Channel::nullchan;
