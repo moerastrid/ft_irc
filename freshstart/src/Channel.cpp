@@ -213,7 +213,7 @@ void Channel::removeOperator(const Client &client) {
 	if (this->getOperators().empty()) {
 		vector<Client *>members = this->getMembers();
 		std::vector<Client *>::iterator new_operator_it = members.begin();
-		while (*new_operator_it != &client && new_operator_it != members.end()) {
+		while (new_operator_it != members.end() && *new_operator_it != &client) {
 			new_operator_it = next(new_operator_it);
 		}
 		if (new_operator_it == members.end())

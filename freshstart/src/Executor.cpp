@@ -397,6 +397,9 @@ string Executor::run_PRIVMSG(const vector<string>& args, Client& caller) {
 		Channel& target_channel = this->getChannelByName(target);
 		if (target_channel == Channel::nullchan)
 			return build_reply(ERR_NOSUCHNICK, caller.getNickname(), target, "No such channel");
+		if (!target_channel.hasMember(caller))
+			return build_reply(ERR_NOTONCHANNEL, caller.getNickname(), target, "You're not a member of that channel.");
+
 		target_channel.sendMessageToChannelMembers(caller, data.str(), false);
 		return "";
 	}
