@@ -80,7 +80,7 @@ public:
 	void	removeOperator(const Client& client);
 	int		removeMember(const Client& client);
 
-	void	sendMessageToChannelMembers(const string& message);
+	void	sendMessageToChannelMembers(const Client& sender, const string& message, bool colon);
 };
 
 std::ostream& operator<<(std::ostream& os, const Channel& channel);
