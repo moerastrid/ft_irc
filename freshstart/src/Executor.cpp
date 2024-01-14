@@ -389,13 +389,12 @@ string Executor::run_PRIVMSG(const vector<string>& args, Client& caller) {
 	}
 	data << "\n";
 
-
 	if (is_channel(target)) {
 		Channel& target_channel = this->getChannelByName(target);
 		if (target_channel == Channel::nullchan)
 			return build_reply(ERR_NOSUCHNICK, caller.getNickname(), target, "No such channel");
 		target_channel.sendMessageToChannelMembers(caller, data.str(), false);
-		// return message;
+		return "";
 	}
 
 	Client& recipient = this->getClientByNick(target);
@@ -404,7 +403,7 @@ string Executor::run_PRIVMSG(const vector<string>& args, Client& caller) {
 	}
 
 
-	recipient.sendPrivMsg(data.str(), false);
+	recipient.sendPrivMsg(caller, data.str(), false);
 	return "";
 }
 

@@ -223,7 +223,7 @@ void Channel::removeOperator(const Client &client) {
 		this->addOperator(**new_operator_it);
 
 		for (auto member : members) {
-			member->sendPrivMsg(new_operator->getNickname() + " is the new operator of the '" + this->getName() + "'-channel.\n", true);
+			member->sendPrivMsg(client, new_operator->getNickname() + " is the new operator of the '" + this->getName() + "'-channel.\n", true);
 		}
 	}
 

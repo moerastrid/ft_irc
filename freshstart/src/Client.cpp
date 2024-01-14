@@ -95,11 +95,12 @@ void Client::setPassword(const string& password) {
 	this->password = password;
 }
 
-// Send a privmsg to the client. If colon is true, add a colon before the actual message part.
-void Client::sendPrivMsg(const string& message, bool colon = false) {
-	string prefix = ":" + this->getNickname() + 
-					  "!" + this->getUsername() + 
-					  "@" + this->getHostname() + 
+// Send a privmsg to the client.
+// If colon is true, add a colon before the actual message part.
+void Client::sendPrivMsg(const Client& sender, const string& message, bool colon = false) {
+	string prefix = ":" + sender.getNickname() + 
+					  "!" + sender.getUsername() + 
+					  "@" + sender.getHostname() + 
 					  " PRIVMSG " + this->getNickname();
 	string colon_str = "";
 	if (colon)
@@ -108,8 +109,10 @@ void Client::sendPrivMsg(const string& message, bool colon = false) {
 }
 
 void Client::addSendData(const string& message) {
-	addEvent(POLLOUT);
-	this->datatosend += message;
+	if (!message.empty()) {
+		addEvent(POLLOUT);
+		this->datatosend += message;
+	}
 }
 void Client::addRecvData(const string& message) {
 	this->datatorecv += message;
