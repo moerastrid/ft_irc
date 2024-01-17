@@ -742,24 +742,30 @@ string Executor::run_INVITE(const vector<string>& args, Client& caller) {
  * Not handled:
  */
 string Executor::run_TOPIC(const vector<string>& args, Client& caller) {
-	string deleteflag = args[0];
-	string target_channel;
-	string newtopic = "";
+	string	deleteflag = args[0];
+	string	target_channel;
+	string	newtopic = "";
 
-	if (deleteflag.compare("-delete")) {
+
+	if (deleteflag.compare("-delete") == 0) {
 		target_channel = args[1];
 	} else {
 		target_channel = args[0];
-		newtopic = args[1];
+		// TO DO :segfault if there is no args[1] (only TOPIC message without #channelname)
+		newtopic = args[1]; 
 	}
+	cout << "target channel " << target_channel << "\n";
 
 	Channel& channel = this->getChannelByName(target_channel);
-
-	const string& oldtopic = channel.getTopic();
-
+	if (channel == Channel::nullchan) {
+		return build_reply(ERR_NOSUCHCHANNEL, caller.getNickname(), target_channel, "No such channel");
+	}
 	if (!channel.hasMember(caller)) {
 		return build_reply(ERR_NOTONCHANNEL, caller.getNickname(), target_channel, "You're not on that channel");
 	}
+
+
+	const string& oldtopic = channel.getTopic();
 
 	if (newtopic.empty()) {
 		if (oldtopic.empty()) {
@@ -772,9 +778,17 @@ string Executor::run_TOPIC(const vector<string>& args, Client& caller) {
 		return build_reply(ERR_CHANOPRIVSNEEDED, caller.getNickname(), target_channel, "You're not a channel operator");
 	}
 
+	channel.setTopic(newtopic);
+
+	string notification = "The topic for channel " + target_channel + " is now: " + newtopic;
+	channel.sendMessageToChannelMembers(caller, notification, false);
+	// :nick!user@host TOPIC #channel :new topic
+
+	return ":" + caller.getFullName() + " TOPIC " + channel.getName() + " " + newtopic + "\n";
+
 	// #TODO send message to all clients on the channel informing them of the topic change.
 
-	return "";
+	//return "";
 }
 
 // Client wants to disconnect from server
