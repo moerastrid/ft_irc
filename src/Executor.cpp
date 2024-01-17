@@ -257,15 +257,16 @@ string Executor::run_NICK(const vector<string>& args, Client& caller) {
 		return build_reply(ERR_ERRONEOUSNICKNAME, "NICK", nickname, "Erroneous nickname");
 	}
 
-	bool first_time = caller.getNickname().empty();
+	string old_nickname = caller.getNickname();
+	bool first_time = old_nickname.empty();
 	caller.setNickname(nickname);
 
 	if (first_time && !caller.getUsername().empty()) { // First time connection part 2: electric boogaloo. Accepting connection and sending welcome message.
-		return build_reply(RPL_WELCOME, nickname, nickname, "Welcome to Astrid's & Thibauld's IRC server, " + caller.getUsername() + "!");
+		return build_reply(RPL_WELCOME, nickname, "", "Welcome to Astrid's & Thibauld's IRC server, " + caller.getUsername() + "!"); //#todo FIX
 	} else if (first_time) {
 		return "";
 	} else {
-		return build_reply(RPL_WELCOME, nickname, nickname, "Nickname changed to " + nickname);
+		return build_reply(RPL_WELCOME, nickname, old_nickname, "Nickname changed to " + nickname);
 	}
 }
 
@@ -336,7 +337,7 @@ string Executor::run_USER(const vector<string>& args, Client& caller) {
 		return build_reply(ERR_ALREADYREGISTERED, caller.getNickname(), username, "You may not reregister");
 
 	if (!caller.getNickname().empty())
-		return build_reply(RPL_WELCOME, caller.getNickname(), username, "Welcome to Astrid's & Thibauld's IRC server, " + username + "!");
+		return build_reply(RPL_WELCOME, caller.getNickname(), "", "Welcome to Astrid's & Thibauld's IRC server, " + username + "!");
 	return "";
 }
 
@@ -796,12 +797,11 @@ string Executor::run_TOPIC(const vector<string>& args, Client& caller) {
 string Executor::run_QUIT([[maybe_unused]]const vector<string>& args,[[maybe_unused]] Client& caller) {
 	deque<Channel>& channels = this->getChannels();
 
-	for (auto& chan : channels) {
+	for (Channel& chan : channels) {
 		if (chan.hasOperator(caller))
 			chan.removeOperator(caller);
 		if (chan.hasMember(caller))
 			chan.removeMember(caller);
-		
 		if (chan.empty()) {
 			this->e.getChannels().erase(this->e.getItToChannelByName(chan.getName()));
 		}
@@ -845,11 +845,48 @@ string Executor::format_reason(vector<string>::iterator& reason_start, vector<st
 	return message;
 }
 
+
+string Executor::new_build_reply(string& prefix, int response_code, string& caller, string& target, string& channel, string& message) {
+	stringstream response;
+	
+	//prefix
+	response << prefix << " ";
+
+	//response code
+	if (response_code == NOTICE) {
+		response << "NOTICE";
+	} else {
+		response << setw(3) << setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
+	}
+
+	// caller
+	response << " " << caller;
+
+	// Optional target
+	if (!target.empty())
+		response << " " << target;
+
+	// Optional channel
+	if (!channel.empty())
+		response << " " << channel;
+
+	// The message
+	return response.str() + " :" + message + "\n";
+}
+
+
 string Executor::build_reply(int response_code, string callername, string target, string message) {
 	if (response_code == NOTICE) {
 		return build_notice_reply(target, callername, message);
 	}
+
+	Client c = getClientByNick(callername);
+	if (c == Client::nullclient) {
+		return "SOME ERROR HERE\n";
+	}
+
 	stringstream response;
+	response << ":" << c.getFullName() << " ";
 	response << setw(3) << setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
 
 	return response.str() + " " + callername + " " + target + " :" + message + "\n";
@@ -871,7 +908,13 @@ string Executor::build_channel_reply(int response_code, string callername, strin
 
 string Executor::build_WHOIS_reply(int response_code, string callername, string target, string userinfo) {
 	stringstream response;
-	response << setw(3) << setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
+	Client& target_client = getClientByNick(target);
+	if (target_client == Client::nullclient) {
+		return "CLIENT NOT FOUND ERROR\n"; // #TODO put some not found error here.
+	}
+
+	response << target_client.getFullName() << " " << setw(3) << setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
+	// response << setw(3) << setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
 
 	return response.str() + " " + callername + " " + target + " " + userinfo + "\n";
 }
