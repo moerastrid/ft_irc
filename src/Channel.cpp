@@ -233,6 +233,7 @@ void Channel::removeOperator(const Client &client) {
 void Channel::addMember(Client& client) {
 	if (find(this->members.begin(), this->members.end(), &client) == this->members.end()) {
 		this->members.push_back(&client);
+		sendMessageToChannelMembers(client, client.getNickname() + " has joined the channel ", true);
 	}
 }
 
