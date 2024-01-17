@@ -327,7 +327,6 @@ string Executor::run_USER(const vector<string>& args, Client& caller) {
 		}
 		return build_reply(ERR_ERRONEOUSNICKNAME, caller.getNickname(), "USER", "Invalid user arguments");
 	}
-
 	if (caller.getUsername().empty()) {// first time connec part 2
 		caller.setUsername(username);
 		caller.setHostname(hostname);
@@ -515,7 +514,7 @@ string Executor::run_JOIN(const vector<string>& args, Client& caller) {
 
 		if (ch == Channel::nullchan) { // Create new channel and have user join as the first member.
 			addChannel(channelname, channelpassword, caller);
-			message += build_reply(RPL_TOPIC, caller.getNickname(), channelname, "Welcome to channel " + channelname); //if succesfull, reply with channel topic.
+			message += new_build_reply(caller.getFullName(), RPL_TOPIC, caller.getNickname(), channelname, "Welcome to channel " + channelname);
 		} else {
 			string password = ch.getPassword();
 			const vector<Client *>& clients = ch.getMembers();
@@ -785,10 +784,6 @@ string Executor::run_TOPIC(const vector<string>& args, Client& caller) {
 	// :nick!user@host TOPIC #channel :new topic
 
 	return ":" + caller.getFullName() + " TOPIC " + channel.getName() + " " + newtopic + "\n";
-
-	// #TODO send message to all clients on the channel informing them of the topic change.
-
-	//return "";
 }
 
 // Client wants to disconnect from server
