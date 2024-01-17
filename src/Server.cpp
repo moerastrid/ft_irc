@@ -186,7 +186,7 @@ bool	Server::receivefromClient(Client &c) {
 	char	buf[BUFSIZE];
 	memset(&buf, 0, sizeof(buf));
 
-	int nbytes = recv(c.getFD(), buf, sizeof(buf), MSG_DONTWAIT);
+	int nbytes = recv(c.getFD(), buf, sizeof(buf) - 1, MSG_DONTWAIT);
 	if (nbytes < 0) {
 		Msg("error in receiving data", "ERROR"); 
 		return (false);

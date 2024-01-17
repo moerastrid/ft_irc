@@ -599,7 +599,7 @@ string Executor::run_KICK(const vector<string>& args, Client& caller) {
 			ch.sendMessageToChannelMembers(caller, ": hoi\n", false);
 		}
 		ch.removeMember(victim);
-		message += "KICK " + channelname + " " + *name_it + " " + *reason_start + "\n";
+		message += victim.getFullName() + " KICK " + channelname + " " + *name_it + " " + *reason_start + "\n";
 	}
 	if (ch.empty()) {
 		this->e.getChannels().erase(this->e.getItToChannelByName(ch.getName()));
