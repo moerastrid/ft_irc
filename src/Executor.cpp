@@ -525,7 +525,7 @@ string Executor::run_JOIN(const vector<string>& args, Client& caller) {
 			}
 
 			if (find(clients.begin(), clients.end(), &caller) != clients.end()) {
-				message += build_reply(ERR_USERONCHANNEL, caller.getNickname(), ch.getName(), "is already on channel");
+				message += build_reply(ERR_USERONCHANNEL, caller.getNickname(), caller.getNickname(), "is already on channel");
 				continue;
 			}
 
