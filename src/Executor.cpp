@@ -572,14 +572,14 @@ string Executor::run_KICK(const vector<string>& args, Client& caller) {
 		return build_reply(ERR_NOSUCHCHANNEL, caller.getNickname(), channelname, "No such channel");
 	}
 	if (!ch.hasMember(caller)) {
-		return build_reply(ERR_NOTONCHANNEL, caller.getFullName(), channelname, "You're not in that channel");
+		return build_reply(ERR_NOTONCHANNEL, ":" + caller.getNickname(), channelname, "You're not in that channel");
 	}
 
 	vector<string>::const_iterator reason_start = find_if(args.begin(), args.end(), find_reason);
 
 	for (vector<string>::const_iterator name_it = next(args.begin()); name_it != reason_start; name_it++) {
 		if (!ch.hasOperator(caller)) {
-			message += build_reply(ERR_CHANOPRIVSNEEDED, caller.getFullName(), channelname, "You're not the channel operator");
+			message += build_reply(ERR_CHANOPRIVSNEEDED, ":" + caller.getNickname(), channelname, "You're not the channel operator");
 			continue;
 		}
 		Client& victim = this->getClientByNick(*name_it);
@@ -656,7 +656,7 @@ string Executor::run_PART(const vector<string>& args, Client& caller) {
 		for (Client* user : ch.getMembers()) {
 			if (user->getFD() == caller.getFD())
 				continue;
-			string 	reasonmessage  = caller.getFullName();
+			string 	reasonmessage  = ":" + caller.getFullName();
 					reasonmessage += " PRIVMSG " + user->getNickname() + " " + *reason_it + "\n";
 			// send_to_client(fd, reasonmessage); #TODO fix
 		}
