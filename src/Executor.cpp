@@ -846,20 +846,21 @@ string Executor::format_reason(vector<string>::iterator& reason_start, vector<st
 }
 
 
-string Executor::new_build_reply(string& prefix, int response_code, string& caller, string& target, string& channel, string& message) {
+string Executor::new_build_reply(const string& prefix, int response_code, const string& caller, const string& message, const string& target = "", const string& channel = "") {
 	stringstream response;
 	
-	//prefix
-	response << prefix << " ";
+	// Optional prefix
+	if (!prefix.empty())
+		response << prefix << " ";
 
-	//response code
+	// Response code
 	if (response_code == NOTICE) {
 		response << "NOTICE";
 	} else {
-		response << setw(3) << setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
+		response << setw(3) << setfill('0') << response_code; // Ensures response_code is shown as a 3-digit number by adding leading zeroes if needed.
 	}
 
-	// caller
+	// Caller
 	response << " " << caller;
 
 	// Optional target
@@ -887,7 +888,7 @@ string Executor::build_reply(int response_code, string callername, string target
 
 	stringstream response;
 	response << ":" << c.getFullName() << " ";
-	response << setw(3) << setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
+	response << setw(3) << setfill('0') << response_code; // Ensures response_code is shown as a 3-digit number by adding leading zeroes if needed.
 
 	return response.str() + " " + callername + " " + target + " :" + message + "\n";
 }
@@ -908,13 +909,13 @@ string Executor::build_channel_reply(int response_code, string callername, strin
 
 string Executor::build_WHOIS_reply(int response_code, string callername, string target, string userinfo) {
 	stringstream response;
-	Client& target_client = getClientByNick(target);
-	if (target_client == Client::nullclient) {
-		return "CLIENT NOT FOUND ERROR\n"; // #TODO put some not found error here.
-	}
+	// Client& target_client = getClientByNick(target);
+	// if (target_client == Client::nullclient) {
+	// 	return "CLIENT NOT FOUND ERROR\n"; // #TODO put some not found error here.
+	// }
 
-	response << target_client.getFullName() << " " << setw(3) << setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
-	// response << setw(3) << setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
+	// response << target_client.getFullName() << " " << setw(3) << setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
+	response << setw(3) << setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
 
 	return response.str() + " " + callername + " " + target + " " + userinfo + "\n";
 }
