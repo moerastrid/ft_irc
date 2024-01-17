@@ -571,6 +571,9 @@ string Executor::run_KICK(const vector<string>& args, Client& caller) {
 	if (ch == Channel::nullchan) {
 		return build_reply(ERR_NOSUCHCHANNEL, caller.getNickname(), channelname, "No such channel");
 	}
+	if (!ch.hasMember(caller)) {
+		return build_reply(ERR_NOTONCHANNEL, caller.getFullName(), channelname, "You're not in that channel");
+	}
 
 	vector<string>::const_iterator reason_start = find_if(args.begin(), args.end(), find_reason);
 
@@ -584,7 +587,7 @@ string Executor::run_KICK(const vector<string>& args, Client& caller) {
 			message += build_reply(ERR_NOSUCHNICK, caller.getNickname(), *name_it, "No such nickname");
 			continue;
 		}
-		else if (ch.hasMember(victim)) {
+		else if (!ch.hasMember(victim)) {
 			message += build_channel_reply(ERR_USERNOTINCHANNEL, caller.getNickname(), *name_it, channelname, "Cannot kick user from a channel that they have not joined");
 			continue;
 		}
