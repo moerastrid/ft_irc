@@ -6,7 +6,7 @@ Channel::Channel() {
 	this->password = "";
 	this->topic = "";
 	this->inviteOnly = false;
-	this->operatorOnly = false;
+	this->operatorOnly = true;
 	this->userLimit = 0;
 	Msg("channel - default constructor", "CLASS");
 };
@@ -45,7 +45,7 @@ Channel::Channel(string name, string password) {
 	this->password = password;
 	this->topic = "Welcome to channel " + name;
 	this->inviteOnly = false;
-	this->operatorOnly = false;
+	this->operatorOnly = true;
 	this->userLimit = 0;
 	Msg("channel - constructor(name, pass)", "CLASS");
 }

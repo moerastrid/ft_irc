@@ -33,7 +33,7 @@ private:
 	vector<Client *>	invited;
 
 	bool				inviteOnly;
-	bool				operatorOnly;
+	bool				operatorOnly = true;
 	size_t				userLimit;
 
 public:
