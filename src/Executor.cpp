@@ -142,7 +142,7 @@ int Executor::run(const Command& cmd, Client& caller) {
 		ptr = this->funcMap.at(command);
 	}
 	catch (std::out_of_range& e) {
-		message = build_reply(ERR_UNKNOWNCOMMAND, caller.getNickname(), command, "Unknown command from client");
+		message = new_build_reply(getHostname(), ERR_UNKNOWNCOMMAND, caller.getNickname(), command, "Unknown command from client");
 		caller.addSendData(message);
 		return true;
 	}
@@ -164,9 +164,9 @@ int Executor::run(const Command& cmd, Client& caller) {
 
 	int res = validateArguments(command, numArgs);
 	if (res == -1) {
-		message = build_reply(ERR_NEEDMOREPARAMS, caller.getNickname(), command, "Not enough parameters");
+		message = new_build_reply(getHostname(), ERR_NEEDMOREPARAMS, caller.getNickname(), command, "Not enough parameters");
 	} else if (res == 1) {
-		message = build_reply(ERR_TOOMANYPARAMS, caller.getNickname(), command, "Too many parameters");
+		message = new_build_reply(getHostname(), ERR_TOOMANYPARAMS, caller.getNickname(), command, "Too many parameters");
 	} else {
 		message = (this->*ptr)(cmd.getArgs(), caller);
 	}
@@ -192,7 +192,7 @@ int Executor::run(const Command& cmd, Client& caller) {
 string Executor::run_CAP([[maybe_unused]]const vector<string>& args, [[maybe_unused]]Client& caller) {
 	return "";
 	// return "CAP NAK :-\n";
-	return "CAP * LS :-\n"; // Correct reply for the correct case, but if the client starts doing weird things, capability negotiation does not follow protocol. 
+	return "CAP * LS :-\n"; // Correct reply for the correct case, but if the client starts doing weird things, capability negotiation does not follow protocol.
 	//We probably just want to ignore CAP completely. :(
 }
 
@@ -209,14 +209,14 @@ string Executor::run_CAP([[maybe_unused]]const vector<string>& args, [[maybe_unu
  */
 string Executor::run_PASS(const vector<string>& args, Client& caller) {
 	if (!caller.getNickname().empty() || !caller.getUsername().empty()) {
-		return build_reply(ERR_ALREADYREGISTERED, caller.getNickname(), caller.getNickname(), "You may not reregister");
+		return new_build_reply(getHostname(), ERR_ALREADYREGISTERED, caller.getNickname(), "You may not reregister");
 	}
 
 	string newpassword = args[0];
 
 	if (e.getPass().compare(newpassword) != 0) {
 		// #TODO close connection? and send ERROR
-		return build_reply(ERR_PASSWDMISMATCH, "PASS", "PASS", "Password incorrect"); //# TODO FIX MESSAGE FORMAT
+		return new_build_reply(getHostname(), ERR_PASSWDMISMATCH, caller.getNickname(), "Password incorrect"); //# TODO FIX MESSAGE FORMAT
 	}
 
 	caller.setPassword(newpassword);
@@ -337,7 +337,7 @@ string Executor::run_USER(const vector<string>& args, Client& caller) {
 		return build_reply(ERR_ALREADYREGISTERED, caller.getNickname(), username, "You may not reregister");
 
 	if (!caller.getNickname().empty())
-		return build_reply(RPL_WELCOME, caller.getNickname(), "", "Welcome to Astrid's & Thibauld's IRC server, " + username + "!");
+		return new_build_reply(getHostname(), RPL_WELCOME, caller.getNickname(), "Welcome to Astrid's & Thibauld's IRC server, " + username + "!");
 	return "";
 }
 
@@ -845,13 +845,20 @@ string Executor::format_reason(vector<string>::iterator& reason_start, vector<st
 	return message;
 }
 
+string Executor::new_build_reply(const string& prefix, int response_code, const string& caller, const string& message) {
+	return new_build_reply(prefix, response_code, caller, "", "", message);
+}
 
-string Executor::new_build_reply(const string& prefix, int response_code, const string& caller, const string& message, const string& target = "", const string& channel = "") {
+string Executor::new_build_reply(const string& prefix, int response_code, const string& caller, const string& target, const string& message) {
+	return new_build_reply(prefix, response_code, caller, target, "", message);
+}
+
+string Executor::new_build_reply(const string& prefix, int response_code, const string& caller, const string& target, const string& channel, const string& message) {
 	stringstream response;
 	
 	// Optional prefix
 	if (!prefix.empty())
-		response << prefix << " ";
+		response << ":" << prefix << " ";
 
 	// Response code
 	if (response_code == NOTICE) {
@@ -939,4 +946,8 @@ deque<Client>& Executor::getClients() {
 
 deque<Channel>& Executor::getChannels() {
 	return this->e.getChannels();
+}
+
+const string &Executor::getHostname() const {
+	return this->e.getHostname();
 }

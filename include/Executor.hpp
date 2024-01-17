@@ -124,7 +124,9 @@ class Executor {
 								string& hostname, string& servername, string& realname);
 
 		string				format_reason(vector<string>::iterator& reason_it, vector<string>& args);
-		string				new_build_reply(const string& prefix, int response_code, const string& caller, const string& message, const string& target, const string& channel);
+		string				new_build_reply(const string& prefix, int response_code, const string& caller, const string& target, const string& channel, const string& message);
+		string				new_build_reply(const string& prefix, int response_code, const string& caller, const string& target, const string& message);
+		string				new_build_reply(const string& prefix, int response_code, const string& caller, const string& message);
 		string				build_reply(int response_code, string callername, string target, string message);
 		string				build_notice_reply(string callername, string target, string message);
 		string				build_channel_reply(int response_code, string callername, string target, string channel, string message);
@@ -135,6 +137,8 @@ class Executor {
 		Channel&			getChannelByName(const string name);
 		deque<Client>&		getClients();
 		deque<Channel>&		getChannels();
+
+		const string&		getHostname() const;
 };
 
 bool			is_channel(const string& name);
