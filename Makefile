@@ -32,9 +32,9 @@ SRC = $(SRC_DIR)/main.cpp \
 
 OBJ = $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRC))
 
-all : $(NAME)
-# all :
-# $(MAKE) -j $(NAME)
+# all : $(NAME)
+all:
+	$(MAKE) -j $(NAME)
 
 $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
