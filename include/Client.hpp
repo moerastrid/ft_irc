@@ -49,6 +49,7 @@ public:
 	const string&			getServername() const;
 	const string&			getRealname() const;
 	const string&			getPassword() const;
+	const string			getFullName() const;
 
 	// Setters
 	void					setEvents(const short events);
