@@ -20,6 +20,14 @@ ERR_ALREADYREGISTERED:
 ERR_PASSWDMISMATCH:
 	<server_prefix> <numeric> <caller> "Password incorrect"
 
+run_nick:
+ERR_NICKCOLLISION:
+	<server_prefix> <numeric> <caller> "Nickname collision KILL from <user>@<host>"
+ERR_NICKNAMEINUSE:
+	<server_prefix> <numeric> <caller> "Nickname is already in use"
+ERR_ERRONEOUSNICKNAME:
+	<server_prefix> <numeric> <caller> 
+
 run_user:
 RPL_WELCOME:
 	<server_prefix> <numeric> <caller> "Welcome to Astrid's & Thibauld's IRC server, " + username + "!"

@@ -171,11 +171,11 @@ int Executor::run(const Command& cmd, Client& caller) {
 		message = (this->*ptr)(cmd.getArgs(), caller);
 	}
 
+	caller.addSendData(message);
 	if (message.find("Nickname collision KILL") != string::npos)
-		return false;	
+		return false;
 	if (message.find("QUITTING") != string::npos)
 		return false;
-	caller.addSendData(message);
 
 	return true;
 }
@@ -241,17 +241,17 @@ string Executor::run_PASS(const vector<string>& args, Client& caller) {
  * ERR_NONICKNAMEGIVEN (override by ERR_NEEDMOREPARAMS)
  *
  */
+#include <unistd.h>
 string Executor::run_NICK(const vector<string>& args, Client& caller) {
 	const string& nickname = args[0];
-
 	// if (caller.getPassword().empty()) // Checked in run().
 	// 	return build_notice_reply(caller.getNickname(), caller.getNickname(), "Enter the server password first with PASS to start connection registration");
 
 	if (name_exists(nickname)) { // #TODO Figure out nickcollision vs nicknameinuse
 		if (caller.getNickname().empty())
-			return build_reply(ERR_NICKCOLLISION, "NICK", nickname, "Nickname collision KILL from "+ caller.getUsername() + "@" + caller.getHostname());
+			return new_build_reply(getHostname(), ERR_NICKCOLLISION, nickname, "Nickname collision KILL from "+ caller.getUsername() + "@" + caller.getHostname());
 		else
-			return build_reply(ERR_NICKNAMEINUSE, "NICK", nickname, "Nickname is already in use");
+			return new_build_reply(getHostname(), ERR_NICKNAMEINUSE, nickname, "Nickname is already in use");
 	}
 	if (nickname.empty() || !verify_name(nickname)) {
 		return build_reply(ERR_ERRONEOUSNICKNAME, "NICK", nickname, "Erroneous nickname");
@@ -338,7 +338,7 @@ string Executor::run_USER(const vector<string>& args, Client& caller) {
 
 	if (!caller.getNickname().empty())
 		return new_build_reply(getHostname(), RPL_WELCOME, caller.getNickname(), "Welcome to Astrid's & Thibauld's IRC server, " + username + "!");
-	return "";
+	return "SUCCESSFULLY REGISTERED OR CHANGED USERNAME\n";
 }
 
 /*
