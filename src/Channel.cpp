@@ -255,7 +255,7 @@ void	Channel::sendMessageToChannelMembers(const Client& sender, const string& me
 	if (channel_members.empty())
 		return ;
 
-	string prefix = ":" + sender.getFullName() + " PRIVMSG " + this->getName();
+	string prefix = sender.getFullName() + " PRIVMSG " + this->getName();
 	string colon_str = "";
 	if (colon)
 		colon_str = ":";
