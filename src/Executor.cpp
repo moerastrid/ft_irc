@@ -243,30 +243,31 @@ string Executor::run_PASS(const vector<string>& args, Client& caller) {
  */
 #include <unistd.h>
 string Executor::run_NICK(const vector<string>& args, Client& caller) {
-	const string& nickname = args[0];
+	const string& new_nickname = args[0];
 	// if (caller.getPassword().empty()) // Checked in run().
 	// 	return build_notice_reply(caller.getNickname(), caller.getNickname(), "Enter the server password first with PASS to start connection registration");
 
-	if (name_exists(nickname)) { // #TODO Figure out nickcollision vs nicknameinuse
+	if (name_exists(new_nickname)) { // #TODO Figure out nickcollision vs nicknameinuse
 		if (caller.getNickname().empty())
-			return new_build_reply(getHostname(), ERR_NICKCOLLISION, nickname, "Nickname collision KILL from "+ caller.getUsername() + "@" + caller.getHostname());
+			return new_build_reply(getHostname(), ERR_NICKCOLLISION, new_nickname, "Nickname collision KILL from "+ caller.getUsername() + "@" + caller.getHostname());
 		else
-			return new_build_reply(getHostname(), ERR_NICKNAMEINUSE, nickname, "Nickname is already in use");
+			return new_build_reply(getHostname(), ERR_NICKNAMEINUSE, new_nickname, "Nickname is already in use");
 	}
-	if (nickname.empty() || !verify_name(nickname)) {
-		return build_reply(ERR_ERRONEOUSNICKNAME, "NICK", nickname, "Erroneous nickname");
+	if (new_nickname.empty() || !verify_name(new_nickname)) {
+		return build_reply(ERR_ERRONEOUSNICKNAME, "NICK", new_nickname, "Erroneous nickname");
 	}
 
 	string old_nickname = caller.getNickname();
 	bool first_time = old_nickname.empty();
-	caller.setNickname(nickname);
+	caller.setNickname(new_nickname);
 
 	if (first_time && !caller.getUsername().empty()) { // First time connection part 2: electric boogaloo. Accepting connection and sending welcome message.
-		return build_reply(RPL_WELCOME, nickname, "", "Welcome to Astrid's & Thibauld's IRC server, " + caller.getUsername() + "!"); //#todo FIX
+		return new_build_reply(getHostname(), RPL_WELCOME, new_nickname, "Welcome to Astrid's & Thibauld's IRC server, " + caller.getUsername() + "!"); //#todo FIX
 	} else if (first_time) {
 		return "";
 	} else {
-		return build_reply(RPL_WELCOME, nickname, old_nickname, "Nickname changed to " + nickname);
+		// return new_build_reply(caller.getFullName(), RPL_WELCOME, nickname, old_nickname, "Nickname changed to " + nickname);
+		return ":" + caller.getFullName() + " NICK :" + new_nickname;
 	}
 }
 
@@ -337,7 +338,7 @@ string Executor::run_USER(const vector<string>& args, Client& caller) {
 
 	if (!caller.getNickname().empty())
 		return new_build_reply(getHostname(), RPL_WELCOME, caller.getNickname(), "Welcome to Astrid's & Thibauld's IRC server, " + username + "!");
-	return "SUCCESSFULLY REGISTERED OR CHANGED USERNAME\n";
+	return "";
 }
 
 /*
@@ -350,7 +351,7 @@ string Executor::run_USER(const vector<string>& args, Client& caller) {
  * Responses not (yet) handled:
  */
 string Executor::run_PING([[maybe_unused]]const vector<string>& args, [[maybe_unused]]Client& caller) {
-	return "PONG " + this->e.getHostname() + "\n";
+	return "PONG " + this->e.getHostname() + "\r\n";
 }
 
 /*
@@ -390,7 +391,7 @@ string Executor::run_PRIVMSG(const vector<string>& args, Client& caller) {
 		if (next(it) != args.end())
 			data << " ";
 	}
-	data << "\n";
+	data << "\r\n";
 
 	if (is_channel(target)) {
 		Channel& target_channel = this->getChannelByName(target);
@@ -599,7 +600,7 @@ string Executor::run_KICK(const vector<string>& args, Client& caller) {
 			ch.sendMessageToChannelMembers(caller, ": hoi\n", false);
 		}
 		ch.removeMember(victim);
-		message += victim.getFullName() + " KICK " + channelname + " " + *name_it + " " + *reason_start + "\n";
+		message += victim.getFullName() + " KICK " + channelname + " " + *name_it + " " + *reason_start + "\r\n";
 	}
 	if (ch.empty()) {
 		this->e.getChannels().erase(this->e.getItToChannelByName(ch.getName()));
@@ -645,7 +646,7 @@ string Executor::run_PART(const vector<string>& args, Client& caller) {
 			continue;
 		}
 
-		message += "PART " + *it + "\n";
+		message += "PART " + *it + "\r\n";
 		if (reason_it == args.end()) {
 			cout << "skipping reason (#TODO change to default message)" << endl;
 			continue;
@@ -657,7 +658,7 @@ string Executor::run_PART(const vector<string>& args, Client& caller) {
 			if (user->getFD() == caller.getFD())
 				continue;
 			string 	reasonmessage  = ":" + caller.getFullName();
-					reasonmessage += " PRIVMSG " + user->getNickname() + " " + *reason_it + "\n";
+					reasonmessage += " PRIVMSG " + user->getNickname() + " " + *reason_it + "\r\n";
 			// send_to_client(fd, reasonmessage); #TODO fix
 		}
 	}
@@ -753,7 +754,7 @@ string Executor::run_TOPIC(const vector<string>& args, Client& caller) {
 		// TO DO :segfault if there is no args[1] (only TOPIC message without #channelname)
 		newtopic = args[1]; 
 	}
-	cout << "target channel " << target_channel << "\n";
+	cout << "target channel " << target_channel << "\r\n";
 
 	Channel& channel = this->getChannelByName(target_channel);
 	if (channel == Channel::nullchan) {
@@ -783,7 +784,7 @@ string Executor::run_TOPIC(const vector<string>& args, Client& caller) {
 	channel.sendMessageToChannelMembers(caller, notification, false);
 	// :nick!user@host TOPIC #channel :new topic
 
-	return ":" + caller.getFullName() + " TOPIC " + channel.getName() + " " + newtopic + "\n";
+	return ":" + caller.getFullName() + " TOPIC " + channel.getName() + " " + newtopic + "\r\n";
 }
 
 // Client wants to disconnect from server
@@ -888,7 +889,7 @@ string Executor::new_build_reply(const string& prefix, int response_code, const 
 		response << " " << channel;
 
 	// The message
-	return response.str() + " :" + message + "\n";
+	return response.str() + " :" + message + "\r\n";
 }
 
 
@@ -906,11 +907,11 @@ string Executor::build_reply(int response_code, string callername, string target
 	response << ":" << c.getFullName() << " ";
 	response << setw(3) << setfill('0') << response_code; // Ensures response_code is shown as a 3-digit number by adding leading zeroes if needed.
 
-	return response.str() + " " + callername + " " + target + " :" + message + "\n";
+	return response.str() + " " + callername + " " + target + " :" + message + "\r\n";
 }
 
 string Executor::build_notice_reply(string callername, string target, string message) {
-	return "NOTICE " + callername + " " + target + " :" + message + "\n";
+	return "NOTICE " + callername + " " + target + " :" + message + "\r\n";
 }
 
 string Executor::build_channel_reply(int response_code, string callername, string target, string channel, string message) {
@@ -920,7 +921,7 @@ string Executor::build_channel_reply(int response_code, string callername, strin
 	stringstream response;
 	response << setw(3) << setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
 
-	return response.str() + " " + callername + " " + target + " " + channel + " :" + message + "\n";
+	return response.str() + " " + callername + " " + target + " " + channel + " :" + message + "\r\n";
 }
 
 string Executor::build_WHOIS_reply(int response_code, string callername, string target, string userinfo) {
@@ -933,7 +934,7 @@ string Executor::build_WHOIS_reply(int response_code, string callername, string 
 	// response << target_client.getFullName() << " " << setw(3) << setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
 	response << setw(3) << setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
 
-	return response.str() + " " + callername + " " + target + " " + userinfo + "\n";
+	return response.str() + " " + callername + " " + target + " " + userinfo + "\r\n";
 }
 
 std::ostream& operator<<(std::ostream& os, const Env& e) {
