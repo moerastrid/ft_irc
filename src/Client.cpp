@@ -132,6 +132,9 @@ void Client::addEvent(const short event) {
 void Client::removeEvent(const short event) {
 	this->pfd.events &= ~event; // bitwise AND with bitwise negation (~).
 }
+void Client::expell() {
+	this->expelled = true;
+}
 void Client::setNickname(const string& nickname) {
 	this->nickname = nickname;
 }
@@ -213,6 +216,10 @@ bool Client::isRegistered() const {
 	return !username.empty() && !nickname.empty();
 }
 
+const bool&	Client::isExpelled() const {
+	return(this->expelled);
+}
+
 // Changers
 void Client::makeOperator(Channel& c) {
 	c.addOperator(*this);
@@ -220,6 +227,7 @@ void Client::makeOperator(Channel& c) {
 void Client::takeOperator(Channel& c) {
 	c.removeOperator(*this);
 }
+
 
 // Old
 void Client::removeSuccesfullySentDataFromBuffer(size_t nbytes) {
