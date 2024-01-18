@@ -156,7 +156,7 @@ void	Server::run(Executor& ex) {
 	} else if (sockfd.revents & POLLERR )
 		throw ServerException("error in Server::run - sockfd.revents & POLLERR");
 
-	deque<Client>& clients = this->e.getClients();
+	deque<Client>&	clients = this->e.getClients();
 
 	for (size_t	i = 0; i < clients.size(); i++) {
 		Client& client = clients[i];
@@ -170,6 +170,8 @@ void	Server::run(Executor& ex) {
 			Msg("POLLERR" + to_string(client.getFD()), "DEBUG");
 	 		closeConnection(client.getFD());
 		} else {
+			// hier? checken of ik de verbinding ga verbreken
+
 			if (client.checkRevent(POLLIN)) {
 				Msg("POLLIN " + to_string(client.getFD()), "DEBUG");
 				if (!comm_pollin(ex, client)) 
@@ -179,6 +181,8 @@ void	Server::run(Executor& ex) {
 				Msg("POLLOUT " + to_string(client.getFD()), "DEBUG");
 				comm_pollout(client);
 			}
+
+			// hier de verbinding verbreken
 		}
 	}
 }

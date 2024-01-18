@@ -31,6 +31,7 @@ private:
 
 	string			datatosend = ""; // data we need to send to this client
 	string			datatorecv = ""; // data we need to recv from this client
+	bool			expelled = false;
 
 public:
 	static Client	nullclient;
@@ -56,6 +57,7 @@ public:
 	void					setRevents(const short revents);
 	void					addEvent(const short event);
 	void					removeEvent(const short event);
+	void					expell();
 
 	void					setNickname(const string& nickname);
 	void					setUsername(const string& username);
@@ -80,6 +82,7 @@ public:
 	bool					checkEvent(short event) const;
 	bool					checkRevent(short revent) const;
 	bool					isRegistered() const;
+	const bool&				isExpelled() const;
 
 	// Changers (set values on some other object)
 	void					makeOperator(Channel& c);
