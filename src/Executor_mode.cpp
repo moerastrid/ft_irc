@@ -124,7 +124,7 @@ void Executor::handle_o_mode(const bool add, const string& arg, Channel& target)
 	if (!arg.size())
 		return;
 	Client& c = this->getClientByNick(arg);
-	if (c == NULL)
+	if (c == Client::nullclient)
 		return ;
 	if (add)
 		target.addOperator(c);
@@ -244,14 +244,14 @@ string Executor::run_MODE(const vector<string>& args, Client& caller) {
 	bool target_is_channel = is_channel(target);
 
 	if (!target_is_channel) { // If target is a user. (Commented code checks properly, but we don't support modes on users, only channels)
-		return build_reply(ERR_NOSUCHCHANNEL, caller.getNickname(), target, "No such channel as we don't support changing modes for users");
-		// if (target_client == NULL) // if target doesn't exist
+		return new_build_reply(getHostname(), ERR_NOSUCHCHANNEL, caller.getNickname(), target, "No such channel as we don't support changing modes for users");
+		// if (target_client == Client::nullclient) // if target doesn't exist
 		// 	return build_reply(ERR_NOSUCHNICK, caller.getNickname(), target, "No such nick/channel");
 		// else if (caller.getNickname().compare(target) != 0) // if target doesn't match caller.
 		// 	return build_reply(ERR_USERSDONTMATCH, caller.getNickname(), target, "Cant change mode for other users");
 	}
 	if (channel == Channel::nullchan) { // If target is a channel and it doesn't exist.
-		return build_reply(ERR_NOSUCHCHANNEL, caller.getNickname(), target, "No such channel");
+		return new_build_reply(getHostname(), ERR_NOSUCHCHANNEL, caller.getNickname(), target, "No such channel");
 	}
 	if (args.size() == 1) { // No modestring
 		pair<string, string> replymodes = channel.getModes();
@@ -266,7 +266,7 @@ string Executor::run_MODE(const vector<string>& args, Client& caller) {
 	}
 
 	if (check_privileges(caller, channel, modestring) == false) {
-		return build_reply(ERR_CHANOPRIVSNEEDED, caller.getNickname(), target, "You're not an operator of " + target);
+		return new_build_reply(getHostname(), ERR_CHANOPRIVSNEEDED, caller.getNickname(), target, "You're not an operator of " + target);
 	}
 
 	if (!modestring.size()) {
@@ -285,6 +285,6 @@ string Executor::build_mode_reply(string callername, string target_channel, stri
 	if (!modeargs.empty()) {
 		 message += " " + modeargs;
 	}
-	message += "\n";
+	message += "\r\n";
 	return message;
 }

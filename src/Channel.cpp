@@ -147,10 +147,10 @@ bool Channel::hasMember(const Client& client) const {
 	return false;
 }
 
-void Channel::setTopic(string topic) {
+void Channel::setTopic(const string& topic) {
 	this->topic = topic;
 }
-void Channel::setPassword(string password) {
+void Channel::setPassword(const string& password) {
 	this->password = password;
 }
 void Channel::makeInviteOnly() {
@@ -168,7 +168,7 @@ void Channel::takeTopicOperatorOnly() {
 void Channel::setUserLimit(size_t limit) {
 	this->userLimit = limit;
 }
-void Channel::addMode(char mode, string password, size_t userLimit) {
+void Channel::addMode(char mode, const string& password, size_t userLimit) {
 	if (mode == 'i') {
 		this->makeInviteOnly();
 	}

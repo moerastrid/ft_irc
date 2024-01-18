@@ -328,7 +328,7 @@ string Executor::run_USER(const vector<string>& args, Client& caller) {
 		}
 		return new_build_reply(getHostname(), ERR_ERRONEOUSNICKNAME, caller.getNickname(), "USER", "Invalid user arguments");
 	}
-	if (caller.getUsername().empty()) { // first time connec part 2
+	if (caller.getUsername().empty()) { //first time connec part 2
 		caller.setUsername(username);
 		caller.setHostname(hostname);
 		caller.setServername(servername);

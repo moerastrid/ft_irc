@@ -63,14 +63,14 @@ public:
 	bool	hasOperator(const Client& client) const;
 	bool	hasMember(const Client& client) const;
 
-	void	setPassword(string password);
-	void	setTopic(string topic);
+	void	setPassword(const string& password);
+	void	setTopic(const string& topic);
 	void	toggleInviteOnly();
 	void	setUserLimit(size_t limit);
 
 	void	makeTopicOperatorOnly();
 	void	makeInviteOnly();
-	void	addMode(char mode, string password, size_t userlimit);
+	void	addMode(char mode, const string& password, size_t userlimit);
 	void	addOperator(Client& client);
 	void	addMember(Client& client);
 
