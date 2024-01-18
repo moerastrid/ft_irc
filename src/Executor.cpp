@@ -629,7 +629,12 @@ string Executor::run_KICK(const vector<string>& args, Client& caller) {
 string Executor::run_PART(const vector<string>& args, Client& caller) {
 	vector<string> channelnames = split_args(args[0]);
 	vector<string>::const_iterator reason_it = find_if(args.begin(), args.end(), find_reason);
+	string reason = ":user " + caller.getNickname() + " parted";
 	string message = "";
+
+	if (reason_it != args.end()) {
+		reason = *reason_it;
+	}
 
 	for (vector<string>::iterator it = channelnames.begin(); it != channelnames.end(); it++) {
 		Channel& ch = this->getChannelByName(*it);
@@ -639,30 +644,18 @@ string Executor::run_PART(const vector<string>& args, Client& caller) {
 		}
 
 		if (ch.removeMember(caller) == 1) {
-			message += new_build_reply(getHostname(), ERR_USERNOTINCHANNEL, caller.getNickname(), *it, "You haven't joined that channel");
+			message += new_build_reply(getHostname(), ERR_NOTONCHANNEL, caller.getNickname(), *it, "You're not on that channel");
 			continue;
 		}
 
 		if (ch.empty()) {
-			this->e.getChannels().erase(this->e.getItToChannelByName(ch.getName()));
+			this->e.getChannels().erase(this->e.getItToChannelByName(*it));
 			continue;
 		}
 
-		message += "PART " + *it + "\r\n";
-		if (reason_it == args.end()) {
-			cout << "skipping reason (#TODO change to default message)" << endl;
-			continue;
-		}
-		
-		// If there's a reason:
-		// Send reason to all other users in channel, to inform them why the user left. //#TODO PROBABLY SHOULD USE SEND DIRECTLY TO FD INSTEAD OF SENDING A REPLY TO THE CLIENT.
-		for (Client* user : ch.getMembers()) {
-			if (user->getFD() == caller.getFD())
-				continue;
-			string 	reasonmessage  = ":" + caller.getFullName();
-					reasonmessage += " PRIVMSG " + user->getNickname() + " " + *reason_it + "\r\n";
-			// send_to_client(fd, reasonmessage); #TODO fix
-		}
+		ch.broadcastToChannel(":" + caller.getFullName() + " PART " + *it + " " + reason + "\r\n");
+		// TO DO : irssi doesn't handle the PART message in the right way so I temporarily made it KICK instead so the behavior is correct.
+		message += ":" + caller.getFullName() + " KICK " + *it + " " + caller.getNickname() + " " + reason + "\r\n";
 	}
 
 	return message;
