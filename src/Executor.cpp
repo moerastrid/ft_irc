@@ -246,23 +246,20 @@ string Executor::run_PASS(const vector<string>& args, Client& caller) {
 #include <unistd.h>
 string Executor::run_NICK(const vector<string>& args, Client& caller) {
 	const string& new_nickname = args[0];
-	// if (caller.getPassword().empty()) // Checked in run().
-	// 	return build_notice_reply(caller.getNickname(), caller.getNickname(), "Enter the server password first with PASS to start connection registration");
 
-	if (name_exists(new_nickname)) { // #TODO Figure out nickcollision vs nicknameinuse
+	if (name_exists(new_nickname)) {
 		if (caller.getNickname().empty())
-			return new_build_reply(getHostname(), ERR_NICKCOLLISION, new_nickname, "Nickname collision KILL from "+ caller.getUsername() + "@" + caller.getHostname());
+			return new_build_reply(getHostname(), ERR_NICKNAMEINUSE, new_nickname, new_nickname, "Nickname is already in use");
 		else
 			return new_build_reply(getHostname(), ERR_NICKNAMEINUSE, caller.getNickname(), new_nickname, "Nickname is already in use");
 	}
 	if (new_nickname.empty() || !verify_name(new_nickname)) {
-		return build_reply(ERR_ERRONEOUSNICKNAME, "NICK", new_nickname, "Erroneous nickname");
+		return new_build_reply(getHostname(), ERR_ERRONEOUSNICKNAME, "NICK", new_nickname, "Erroneous nickname");
 	}
 
 	string old_nickname = caller.getNickname();
-	bool first_time = old_nickname.empty();
 	string old_fullname = caller.getFullName();
-	cout << "nick " << old_nickname << " - new nick " << new_nickname << "\n";
+	bool first_time = old_nickname.empty();
 	caller.setNickname(new_nickname);
 
 	if (first_time && !caller.getUsername().empty()) { // First time connection part 2: electric boogaloo. Accepting connection and sending welcome message.
@@ -270,16 +267,7 @@ string Executor::run_NICK(const vector<string>& args, Client& caller) {
 	} else if (first_time) {
 		return "";
 	} else {
-		//return build_reply(RPL_WELCOME, nickname, old_nickname, "Nickname changed to " + nickname);
-		//string fullname = caller.getFullName();
-		//return	new_build_reply(fullname, RPL_WELCOME, nickname, old_nickname, "Nickname changed to " + nickname);
-
-		// return new_build_reply(caller.getFullName(), RPL_WELCOME, nickname, old_nickname, "Nickname changed to " + nickname);
-<<<<<<< HEAD
-		return ":" + caller.getFullName() + " NICK :" + new_nickname + "\r\n";
-=======
-		return ":" + old_fullname + " NICK :" + new_nickname + "\r\n";
->>>>>>> 95b0a92bdd3f078decc201497a2f25abf07bef57
+		return build_short_reply(old_fullname, "NICK", new_nickname);
 	}
 }
 
@@ -865,6 +853,10 @@ string Executor::format_reason(vector<string>::iterator& reason_start, vector<st
 		}
 	}
 	return message;
+}
+
+string Executor::build_short_reply(const string& prefix, const string& command, const string& postfix) {
+	return ":" + prefix + " " + command + " :" + postfix + "\r\n";
 }
 
 string Executor::new_build_reply(const string& prefix, int response_code, const string& caller, const string& message) {
