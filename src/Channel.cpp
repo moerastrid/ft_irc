@@ -232,8 +232,8 @@ void Channel::removeOperator(const Client &client) {
 
 void Channel::addMember(Client& client) {
 	if (find(this->members.begin(), this->members.end(), &client) == this->members.end()) {
+		broadcastToChannel(":" + client.getFullName() + " JOIN :" + this->getName() + "\r\n");
 		this->members.push_back(&client);
-		sendMessageToChannelMembers(client, client.getNickname() + " has joined the channel ", true);
 	}
 }
 
@@ -248,6 +248,16 @@ int Channel::removeMember(const Client& client) {
 		this->removeOperator(client);
 
 	return 0;
+}
+
+void	Channel::broadcastToChannel(const string& message) {
+	vector<Client *> channel_members = this->getMembers();
+	if (channel_members.empty())
+		return ;
+
+	for (Client * member : channel_members) {
+		member->addSendData(message);
+	}
 }
 
 void	Channel::sendMessageToChannelMembers(const Client& sender, const string& message, bool colon) {
