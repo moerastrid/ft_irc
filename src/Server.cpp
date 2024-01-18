@@ -130,8 +130,10 @@ bool	Server::comm_pollin(Executor& ex, Client &client) {
 		this->customOut << BG_COLOR_MAGENTA << "EXECUTING: [" << receiveData << "]" << COLOR_RESET << endl; // #TODO delete
 		Command cmd(receiveData);					// Turn it into a command.
 		if (ex.run(cmd, client) == false) {			// Run the command.
-			// #TODO if a NICKCOLLISIONS occurs, we cannot send back an error message because the connection is closed before the message can be sent.
-			closeConnection(client.getFD());
+			if (!client.hasSendData())
+				closeConnection(client.getFD());
+			else
+				client.expell();
 			return false;
 		}
 	}
@@ -143,7 +145,11 @@ void	Server::comm_pollout(Client &client) {
 		closeConnection(client.getFD());
 	}
 	if (!client.hasSendData()) //check for more messages. If none, remove event.
+	{
 		client.removeEvent(POLLOUT);
+		if (client.isExpelled())
+			closeConnection(client.getFD());
+	}
 }
 
 void	Server::run(Executor& ex) {
@@ -170,9 +176,7 @@ void	Server::run(Executor& ex) {
 			Msg("POLLERR" + to_string(client.getFD()), "DEBUG");
 	 		closeConnection(client.getFD());
 		} else {
-			// hier? checken of ik de verbinding ga verbreken
-
-			if (client.checkRevent(POLLIN)) {
+			if (!client.isExpelled() && client.checkRevent(POLLIN)) {
 				Msg("POLLIN " + to_string(client.getFD()), "DEBUG");
 				if (!comm_pollin(ex, client)) 
 					continue ;
@@ -181,8 +185,6 @@ void	Server::run(Executor& ex) {
 				Msg("POLLOUT " + to_string(client.getFD()), "DEBUG");
 				comm_pollout(client);
 			}
-
-			// hier de verbinding verbreken
 		}
 	}
 }
