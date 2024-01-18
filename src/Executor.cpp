@@ -267,7 +267,7 @@ string Executor::run_NICK(const vector<string>& args, Client& caller) {
 		return "";
 	} else {
 		// return new_build_reply(caller.getFullName(), RPL_WELCOME, nickname, old_nickname, "Nickname changed to " + nickname);
-		return ":" + caller.getFullName() + " NICK :" + new_nickname;
+		return ":" + caller.getFullName() + " NICK :" + new_nickname + "\r\n";
 	}
 }
 
