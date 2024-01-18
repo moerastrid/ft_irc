@@ -6,7 +6,7 @@ Env::Env(int port, string pass) : pass(pass), port(port) {
 };
 
 Client&	Env::getClientByFD(int fd) {
-	for(auto& el : this->clients) {
+	for (auto& el : this->clients) {
 		if (el.getPFD().fd == fd)
 			return el;
 	}
