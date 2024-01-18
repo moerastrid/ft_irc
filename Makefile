@@ -1,4 +1,4 @@
-NAME := ircserver
+NAME := ircserv
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -Iinclude
 CXXFLAGS += -g -fsanitize=address

@@ -738,18 +738,14 @@ string Executor::run_INVITE(const vector<string>& args, Client& caller) {
  * Not handled:
  */
 string Executor::run_TOPIC(const vector<string>& args, Client& caller) {
-	string	deleteflag = args[0];
 	string	target_channel;
 	string	newtopic = "";
 
-
-	if (deleteflag.compare("-delete") == 0) {
-		target_channel = args[1];
-	} else {
-		target_channel = args[0];
-		// TO DO :segfault if there is no args[1] (only TOPIC message without #channelname)
+	target_channel = args[0];
+	
+	if (args.size() > 0)
 		newtopic = args[1]; 
-	}
+
 	cout << "target channel " << target_channel << "\r\n";
 
 	Channel& channel = this->getChannelByName(target_channel);
@@ -770,16 +766,11 @@ string Executor::run_TOPIC(const vector<string>& args, Client& caller) {
 	}
 
 	if (channel.hasTopicRestricted() && !channel.hasOperator(caller)) {
-		return new_build_reply(getHostname(), ERR_CHANOPRIVSNEEDED, caller.getNickname(), target_channel, "You're not a channel operator");
+		return new_build_reply(getHostname(), ERR_CHANOPRIVSNEEDED, target_channel, "You're not a channel operator");
 	}
-
 	channel.setTopic(newtopic);
-
-	string notification = "The topic for channel " + target_channel + " is now: " + newtopic;
-	channel.sendMessageToChannelMembers(caller, notification, false);
-	// :nick!user@host TOPIC #channel :new topic
-
-	return ":" + caller.getFullName() + " TOPIC " + channel.getName() + " " + newtopic + "\r\n";
+	channel.broadcastToChannel(":" + caller.getFullName() + " TOPIC " + channel.getName() + " " + newtopic + "\r\n");
+	return "";
 }
 
 // Client wants to disconnect from server
@@ -812,8 +803,8 @@ string Executor::run_QUIT([[maybe_unused]]const vector<string>& args,[[maybe_unu
 		if (chan.hasOperator(caller))
 			chan.removeOperator(caller);
 		if (chan.hasMember(caller)) {
-			chan.broadcastToChannel(":" + fullName + " QUIT " + reason + "\r\n");
 			chan.removeMember(caller);
+			chan.broadcastToChannel(":" + fullName + " QUIT " + reason + "\r\n");
 		}
 		if (chan.empty()) {
 			this->e.getChannels().erase(this->e.getItToChannelByName(chan.getName()));
@@ -895,6 +886,8 @@ string Executor::new_build_reply(const string& prefix, int response_code, const 
 		response << " " << channel;
 
 	// The message
+	if (message.begin()[0] == ':')
+		return response.str() + " " + message + "\r\n";
 	return response.str() + " :" + message + "\r\n";
 }
 
