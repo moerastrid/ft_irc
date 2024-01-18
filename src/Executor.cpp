@@ -150,6 +150,7 @@ int Executor::run(const Command& cmd, Client& caller) {
 	// Check password on commands other than PASS and CAP
 	static vector<string> passcmds = {"PASS", "CAP"};
 	if (find(passcmds.begin(), passcmds.end(), command) == passcmds.end() && caller.getPassword().empty()) {
+		// todo : add message to send with reason for no connection & add it to client send data
 		return false;
 	}
 
@@ -157,6 +158,7 @@ int Executor::run(const Command& cmd, Client& caller) {
 	static vector<string> regcmds = {"PASS", "CAP", "NICK", "USER"};
 	if (find(regcmds.begin(), regcmds.end(), command) == regcmds.end()) {
 		if (!caller.isRegistered())
+			// todo : add message to send with reason for no connection & add it to client send data
 			return false;
 	}
 
@@ -259,6 +261,8 @@ string Executor::run_NICK(const vector<string>& args, Client& caller) {
 
 	string old_nickname = caller.getNickname();
 	bool first_time = old_nickname.empty();
+	string fullname = caller.getFullName();
+	cout << "nick " << old_nickname << " - new nick " << nickname << "\n";
 	caller.setNickname(nickname);
 
 	if (first_time && !caller.getUsername().empty()) { // First time connection part 2: electric boogaloo. Accepting connection and sending welcome message.
@@ -266,7 +270,9 @@ string Executor::run_NICK(const vector<string>& args, Client& caller) {
 	} else if (first_time) {
 		return "";
 	} else {
-		return build_reply(RPL_WELCOME, nickname, old_nickname, "Nickname changed to " + nickname);
+		//return build_reply(RPL_WELCOME, nickname, old_nickname, "Nickname changed to " + nickname);
+		//string fullname = caller.getFullName();
+		return	new_build_reply(fullname, RPL_WELCOME, nickname, old_nickname, "Nickname changed to " + nickname);
 	}
 }
 
@@ -337,10 +343,10 @@ string Executor::run_USER(const vector<string>& args, Client& caller) {
 
 	if (!caller.getNickname().empty())
 		return new_build_reply(getHostname(), RPL_WELCOME, caller.getNickname(), "Welcome to Astrid's & Thibauld's IRC server, " + username + "!");
-	return "SUCCESSFULLY REGISTERED OR CHANGED USERNAME\n";
+	return "";
 }
 
-/*
+/*s
  * Incoming message: PING {no args} (not a user command, just a reply to the automatic PING request from the server to indicate the connection is alive)
  * Possible replies: PONG <server=:localhost>
  *
