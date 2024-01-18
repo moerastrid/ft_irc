@@ -36,7 +36,7 @@ static vector<tuple<bool, signed char, string>> parse_modestring(string modestri
 		}
 		if (is_mode(el)) {
 			string arg = "";
-			if (hasArg(el)) {
+			if (hasArg(el) && add) {
 				try {
 					arg = modeargs.at(argcounter++);
 				} catch (std::out_of_range& e) {
@@ -115,8 +115,10 @@ void Executor::handle_k_mode(const bool add, const string& arg, Channel& target)
 			return ;
 		target.setPassword(arg);
 	}
-	else
+	else {
+		cout << "Clearing password" << endl;
 		target.setPassword("");
+	}
 }
 
 // Type A: must always have parameter, otherwise ignore command.
@@ -162,41 +164,51 @@ string Executor::handle_modes(const Client& caller, const vector<tuple<bool, sig
 		switch (mode)
 		{
 			case 'i':
+				cout << "i mode detected" << endl;
 				handle_i_mode(add, target);
 				modestring = "+i";
 				message += build_mode_reply(caller.getNickname(), target.getName(), modestring, modearg);
 				break;
 			case 't':
+				cout << "t mode detected" << endl;
 				handle_t_mode(add, target);
 				modestring = "+t";
 				message += build_mode_reply(caller.getNickname(), target.getName(), modestring, modearg);
 				break;
 			case 'k':
+				cout << "k mode detected" << endl;
 				modestring = "+k";
-				if (modearg.empty()) {
+				if (!add)
+					modestring = "-k";
+				if (modearg.empty() && add) {
 					modearg = target.getPassword();
-					message += build_mode_reply(caller.getNickname(), target.getName(), modestring, "");
+					message += build_mode_reply(caller.getNickname(), target.getName(), modestring, modearg);
 					continue;
 				}
 				handle_k_mode(add, modearg, target);
 				message += build_mode_reply(caller.getNickname(), target.getName(), modestring, modearg);
 				break;
 			case 'o':
+				cout << "o mode detected" << endl;
 				modestring = "+o";
 				message += build_mode_reply(caller.getNickname(), target.getName(), modestring, modearg);
 				handle_o_mode(add, modearg, target); //#TODO check modearg for existence of user.
 				break;
 			case 'l':
+				cout << "l mode detected" << endl;
 				modestring = "+l";
 				message += build_mode_reply(caller.getNickname(), target.getName(), modestring, modearg);
 				handle_l_mode(add, modearg, target);
 				break;
 			case 0:
+				cout << "0 mode detected" << endl;
 				message += build_reply(ERR_UMODEUNKNOWNFLAG, caller.getNickname(), target.getName(), "Unknown MODE flag");
 				break;
 			case -1: //ignored
+				cout << "-1 mode detected" << endl;
 				break;
 			default:
+				cout << "default mode detected" << endl;
 				message += build_reply(ERR_UMODEUNKNOWNFLAG, caller.getNickname(), target.getName(), "Unknown MODE flag");
 				break;
 		}

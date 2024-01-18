@@ -212,18 +212,18 @@ string Executor::run_CAP([[maybe_unused]]const vector<string>& args, [[maybe_unu
  * Responses not (yet) handled:
  */
 string Executor::run_PASS(const vector<string>& args, Client& caller) {
-	if (!caller.getNickname().empty() || !caller.getUsername().empty()) {
+
+	if (!caller.getNickname().empty() && !caller.getUsername().empty()) {
 		return new_build_reply(getHostname(), ERR_ALREADYREGISTERED, caller.getNickname(), "You may not reregister");
 	}
 
 	string newpassword = args[0];
+	caller.setPassword(newpassword);
 
 	if (e.getPass().compare(newpassword) != 0) {
 		// #TODO close connection? and send ERROR
 		return new_build_reply(getHostname(), ERR_PASSWDMISMATCH, caller.getNickname(), "Password incorrect"); //# TODO FIX MESSAGE FORMAT
 	}
-
-	caller.setPassword(newpassword);
 
 	return ""; // build_reply(NOTICE, "PASS", "PASS", "Remember to set your username and nickname with USER and PASS.");
 }
