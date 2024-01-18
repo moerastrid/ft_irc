@@ -81,6 +81,7 @@ public:
 	int		removeMember(const Client& client);
 
 	void	sendMessageToChannelMembers(const Client& sender, const string& message, bool colon);
+	void	broadcastToChannel(const string& message);
 };
 
 std::ostream& operator<<(std::ostream& os, const Channel& channel);

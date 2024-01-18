@@ -806,18 +806,23 @@ string Executor::run_TOPIC(const vector<string>& args, Client& caller) {
  */
 string Executor::run_QUIT([[maybe_unused]]const vector<string>& args,[[maybe_unused]] Client& caller) {
 	deque<Channel>& channels = this->getChannels();
+	
+	string fullName = caller.getFullName();
 
 	for (Channel& chan : channels) {
 		if (chan.hasOperator(caller))
 			chan.removeOperator(caller);
-		if (chan.hasMember(caller))
+		if (chan.hasMember(caller)) {
+//			chan.broadcastToChannel(":" + fullName + " QUIT :Quit: " + "arg??? \r\n");
 			chan.removeMember(caller);
+		}
 		if (chan.empty()) {
 			this->e.getChannels().erase(this->e.getItToChannelByName(chan.getName()));
 		}
 	}
 
-	return "QUITTING";
+
+	return ":" + fullName + " QUIT :Quit: " + "arg??? \r\n";
 }
 
 bool Executor::parseUserArguments(const vector<string>& args, string& username, string& hostname, string& servername, string& realname) {
