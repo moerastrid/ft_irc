@@ -260,6 +260,8 @@ void	Channel::broadcastToChannel(const string& message) {
 	}
 }
 
+
+// old ?
 void	Channel::sendMessageToChannelMembers(const Client& sender, const string& message, bool colon) {
 
 	vector<Client *> channel_members = this->getMembers();
