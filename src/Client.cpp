@@ -157,7 +157,7 @@ void Client::setPassword(const string& password) {
 // Send a privmsg to the client.
 // If colon is true, add a colon before the actual message part.
 void Client::sendPrivMsg(const Client& sender, const string& message, bool colon = false) {
-	string prefix = sender.getFullName() + " PRIVMSG " + this->getNickname();
+	string prefix = ":" + sender.getFullName() + " PRIVMSG " + this->getNickname();
 	string colon_str = "";
 	if (colon)
 		colon_str = ":";

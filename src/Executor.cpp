@@ -246,23 +246,20 @@ string Executor::run_PASS(const vector<string>& args, Client& caller) {
 #include <unistd.h>
 string Executor::run_NICK(const vector<string>& args, Client& caller) {
 	const string& new_nickname = args[0];
-	// if (caller.getPassword().empty()) // Checked in run().
-	// 	return build_notice_reply(caller.getNickname(), caller.getNickname(), "Enter the server password first with PASS to start connection registration");
 
-	if (name_exists(new_nickname)) { // #TODO Figure out nickcollision vs nicknameinuse
+	if (name_exists(new_nickname)) {
 		if (caller.getNickname().empty())
-			return new_build_reply(getHostname(), ERR_NICKCOLLISION, new_nickname, "Nickname collision KILL from "+ caller.getUsername() + "@" + caller.getHostname());
+			return new_build_reply(getHostname(), ERR_NICKNAMEINUSE, new_nickname, new_nickname, "Nickname is already in use");
 		else
 			return new_build_reply(getHostname(), ERR_NICKNAMEINUSE, caller.getNickname(), new_nickname, "Nickname is already in use");
 	}
 	if (new_nickname.empty() || !verify_name(new_nickname)) {
-		return build_reply(ERR_ERRONEOUSNICKNAME, "NICK", new_nickname, "Erroneous nickname");
+		return new_build_reply(getHostname(), ERR_ERRONEOUSNICKNAME, "NICK", new_nickname, "Erroneous nickname");
 	}
 
 	string old_nickname = caller.getNickname();
-	bool first_time = old_nickname.empty();
 	string old_fullname = caller.getFullName();
-	cout << "nick " << old_nickname << " - new nick " << new_nickname << "\n";
+	bool first_time = old_nickname.empty();
 	caller.setNickname(new_nickname);
 
 	if (first_time && !caller.getUsername().empty()) { // First time connection part 2: electric boogaloo. Accepting connection and sending welcome message.
@@ -270,13 +267,7 @@ string Executor::run_NICK(const vector<string>& args, Client& caller) {
 	} else if (first_time) {
 		return "";
 	} else {
-		//return build_reply(RPL_WELCOME, nickname, old_nickname, "Nickname changed to " + nickname);
-		//string fullname = caller.getFullName();
-		//return	new_build_reply(fullname, RPL_WELCOME, nickname, old_nickname, "Nickname changed to " + nickname);
-
-		// return new_build_reply(caller.getFullName(), RPL_WELCOME, nickname, old_nickname, "Nickname changed to " + nickname);
-		//return ":" + caller.getFullName() + " NICK :" + new_nickname + "\r\n";
-		//return ":" + old_fullname + " NICK :" + new_nickname + "\r\n";
+		return build_short_reply(old_fullname, "NICK", new_nickname);
 	}
 }
 
@@ -333,17 +324,17 @@ string Executor::run_USER(const vector<string>& args, Client& caller) {
 	string username, hostname, servername, realname;
 	if (!parseUserArguments(args, username, hostname, servername, realname)) {
 		if (caller.getNickname().empty()) {
-			return build_reply(ERR_ERRONEOUSNICKNAME, "USER", "USER", "Invalid user arguments");
+			return new_build_reply(getHostname(), ERR_ERRONEOUSNICKNAME, "USER", "USER", "Invalid user arguments");
 		}
-		return build_reply(ERR_ERRONEOUSNICKNAME, caller.getNickname(), "USER", "Invalid user arguments");
+		return new_build_reply(getHostname(), ERR_ERRONEOUSNICKNAME, caller.getNickname(), "USER", "Invalid user arguments");
 	}
-	if (caller.getUsername().empty()) {// first time connec part 2
+	if (caller.getUsername().empty()) { // first time connec part 2
 		caller.setUsername(username);
 		caller.setHostname(hostname);
 		caller.setServername(servername);
 		caller.setRealname(realname);
 	} else
-		return build_reply(ERR_ALREADYREGISTERED, caller.getNickname(), username, "You may not reregister");
+		return new_build_reply(getHostname(), ERR_ALREADYREGISTERED, caller.getNickname(), username, "You may not reregister");
 
 	if (!caller.getNickname().empty())
 		return new_build_reply(getHostname(), RPL_WELCOME, caller.getNickname(), "Welcome to Astrid's & Thibauld's IRC server, " + username + "!");
@@ -405,9 +396,9 @@ string Executor::run_PRIVMSG(const vector<string>& args, Client& caller) {
 	if (is_channel(target)) {
 		Channel& target_channel = this->getChannelByName(target);
 		if (target_channel == Channel::nullchan)
-			return build_reply(ERR_NOSUCHNICK, caller.getNickname(), target, "No such channel");
+			return new_build_reply(getHostname(), ERR_NOSUCHNICK, caller.getNickname(), target, "No such channel");
 		if (!target_channel.hasMember(caller))
-			return build_reply(ERR_NOTONCHANNEL, caller.getNickname(), target, "You're not a member of that channel.");
+			return new_build_reply(getHostname(), ERR_NOTONCHANNEL, caller.getNickname(), target, "You're not a member of that channel.");
 
 		target_channel.sendMessageToChannelMembers(caller, data.str(), false);
 		return "";
@@ -415,7 +406,7 @@ string Executor::run_PRIVMSG(const vector<string>& args, Client& caller) {
 
 	Client& recipient = this->getClientByNick(target);
 	if (recipient == Client::nullclient) {
-		return build_reply(ERR_NOSUCHNICK, caller.getNickname(), target, "No such recipient");
+		return new_build_reply(getHostname(), ERR_NOSUCHNICK, caller.getNickname(), target, "No such recipient");
 	}
 
 	recipient.sendPrivMsg(caller, data.str(), false);
@@ -454,8 +445,8 @@ string Executor::run_WHOIS(const vector<string>& args, Client& caller) {
 
 	for (vector<string>::const_iterator it = args.begin(); it != args.end(); it++) {
 		Client& requestee = this->getClientByNick(*it);
-		if (requestee == NULL) {
-			message += build_reply(ERR_NOSUCHNICK, caller.getNickname(), *it, "No such nickname");
+		if (requestee == Client::nullclient) {
+			message += new_build_reply(getHostname(), ERR_NOSUCHNICK, caller.getNickname(), *it, "No such nickname");
 		} else {
 			string userinfo = requestee.getUsername() + " " + requestee.getHostname() + " * :" + requestee.getRealname(); //#TODO fix servername? (servername == *)
 			message += build_WHOIS_reply(RPL_WHOISUSER, caller.getNickname(), *it, userinfo);
@@ -530,27 +521,27 @@ string Executor::run_JOIN(const vector<string>& args, Client& caller) {
 			const vector<Client *>& clients = ch.getMembers();
 			size_t userLimit = ch.getUserLimit();
 			if (userLimit != 0 && clients.size() >= userLimit) {
-				message += build_reply(ERR_CHANNELISFULL, caller.getNickname(), ch.getName(), "Cannot join channel (+l)");
+				message += new_build_reply(getHostname(), ERR_CHANNELISFULL, caller.getNickname(), ch.getName(), "Cannot join channel (+l)");
 				continue;
 			}
 
 			if (find(clients.begin(), clients.end(), &caller) != clients.end()) {
-				message += build_reply(ERR_USERONCHANNEL, caller.getNickname(), caller.getNickname(), "is already on channel");
+				message += new_build_reply(getHostname(), ERR_USERONCHANNEL, caller.getNickname(), caller.getNickname(), "is already on channel");
 				continue;
 			}
 
 			if (password.empty()) {
 				ch.addMember(caller);
-				message += build_reply(RPL_TOPIC, caller.getNickname(), channelname, ch.getTopic()); //if succesfull, reply with channel topic.
+				message += new_build_reply(getHostname(), RPL_TOPIC, caller.getNickname(), channelname, ch.getTopic()); //if succesfull, reply with channel topic.
 				continue;
 			}
 
 			if (password.compare(channelpassword) != 0) {
-				message += build_reply(ERR_BADCHANNELKEY, caller.getNickname(), channelname, "Cannot join channel (+k)");
+				message += new_build_reply(getHostname(), ERR_BADCHANNELKEY, caller.getNickname(), channelname, "Cannot join channel (+k)");
 				continue;
 			}
 			ch.addMember(caller);
-			message += build_reply(RPL_TOPIC, caller.getNickname(), channelname, ch.getTopic()); //if succesfull, reply with channel topic.
+			message += new_build_reply(getHostname(), RPL_TOPIC, caller.getNickname(), channelname, ch.getTopic()); //if succesfull, reply with channel topic.
 		}
 	}
 	return message;
@@ -579,22 +570,22 @@ string Executor::run_KICK(const vector<string>& args, Client& caller) {
 	string channelname = args[0];
 	Channel& ch = this->getChannelByName(channelname);
 	if (ch == Channel::nullchan) {
-		return build_reply(ERR_NOSUCHCHANNEL, caller.getNickname(), channelname, "No such channel");
+		return new_build_reply(getHostname(), ERR_NOSUCHCHANNEL, caller.getNickname(), channelname, "No such channel");
 	}
 	if (!ch.hasMember(caller)) {
-		return build_reply(ERR_NOTONCHANNEL, ":" + caller.getNickname(), channelname, "You're not in that channel");
+		return new_build_reply(getHostname(), ERR_NOTONCHANNEL, ":" + caller.getNickname(), channelname, "You're not in that channel");
 	}
 
 	vector<string>::const_iterator reason_start = find_if(args.begin(), args.end(), find_reason);
 
 	for (vector<string>::const_iterator name_it = next(args.begin()); name_it != reason_start; name_it++) {
 		if (!ch.hasOperator(caller)) {
-			message += build_reply(ERR_CHANOPRIVSNEEDED, ":" + caller.getNickname(), channelname, "You're not the channel operator");
+			message += new_build_reply(getHostname(), ERR_CHANOPRIVSNEEDED, ":" + caller.getNickname(), channelname, "You're not the channel operator");
 			continue;
 		}
 		Client& victim = this->getClientByNick(*name_it);
 		if (victim == Client::nullclient) {
-			message += build_reply(ERR_NOSUCHNICK, caller.getNickname(), *name_it, "No such nickname");
+			message += new_build_reply(getHostname(), ERR_NOSUCHNICK, caller.getNickname(), *name_it, "No such nickname");
 			continue;
 		}
 		else if (!ch.hasMember(victim)) {
@@ -641,12 +632,12 @@ string Executor::run_PART(const vector<string>& args, Client& caller) {
 	for (vector<string>::iterator it = channelnames.begin(); it != channelnames.end(); it++) {
 		Channel& ch = this->getChannelByName(*it);
 		if (ch == Channel::nullchan) {
-			message += build_reply(ERR_NOSUCHCHANNEL, caller.getNickname(), *it, "No such channel");
+			message += new_build_reply(getHostname(), ERR_NOSUCHCHANNEL, caller.getNickname(), *it, "No such channel");
 			continue;
 		}
 
 		if (ch.removeMember(caller) == 1) {
-			message += build_reply(ERR_USERNOTINCHANNEL, caller.getNickname(), *it, "You haven't joined that channel");
+			message += new_build_reply(getHostname(), ERR_USERNOTINCHANNEL, caller.getNickname(), *it, "You haven't joined that channel");
 			continue;
 		}
 
@@ -701,25 +692,19 @@ string Executor::run_INVITE(const vector<string>& args, Client& caller) {
 	string target_channel = args[1];
 	Channel& channel = this->getChannelByName(target_channel);
 	if (channel == Channel::nullchan) {
-		return build_reply(ERR_NOSUCHCHANNEL, caller.getNickname(), target_channel, "No such channel");
+		return new_build_reply(getHostname(), ERR_NOSUCHCHANNEL, caller.getNickname(), target_channel, "No such channel");
 	}
 
-	if (!channel.hasMember(caller)) {
-		return build_reply(ERR_NOTONCHANNEL, caller.getNickname(), target_channel, "Not on channel");
-	}
-
-	if (channel.isInviteOnly() && !channel.hasOperator(caller)) {
-		return build_reply(ERR_CHANOPRIVSNEEDED, caller.getNickname(), target_channel, "You're not a channel operator");
-	}
+	if (!channel.hasMember(caller))
+		return new_build_reply(getHostname(), ERR_NOTONCHANNEL, caller.getNickname(), target_channel, "Not on channel");
+	if (channel.isInviteOnly() && !channel.hasOperator(caller))
+		return new_build_reply(getHostname(), ERR_CHANOPRIVSNEEDED, caller.getNickname(), target_channel, "You're not a channel operator");
 
 	Client& target = this->getClientByNick(target_client);
-	if (target == NULL) {
-		return build_reply(ERR_NOSUCHNICK, caller.getNickname(), target_client, "No such client");
-	}
-
-	if (channel.hasMember(target)) {
+	if (target == Client::nullclient)
+		return new_build_reply(getHostname(), ERR_NOSUCHNICK, caller.getNickname(), target_client, "No such client");
+	if (channel.hasMember(target))
 		return build_channel_reply(ERR_USERONCHANNEL, caller.getNickname(), target_client, target_channel, "is already on channel");
-	}
 
 	// #TODO send private message to invitee in in :nick!user@host form.
 	/*
@@ -767,24 +752,23 @@ string Executor::run_TOPIC(const vector<string>& args, Client& caller) {
 
 	Channel& channel = this->getChannelByName(target_channel);
 	if (channel == Channel::nullchan) {
-		return build_reply(ERR_NOSUCHCHANNEL, caller.getNickname(), target_channel, "No such channel");
+		return new_build_reply(getHostname(), ERR_NOSUCHCHANNEL, caller.getNickname(), target_channel, "No such channel");
 	}
 	if (!channel.hasMember(caller)) {
-		return build_reply(ERR_NOTONCHANNEL, caller.getNickname(), target_channel, "You're not on that channel");
+		return new_build_reply(getHostname(), ERR_NOTONCHANNEL, caller.getNickname(), target_channel, "You're not on that channel");
 	}
-
 
 	const string& oldtopic = channel.getTopic();
 
 	if (newtopic.empty()) {
 		if (oldtopic.empty()) {
-			return build_reply(RPL_NOTOPIC, caller.getNickname(), target_channel, "No topic is set");
+			return new_build_reply(getHostname(), RPL_NOTOPIC, caller.getNickname(), target_channel, "No topic is set");
 		}
-		return build_reply(RPL_TOPIC, caller.getNickname(), target_channel, oldtopic);
+		return new_build_reply(getHostname(), RPL_TOPIC, caller.getNickname(), target_channel, oldtopic);
 	}
 
 	if (channel.hasTopicRestricted() && !channel.hasOperator(caller)) {
-		return build_reply(ERR_CHANOPRIVSNEEDED, caller.getNickname(), target_channel, "You're not a channel operator");
+		return new_build_reply(getHostname(), ERR_CHANOPRIVSNEEDED, caller.getNickname(), target_channel, "You're not a channel operator");
 	}
 
 	channel.setTopic(newtopic);
@@ -867,6 +851,10 @@ string Executor::format_reason(vector<string>::iterator& reason_start, vector<st
 		}
 	}
 	return message;
+}
+
+string Executor::build_short_reply(const string& prefix, const string& command, const string& postfix) {
+	return ":" + prefix + " " + command + " :" + postfix + "\r\n";
 }
 
 string Executor::new_build_reply(const string& prefix, int response_code, const string& caller, const string& message) {
