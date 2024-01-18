@@ -131,7 +131,7 @@ bool	Server::comm_pollin(Executor& ex, Client &client) {
 		Command cmd(receiveData);					// Turn it into a command.
 		if (ex.run(cmd, client) == false) {			// Run the command.
 		// #TODO if a NICKCOLLISIONS occurs, we cannot send back an error message because the connection is closed before the message can be sent.
-			closeConnection(client.getFD());
+			//closeConnection(client.getFD());
 			return false;
 		}
 	}
