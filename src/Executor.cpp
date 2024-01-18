@@ -150,7 +150,7 @@ int Executor::run(const Command& cmd, Client& caller) {
 	// Check password on commands other than PASS and CAP
 	static vector<string> passcmds = {"PASS", "CAP"};
 	if (find(passcmds.begin(), passcmds.end(), command) == passcmds.end() && caller.getPassword().empty()) {
-		// todo : add message to send with reason for no connection & add it to client send data
+		caller.addSendData(new_build_reply(getHostname(), ERR_PASSWDMISMATCH, caller.getNickname(), "Password needed"));
 		return false;
 	}
 
@@ -158,8 +158,10 @@ int Executor::run(const Command& cmd, Client& caller) {
 	static vector<string> regcmds = {"PASS", "CAP", "NICK", "USER"};
 	if (find(regcmds.begin(), regcmds.end(), command) == regcmds.end()) {
 		if (!caller.isRegistered())
-			// todo : add message to send with reason for no connection & add it to client send data
+		{
+			caller.addSendData(new_build_reply(getHostname(), ERR_NOTREGISTERED, caller.getNickname(), "You have not registered (correctly)"));
 			return false;
+		}
 	}
 
 	int numArgs = cmd.getArgs().size();
@@ -176,7 +178,7 @@ int Executor::run(const Command& cmd, Client& caller) {
 	caller.addSendData(message);
 	if (message.find("Nickname collision KILL") != string::npos)
 		return false;
-	if (message.find("QUITTING") != string::npos)
+	if (message.find("QUIT") != string::npos)
 		return false;
 
 	return true;
@@ -800,22 +802,24 @@ string Executor::run_TOPIC(const vector<string>& args, Client& caller) {
 string Executor::run_QUIT([[maybe_unused]]const vector<string>& args,[[maybe_unused]] Client& caller) {
 	deque<Channel>& channels = this->getChannels();
 	
-	string fullName = caller.getFullName();
+	string	fullName = caller.getFullName();
+	string	reason = ":Client Quit!";
+
+	if (!args.empty())
+		reason = args[0];
 
 	for (Channel& chan : channels) {
 		if (chan.hasOperator(caller))
 			chan.removeOperator(caller);
 		if (chan.hasMember(caller)) {
-//			chan.broadcastToChannel(":" + fullName + " QUIT :Quit: " + "arg??? \r\n");
+			chan.broadcastToChannel(":" + fullName + " QUIT " + reason + "\r\n");
 			chan.removeMember(caller);
 		}
 		if (chan.empty()) {
 			this->e.getChannels().erase(this->e.getItToChannelByName(chan.getName()));
 		}
 	}
-
-
-	return ":" + fullName + " QUIT :Quit: " + "arg??? \r\n";
+	return (":" + fullName + " QUIT " + reason + "\r\n");
 }
 
 bool Executor::parseUserArguments(const vector<string>& args, string& username, string& hostname, string& servername, string& realname) {

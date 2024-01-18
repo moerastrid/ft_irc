@@ -21,6 +21,7 @@
 #define ERR_USERNOTINCHANNEL 441
 #define ERR_NOTONCHANNEL 442 		//(Returned by the server whenever a client tries to perform a channel effecting command for which the client isn't a member.)
 #define ERR_USERONCHANNEL 443
+#define ERR_NOTREGISTERED 451
 #define ERR_NEEDMOREPARAMS 461
 #define ERR_TOOMANYPARAMS 461
 #define ERR_ALREADYREGISTERED 462
