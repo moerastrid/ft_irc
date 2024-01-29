@@ -21,7 +21,6 @@ class Command {
 private:
 	string			command;
 	vector<string>	args;
-	// int				client_fd;
 public:
 	Command();
 	Command(const string& client_message_string);
