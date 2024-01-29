@@ -147,6 +147,13 @@ bool Channel::hasMember(const Client& client) const {
 	return false;
 }
 
+bool	Channel::hasInvited(const Client &client) const {
+	if (find(this->invited.begin(), this->invited.end(), &client) != this->invited.end()) {
+		return true;
+	}
+	return false;
+}
+
 void Channel::setTopic(const string& topic) {
 	this->topic = topic;
 }
@@ -243,9 +250,11 @@ bool Channel::removeOperator(const Client& client) {
 
 void Channel::addMember(Client& client) {
 	if (find(this->members.begin(), this->members.end(), &client) == this->members.end()) {
-		broadcastToChannel(":" + client.getFullName() + " JOIN :" + this->getName() + "\r\n");
 		this->members.push_back(&client);
 	}
+	if (this->hasInvited(client)) {
+		this->removeInvited(client);
+	} 
 }
 
 bool Channel::removeMember(const Client& client) {
@@ -258,6 +267,25 @@ bool Channel::removeMember(const Client& client) {
 	if (this->hasOperator(client))
 		this->removeOperator(client);
 
+	if (this->hasInvited(client)) {
+		this->removeInvited(client);
+	} 
+
+	return true;
+}
+
+void	Channel::addInvited(Client& client) {
+	if (find(this->invited.begin(), this->invited.end(), &client) == this->invited.end()) {
+		this->invited.push_back(&client);
+	}
+}
+
+bool Channel::removeInvited(const Client& client) {
+	auto it = find(invited.begin(), invited.end(), &client);
+	if (it == invited.end()) {
+		return false;
+	}
+	this->invited.erase(it);
 	return true;
 }
 

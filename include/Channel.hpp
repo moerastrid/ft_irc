@@ -62,6 +62,7 @@ public:
 	bool	hasMode(char mode) const;
 	bool	hasOperator(const Client& client) const;
 	bool	hasMember(const Client& client) const;
+	bool	hasInvited(const Client &client) const;
 
 	void	setPassword(const string& password);
 	void	setTopic(const string& topic);
@@ -73,6 +74,7 @@ public:
 	void	addMode(char mode, const string& password, size_t userlimit);
 	void	addOperator(Client& client);
 	void	addMember(Client& client);
+	void	addInvited(Client& client);
 
 	void	takeTopicOperatorOnly();
 	void	takeInviteOnly();
@@ -80,6 +82,7 @@ public:
 	//void	removeOperator(const Client& client);
 	bool	removeOperator(const Client& client);
 	bool	removeMember(const Client& client);
+	bool	removeInvited(const Client& client);
 
 	void	sendMessageToChannelMembers(const Client& sender, const string& message, bool colon);
 	void	broadcastToChannel(const string& message);

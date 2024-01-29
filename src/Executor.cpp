@@ -482,7 +482,6 @@ string Executor::run_WHOIS(const vector<string>& args, Client& caller) {
 string Executor::run_JOIN(const vector<string>& args, Client& caller) {
 	string target = args[0];
 	if (target[0] == '0') { // /JOIN 0 = leave all joined channels.
-		//#TODO leave all channels;
 		std::deque<Channel>& channels = this->e.getChannels();
 		for (Channel &chan : channels) {
 			if (chan.hasMember(caller)) {
@@ -532,18 +531,19 @@ string Executor::run_JOIN(const vector<string>& args, Client& caller) {
 				continue;
 			}
 
-			if (password.empty()) {
-				ch.addMember(caller);
-				message += new_build_reply(getHostname(), RPL_TOPIC, caller.getNickname(), channelname, ch.getTopic()); //if succesfull, reply with channel topic.
-				continue;
+			if (ch.isInviteOnly() && !ch.hasInvited(caller)) {
+				message += new_build_reply(getHostname(), ERR_INVITEONLYCHAN, caller.getNickname(), channelname, "Cannot join channel (+i)");
+				continue ;
 			}
 
-			if (password.compare(channelpassword) != 0) {
+			if (!password.empty() && password.compare(channelpassword) != 0) {
 				message += new_build_reply(getHostname(), ERR_BADCHANNELKEY, caller.getNickname(), channelname, "Cannot join channel (+k)");
 				continue;
 			}
-			ch.addMember(caller);
+
 			message += new_build_reply(getHostname(), RPL_TOPIC, caller.getNickname(), channelname, ch.getTopic()); //if succesfull, reply with channel topic.
+			ch.broadcastToChannel(":" + caller.getFullName() + " JOIN :" + channelname + "\r\n");
+			ch.addMember(caller);
 		}
 	}
 	return message;
@@ -594,15 +594,20 @@ string Executor::run_KICK(const vector<string>& args, Client& caller) {
 			message += build_channel_reply(ERR_USERNOTINCHANNEL, caller.getNickname(), *name_it, channelname, "Cannot kick user from a channel that they have not joined");
 			continue;
 		}
-		cout << "reason_start :" << *reason_start << ":\n";
+		cout << "reason_start +" << *reason_start << "+\n";
+
+		string reason = "Default kick reason";
 		if ((*reason_start).compare(":") == 0) {
+			reason = *reason_start;
+			//ch.broadcastToChannel(":" + fullName + " QUIT " + reason + "\r\n");
 			//ch.kickMemberMessage
-			ch.sendMessageToChannelMembers(caller, ": default kick reason\n", false);
-		} else {
-			ch.sendMessageToChannelMembers(caller, ": hoi\n", false);
-		}
+			//ch.sendMessageToChannelMembers(caller, ": default kick reason\n", false);
+		} //else {
+			//ch.sendMessageToChannelMembers(caller, ": hoi\n", false);
+		//}
 		ch.removeMember(victim);
-		message += victim.getFullName() + " KICK " + channelname + " " + *name_it + " " + *reason_start + "\r\n";
+		message += caller.getFullName() + " KICK " + channelname + " " + *name_it + " " + reason + "\r\n";
+		ch.broadcastToChannel(caller.getFullName() + " KICK " + channelname + " " + *name_it + " " + reason + "\r\n");
 	}
 	if (ch.empty()) {
 		this->e.getChannels().erase(this->e.getItToChannelByName(ch.getName()));
@@ -648,14 +653,14 @@ string Executor::run_PART(const vector<string>& args, Client& caller) {
 			continue;
 		}
 
+		// INFO : irssi doesn't handle the PART message in the right way so I made it KICK instead so the behavior is correct.
+		message += ":" + caller.getFullName() + " KICK " + *it + " " + caller.getNickname() + " " + reason + "\r\n";
+
 		if (ch.empty()) {
 			this->e.getChannels().erase(this->e.getItToChannelByName(*it));
-			continue;
+		} else {
+			ch.broadcastToChannel(":" + caller.getFullName() + " PART " + *it + " " + reason + "\r\n");
 		}
-
-		ch.broadcastToChannel(":" + caller.getFullName() + " PART " + *it + " " + reason + "\r\n");
-		// TO DO : irssi doesn't handle the PART message in the right way so I temporarily made it KICK instead so the behavior is correct.
-		message += ":" + caller.getFullName() + " KICK " + *it + " " + caller.getNickname() + " " + reason + "\r\n";
 	}
 
 	return message;
@@ -685,31 +690,28 @@ string Executor::run_PART(const vector<string>& args, Client& caller) {
 string Executor::run_INVITE(const vector<string>& args, Client& caller) {
 	string target_client = args[0];
 	string target_channel = args[1];
+
 	Channel& channel = this->getChannelByName(target_channel);
 	if (channel == Channel::nullchan) {
 		return new_build_reply(getHostname(), ERR_NOSUCHCHANNEL, caller.getNickname(), target_channel, "No such channel");
 	}
-
 	if (!channel.hasMember(caller))
-		return new_build_reply(getHostname(), ERR_NOTONCHANNEL, caller.getNickname(), target_channel, "Not on channel");
+		return new_build_reply(getHostname(), ERR_NOTONCHANNEL, caller.getNickname(), target_channel, "You're not on that channel");
 	if (channel.isInviteOnly() && !channel.hasOperator(caller))
 		return new_build_reply(getHostname(), ERR_CHANOPRIVSNEEDED, caller.getNickname(), target_channel, "You're not a channel operator");
 
 	Client& target = this->getClientByNick(target_client);
 	if (target == Client::nullclient)
-		return new_build_reply(getHostname(), ERR_NOSUCHNICK, caller.getNickname(), target_client, "No such client");
+		return new_build_reply(getHostname(), ERR_NOSUCHNICK, caller.getNickname(), target_client, "No such nick");
 	if (channel.hasMember(target))
-		return build_channel_reply(ERR_USERONCHANNEL, caller.getNickname(), target_client, target_channel, "is already on channel");
+		return new_build_reply(getHostname(), ERR_USERONCHANNEL, caller.getNickname(), target_client + " is already on channel " + target_channel);
+		// official :		-> doesn't give expected output?
+		//return new_build_reply(getHostname(), ERR_USERONCHANNEL, caller.getNickname(), target_client, target_channel, "is already on channel");
 
-	// #TODO send private message to invitee in in :nick!user@host form.
-	/*
-	 * Message Examples:
+	channel.addInvited(target);
+	target.addSendData(":" + caller.getFullName() + " INVITE " + target.getNickname() + " " + target_channel + "\r\n");
 
-		:dan-!d@localhost INVITE Wiz #test ; dan- has invited Wiz to the channel #test
-	 *
-	 */
-
-	return build_channel_reply(RPL_INVITING, caller.getNickname(), target_client, target_channel, ""); // #TODO if message is empty, dont send the message part.
+	return	new_build_reply(caller.getFullName(), RPL_INVITING, caller.getNickname(), target_client, target_channel);
 }
 
 /*

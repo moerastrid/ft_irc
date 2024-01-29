@@ -29,6 +29,7 @@
 #define ERR_KEYSET 467				// "<channel> :Channel key already set"
 #define ERR_CHANNELISFULL 471
 #define ERR_UNKNOWNMODE 472
+#define ERR_INVITEONLYCHAN 473
 #define ERR_BADCHANNELKEY 475
 #define ERR_CHANOPRIVSNEEDED 482 
 
