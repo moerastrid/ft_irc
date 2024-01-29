@@ -610,6 +610,7 @@ string Executor::run_KICK(const vector<string>& args, Client& caller) {
 		//message += ":" + caller.getFullName() + " KICK " + channelname + " " + *target_it + " " + reason + "\r\n";
 		ch.broadcastToChannel( ":" + caller.getFullName() + " KICK " + channelname + " " + *target_it + " " + reason + "\r\n");
 		ch.removeMember(victim);
+		victim.addSendData(":" + getHostname() + " You were kicked from " + channelname + " by " + caller.getNickname() + " " + reason + "\r\n");
 	}
 	if (ch.empty()) {
 		this->e.getChannels().erase(this->e.getItToChannelByName(ch.getName()));
