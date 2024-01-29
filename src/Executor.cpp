@@ -698,13 +698,13 @@ string Executor::run_INVITE(const vector<string>& args, Client& caller) {
 		return new_build_reply(getHostname(), ERR_NOSUCHCHANNEL, caller.getNickname(), target_channel, "No such channel");
 	}
 	if (!channel.hasMember(caller))
-		return new_build_reply(getHostname(), ERR_NOTONCHANNEL, caller.getNickname(), target_channel, "You're not on that channel");
+		return new_build_reply(getHostname(), ERR_NOTONCHANNEL, target_channel, "You're not on that channel");
 	if (channel.isInviteOnly() && !channel.hasOperator(caller))
-		return new_build_reply(getHostname(), ERR_CHANOPRIVSNEEDED, caller.getNickname(), target_channel, "You're not a channel operator");
+		return new_build_reply(getHostname(), ERR_CHANOPRIVSNEEDED, target_channel, "You're not a channel operator");
 
 	Client& target = this->getClientByNick(target_client);
 	if (target == Client::nullclient)
-		return new_build_reply(getHostname(), ERR_NOSUCHNICK, caller.getNickname(), target_client, "No such nick");
+		return new_build_reply(getHostname(), ERR_NOSUCHNICK, target_channel, target_client, "No such nick");
 	if (channel.hasMember(target))
 		return new_build_reply(getHostname(), ERR_USERONCHANNEL, target_channel, target_client, "is already on channel");
 
