@@ -204,31 +204,42 @@ void Channel::addOperator(Client &client) {
 	}
 }
 
-void Channel::removeOperator(const Client &client) {
+bool Channel::removeOperator(const Client& client) {
 	auto it = find(operators.begin(), operators.end(), &client);
-	if (it != operators.end()) {
-		this->operators.erase(it);
+	if (it == operators.end()) {
+		return false;
 	}
-
-	if (this->getOperators().empty()) {
-		vector<Client *>members = this->getMembers();
-		std::vector<Client *>::iterator new_operator_it = members.begin();
-		while (new_operator_it != members.end() && *new_operator_it != &client) {
-			new_operator_it = next(new_operator_it);
-		}
-		if (new_operator_it == members.end())
-			return;
-
-		Client* new_operator = *new_operator_it;
-		this->addOperator(**new_operator_it);
-
-		for (auto member : members) {
-			member->sendPrivMsg(client, new_operator->getNickname() + " is the new operator of the '" + this->getName() + "'-channel.\n", true);
-		}
-	}
-
-	return;
+	this->operators.erase(it);
+	return true;
 }
+
+// void Channel::removeOperator(const Client &client) {
+// 	auto it = find(operators.begin(), operators.end(), &client);
+// 	if (it != operators.end()) {
+// 		this->operators.erase(it);
+// 	}
+
+// 	if (this->getMembers().empty())
+// 		return ;
+
+// 	if (this->getOperators().empty()) {
+// 		vector<Client *>members = this->getMembers();
+// 		std::vector<Client *>::iterator new_operator_it = members.begin();
+// 		while (new_operator_it != members.end() && *new_operator_it != &client) {
+// 			new_operator_it = next(new_operator_it);
+// 		}
+// 		if (new_operator_it == members.end())
+// 			return;
+
+// 		Client* new_operator = *new_operator_it;
+// 		this->addOperator(**new_operator_it);
+
+// 		for (auto member : members) {
+// 			member->sendPrivMsg(client, new_operator->getNickname() + " is the new operator of the '" + this->getName() + "'-channel.\n", true);
+// 		}
+// 	}
+// 	return;
+//}
 
 void Channel::addMember(Client& client) {
 	if (find(this->members.begin(), this->members.end(), &client) == this->members.end()) {
@@ -237,17 +248,17 @@ void Channel::addMember(Client& client) {
 	}
 }
 
-int Channel::removeMember(const Client& client) {
+bool Channel::removeMember(const Client& client) {
 	auto it = find(members.begin(), members.end(), &client);
 	if (it == members.end()) {
-		return 1;
+		return false;
 	}
 
 	this->members.erase(it);
 	if (this->hasOperator(client))
 		this->removeOperator(client);
 
-	return 0;
+	return true;
 }
 
 void	Channel::broadcastToChannel(const string& message) {

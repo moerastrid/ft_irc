@@ -643,7 +643,7 @@ string Executor::run_PART(const vector<string>& args, Client& caller) {
 			continue;
 		}
 
-		if (ch.removeMember(caller) == 1) {
+		if (ch.removeMember(caller) == false) {
 			message += new_build_reply(getHostname(), ERR_NOTONCHANNEL, caller.getNickname(), *it, "You're not on that channel");
 			continue;
 		}

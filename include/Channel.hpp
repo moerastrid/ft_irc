@@ -77,8 +77,9 @@ public:
 	void	takeTopicOperatorOnly();
 	void	takeInviteOnly();
 	void	removeMode(char mode);
-	void	removeOperator(const Client& client);
-	int		removeMember(const Client& client);
+	//void	removeOperator(const Client& client);
+	bool	removeOperator(const Client& client);
+	bool	removeMember(const Client& client);
 
 	void	sendMessageToChannelMembers(const Client& sender, const string& message, bool colon);
 	void	broadcastToChannel(const string& message);

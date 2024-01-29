@@ -132,6 +132,9 @@ void Executor::handle_o_mode(const bool add, const string& arg, Channel& target)
 		target.addOperator(c);
 	else
 		target.removeOperator(c);
+		// TO DO:
+		// if (target.removeOperator(c) == false)
+			// some error message
 }
 
 // Type C: If set and no parameter, ignore command.
