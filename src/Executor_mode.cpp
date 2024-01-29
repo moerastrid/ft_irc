@@ -1,4 +1,5 @@
 #include "Executor.hpp"
+#include <cstdlib>
 
 static bool is_mode(char c) {
 	string modes = "itkol";
@@ -75,6 +76,7 @@ static pair<string,string> get_current_modes(const Channel& ch) {
 	string args = "";
 	string password = ch.getPassword();
 	size_t userLimit = ch.getUserLimit();
+	std::cerr << "Userlimit: " << userLimit << endl;
 	if (!password.empty()) {
 		modes += 'k';
 		args += password;
@@ -144,12 +146,24 @@ void Executor::handle_l_mode(const bool add, const string& arg, Channel& target)
 		try {
 			num = std::stoi(arg);
 		} catch (const std::exception& e) {
+			cout << "ERR" << endl;
 			return ;
 		}
+		std::cerr << "num: " << num << endl;
 		target.setUserLimit(num);
 	}
 	else
 		target.takeInviteOnly();
+}
+
+
+string return_modestring(bool add, char mode) {
+	string res = "-";
+	if (add) {
+		res = "+";
+	}
+	res += mode;
+	return res;
 }
 
 #include <iostream>
@@ -162,56 +176,54 @@ string Executor::handle_modes(const Client& caller, const vector<tuple<bool, sig
 		bool add = std::get<0>(mode_cmd);
 		signed char mode = std::get<1>(mode_cmd);
 		string modearg = std::get<2>(mode_cmd);
-		string modestring;
+		cout << modearg << endl;
 
 		switch (mode)
 		{
 			case 'i':
-				cout << "i mode detected" << endl;
+				cout << "i mode detected: " << add << endl;
 				handle_i_mode(add, target);
-				modestring = "+i";
-				message += build_mode_reply(caller.getNickname(), target.getName(), modestring, modearg);
+				message += build_mode_reply(caller.getNickname(), target.getName(), return_modestring(add, mode), modearg);
 				break;
 			case 't':
-				cout << "t mode detected" << endl;
+				cout << "t mode detected: " << add << endl;
 				handle_t_mode(add, target);
-				modestring = "+t";
-				message += build_mode_reply(caller.getNickname(), target.getName(), modestring, modearg);
+				message += build_mode_reply(caller.getNickname(), target.getName(), return_modestring(add, mode), modearg);
 				break;
 			case 'k':
-				cout << "k mode detected" << endl;
-				modestring = "+k";
-				if (!add)
-					modestring = "-k";
+				cout << "k mode detected: " << add << endl;
 				if (modearg.empty() && add) {
 					modearg = target.getPassword();
-					message += build_mode_reply(caller.getNickname(), target.getName(), modestring, modearg);
+					message += build_mode_reply(caller.getNickname(), target.getName(), return_modestring(add, mode), modearg);
 					continue;
 				}
 				handle_k_mode(add, modearg, target);
-				message += build_mode_reply(caller.getNickname(), target.getName(), modestring, modearg);
+				message += build_mode_reply(caller.getNickname(), target.getName(), return_modestring(add, mode), modearg);
 				break;
 			case 'o':
-				cout << "o mode detected" << endl;
-				modestring = "+o";
-				message += build_mode_reply(caller.getNickname(), target.getName(), modestring, modearg);
+				cout << "o mode detected: " << add << endl;
+				message += build_mode_reply(caller.getNickname(), target.getName(), return_modestring(add, mode), modearg);
 				handle_o_mode(add, modearg, target); //#TODO check modearg for existence of user.
 				break;
 			case 'l':
-				cout << "l mode detected" << endl;
-				modestring = "+l";
-				message += build_mode_reply(caller.getNickname(), target.getName(), modestring, modearg);
-				handle_l_mode(add, modearg, target);
+				cout << "l mode detected: " << add << endl;
+				message += build_mode_reply(caller.getNickname(), target.getName(), return_modestring(add, mode), modearg);
+				try {
+					handle_l_mode(add, modearg, target);
+				} catch (const std::exception& e) {
+					//#TODO give invalid argument message here?
+					//:servername 461 nickname mode :Invalid mode parameter
+				}
 				break;
 			case 0:
-				cout << "0 mode detected" << endl;
+				cout << "0 mode detected: " << add << endl;
 				message += build_reply(ERR_UMODEUNKNOWNFLAG, caller.getNickname(), target.getName(), "Unknown MODE flag");
 				break;
 			case -1: //ignored
-				cout << "-1 mode detected" << endl;
+				cout << "-1 mode detected: " << add << endl;
 				break;
 			default:
-				cout << "default mode detected" << endl;
+				cout << "default mode detected: " << add << endl;
 				message += build_reply(ERR_UMODEUNKNOWNFLAG, caller.getNickname(), target.getName(), "Unknown MODE flag");
 				break;
 		}
