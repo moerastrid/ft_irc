@@ -576,14 +576,14 @@ string Executor::run_KICK(const vector<string>& args, Client& caller) {
 		return new_build_reply(getHostname(), ERR_NOSUCHCHANNEL, caller.getNickname(), channelname, "No such channel");
 	}
 	if (!ch.hasMember(caller)) {
-		return new_build_reply(getHostname(), ERR_NOTONCHANNEL, ":" + caller.getNickname(), channelname, "You're not in that channel");
+		return new_build_reply(getHostname(), ERR_NOTONCHANNEL, channelname, "You're not in that channel");
 	}
 
 	vector<string>::const_iterator reason_start = find_if(args.begin(), args.end(), find_reason);
 
 	for (vector<string>::const_iterator target_it = next(args.begin()); target_it != reason_start; target_it++) {
 		if (!ch.hasOperator(caller)) {
-			message += new_build_reply(getHostname(), ERR_CHANOPRIVSNEEDED, ":" + caller.getNickname(), channelname, "You're not the channel operator");
+			message += new_build_reply(getHostname(), ERR_CHANOPRIVSNEEDED, channelname, "You're not the channel operator");
 			continue;
 		}
 		Client& victim = this->getClientByNick(*target_it);
@@ -592,8 +592,7 @@ string Executor::run_KICK(const vector<string>& args, Client& caller) {
 			continue;
 		}
 		else if (!ch.hasMember(victim)) {
-			message += build_channel_reply(ERR_USERNOTINCHANNEL, caller.getNickname(), *target_it, channelname, "Cannot kick user from a channel that they have not joined");
-			//message += build_channel_reply(ERR_USERNOTINCHANNEL, caller.getNickname(), "Cannot kick user from a channel that they have not joined");
+			message += new_build_reply(getHostname(), ERR_USERNOTINCHANNEL, channelname, "They aren't on that channel");
 			continue;
 		}
 		cout << "reason_start " << *reason_start << "\n";
@@ -607,10 +606,10 @@ string Executor::run_KICK(const vector<string>& args, Client& caller) {
 		} else {
 			reason = *reason_start;
 			//ch.sendMessageToChannelMembers(caller, ": hoi\n", false);
-		}
+		}		
+		//message += ":" + caller.getFullName() + " KICK " + channelname + " " + *target_it + " " + reason + "\r\n";
+		ch.broadcastToChannel( ":" + caller.getFullName() + " KICK " + channelname + " " + *target_it + " " + reason + "\r\n");
 		ch.removeMember(victim);
-		message += ":" + caller.getFullName() + " KICK " + channelname + " " + *target_it + " " + reason + "\r\n";
-		//ch.broadcastToChannel( ":" + caller.getFullName() + " KICK " + channelname + " " + *target_it + " " + reason + "\r\n");
 	}
 	if (ch.empty()) {
 		this->e.getChannels().erase(this->e.getItToChannelByName(ch.getName()));
@@ -707,9 +706,7 @@ string Executor::run_INVITE(const vector<string>& args, Client& caller) {
 	if (target == Client::nullclient)
 		return new_build_reply(getHostname(), ERR_NOSUCHNICK, caller.getNickname(), target_client, "No such nick");
 	if (channel.hasMember(target))
-		return new_build_reply(getHostname(), ERR_USERONCHANNEL, caller.getNickname(), target_client + " is already on channel " + target_channel);
-		// official :		-> doesn't give expected output?
-		//return new_build_reply(getHostname(), ERR_USERONCHANNEL, caller.getNickname(), target_client, target_channel, "is already on channel");
+		return new_build_reply(getHostname(), ERR_USERONCHANNEL, target_channel, target_client, "is already on channel");
 
 	channel.addInvited(target);
 	target.addSendData(":" + caller.getFullName() + " INVITE " + target.getNickname() + " " + target_channel + "\r\n");
