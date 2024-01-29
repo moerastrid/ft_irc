@@ -104,7 +104,7 @@ pair<string,string> Channel::getModes() const {
 	else
 		unset += "k";
 
-	if (this->userLimit == 0) {
+	if (this->userLimit != 0) {
 		set += "l";
 		modeargs += to_string(this->getUserLimit());
 	}
