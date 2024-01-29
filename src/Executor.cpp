@@ -541,9 +541,10 @@ string Executor::run_JOIN(const vector<string>& args, Client& caller) {
 				continue;
 			}
 
-			message += new_build_reply(getHostname(), RPL_TOPIC, caller.getNickname(), channelname, ch.getTopic()); //if succesfull, reply with channel topic.
 			ch.broadcastToChannel(":" + caller.getFullName() + " JOIN :" + channelname + "\r\n");
 			ch.addMember(caller);
+
+			message += new_build_reply(getHostname(), RPL_TOPIC, caller.getNickname(), channelname, ch.getTopic()); //if succesfull, reply with channel topic.
 		}
 	}
 	return message;
@@ -580,34 +581,36 @@ string Executor::run_KICK(const vector<string>& args, Client& caller) {
 
 	vector<string>::const_iterator reason_start = find_if(args.begin(), args.end(), find_reason);
 
-	for (vector<string>::const_iterator name_it = next(args.begin()); name_it != reason_start; name_it++) {
+	for (vector<string>::const_iterator target_it = next(args.begin()); target_it != reason_start; target_it++) {
 		if (!ch.hasOperator(caller)) {
 			message += new_build_reply(getHostname(), ERR_CHANOPRIVSNEEDED, ":" + caller.getNickname(), channelname, "You're not the channel operator");
 			continue;
 		}
-		Client& victim = this->getClientByNick(*name_it);
+		Client& victim = this->getClientByNick(*target_it);
 		if (victim == Client::nullclient) {
-			message += new_build_reply(getHostname(), ERR_NOSUCHNICK, caller.getNickname(), *name_it, "No such nickname");
+			message += new_build_reply(getHostname(), ERR_NOSUCHNICK, caller.getNickname(), *target_it, "No such nickname");
 			continue;
 		}
 		else if (!ch.hasMember(victim)) {
-			message += build_channel_reply(ERR_USERNOTINCHANNEL, caller.getNickname(), *name_it, channelname, "Cannot kick user from a channel that they have not joined");
+			message += build_channel_reply(ERR_USERNOTINCHANNEL, caller.getNickname(), *target_it, channelname, "Cannot kick user from a channel that they have not joined");
+			//message += build_channel_reply(ERR_USERNOTINCHANNEL, caller.getNickname(), "Cannot kick user from a channel that they have not joined");
 			continue;
 		}
-		cout << "reason_start +" << *reason_start << "+\n";
+		cout << "reason_start " << *reason_start << "\n";
 
-		string reason = "Default kick reason";
+		string reason;
 		if ((*reason_start).compare(":") == 0) {
-			reason = *reason_start;
+			reason = ":Default kick reason";
 			//ch.broadcastToChannel(":" + fullName + " QUIT " + reason + "\r\n");
 			//ch.kickMemberMessage
 			//ch.sendMessageToChannelMembers(caller, ": default kick reason\n", false);
-		} //else {
+		} else {
+			reason = *reason_start;
 			//ch.sendMessageToChannelMembers(caller, ": hoi\n", false);
-		//}
+		}
 		ch.removeMember(victim);
-		message += caller.getFullName() + " KICK " + channelname + " " + *name_it + " " + reason + "\r\n";
-		ch.broadcastToChannel(caller.getFullName() + " KICK " + channelname + " " + *name_it + " " + reason + "\r\n");
+		message += ":" + caller.getFullName() + " KICK " + channelname + " " + *target_it + " " + reason + "\r\n";
+		//ch.broadcastToChannel( ":" + caller.getFullName() + " KICK " + channelname + " " + *target_it + " " + reason + "\r\n");
 	}
 	if (ch.empty()) {
 		this->e.getChannels().erase(this->e.getItToChannelByName(ch.getName()));
