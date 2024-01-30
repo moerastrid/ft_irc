@@ -78,7 +78,8 @@ static bool check_privileges(const Client& caller, const Channel& target, const 
 	return res;
 }
 
-static pair<string,string> get_current_modes(const Channel& ch) {
+static pair<string,string> 
+get_current_modes(const Channel& ch) {
 	string modes = "+";
 	string args = "";
 	string password = ch.getPassword();
@@ -293,14 +294,14 @@ string Executor::run_MODE(const vector<string>& args, Client& caller) {
 
 	if (!target_is_channel) {
 		if (target_client == Client::nullclient)
-			return new_build_reply(getHostname(), ERR_NOSUCHNICK, caller.getNickname(), target, "No such nick/channel");
+			return new_build_reply(getHostname(), ERR_NOSUCHNICK, target, "No such nick/channel");
 		else if (caller.getNickname().compare(target) != 0)
-			return this->new_build_reply(getHostname(), ERR_USERSDONTMATCH, caller.getNickname(), target, "Cant change mode for other users");
+			return this->new_build_reply(getHostname(), ERR_USERSDONTMATCH, target, "Cant change mode for other users");
 		else
 			return "";
 	}
 	if (channel == Channel::nullchan) {
-		return new_build_reply(getHostname(), ERR_NOSUCHCHANNEL, caller.getNickname(), target, "No such channel");
+		return new_build_reply(getHostname(), ERR_NOSUCHCHANNEL, target, "No such channel");
 	}
 	if (args.size() == 1) { // No modestring
 		pair<string, string> replymodes = channel.getModes();

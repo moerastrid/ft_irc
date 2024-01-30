@@ -222,7 +222,7 @@ int	Server::setPoll() {
 	vector<struct pollfd>	pollFds;
 
 	pollFds.push_back(sockfd);
-	for (const auto& client : this->e.getClients()) {
+	for (const Client& client : this->e.getClients()) {
 		pollFds.push_back(client.getPFD());
 	}
 	int ret = poll(pollFds.data(), pollFds.size(), -1);

@@ -475,7 +475,7 @@ string Executor::run_NOTICE(const vector<string>& args, Client& caller) {
 // string Executor::run_WHOIS(const vector<string>& args, Client& caller) {
 // 	if (args.empty() || args[0].empty()) { // No args queries the caller.
 // 		string userinfo = caller.getUsername() + " " + caller.getHostname() + " * :" + caller.getRealname();
-// 		return build_WHOIS_reply(RPL_WHOISUSER, caller.getNickname(), caller.getNickname(), userinfo);
+// 		return new_build_reply(RPL_WHOISUSER, caller.getNickname(), caller.getNickname(), userinfo);
 // 	}
 
 // 	string message;
@@ -486,7 +486,7 @@ string Executor::run_NOTICE(const vector<string>& args, Client& caller) {
 // 			message += new_build_reply(getHostname(), ERR_NOSUCHNICK, caller.getNickname(), *it, "No such nickname");
 // 		} else {
 // 			string userinfo = requestee.getUsername() + " " + requestee.getHostname() + " * :" + requestee.getRealname(); //#TODO fix servername? (servername == *)
-// 			message += build_WHOIS_reply(RPL_WHOISUSER, caller.getNickname(), *it, userinfo);
+// 			message += new_build_reply(RPL_WHOISUSER, caller.getNickname(), *it, userinfo);
 // 		}
 // 	}
 
@@ -630,8 +630,6 @@ string Executor::run_KICK(const vector<string>& args, Client& caller) {
 			message += new_build_reply(getHostname(), ERR_USERNOTINCHANNEL, channelname, "They aren't on that channel");
 			continue;
 		}
-		cout << "reason_start " << *reason_start << "\n";
-
 		string reason;
 		if (reason_start == args.end() || (*reason_start).compare(":") == 0) {
 			reason = ":" + *target_it;
@@ -644,7 +642,6 @@ string Executor::run_KICK(const vector<string>& args, Client& caller) {
 	}
 	if (ch.empty()) {
 		this->e.getChannels().erase(this->e.getItToChannelByName(ch.getName()));
-		// this->e.deleteChannel(ch);
 	}
 	return message;
 }
@@ -722,7 +719,9 @@ string Executor::run_PART(const vector<string>& args, Client& caller) {
  */
 string Executor::run_INVITE(const vector<string>& args, Client& caller) {
 	string target_client = args[0];
-	string target_channel = args[1];
+	string target_channel = "";
+	if (args.size() > 0)
+		target_channel = args[1];
 
 	Channel& channel = this->getChannelByName(target_channel);
 	if (channel == Channel::nullchan) {
@@ -763,14 +762,15 @@ string Executor::run_INVITE(const vector<string>& args, Client& caller) {
  *
  * Not handled:
  */
+// #TODO check segfault on reason?!
 string Executor::run_TOPIC(const vector<string>& args, Client& caller) {
 	string	target_channel;
 	string	newtopic = "";
 
 	target_channel = args[0];
 	
-	if (args.size() > 0)
-		newtopic = args[1]; 
+	if (args.size() > 1)
+		newtopic = args[1];
 
 	cout << "target channel " << target_channel << "\r\n";
 

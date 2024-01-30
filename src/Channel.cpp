@@ -83,35 +83,21 @@ size_t Channel::getUserLimit() const {
 // modes: i t k l (o not shown here)
 pair<string,string> Channel::getModes() const {
 	string set = "+";
-	string unset = "-";
-
 	string modeargs;
 
 	if (this->isInviteOnly())
 		set += "i";
-	else
-		unset += "i";
-
 	if (this->hasTopicRestricted())
 		set += "t";
-	else
-		unset += "t";
-
 	if (this->password.size() > 0) {
 		set += "k";
 		modeargs += this->getPassword();
 	}
-	else
-		unset += "k";
-
 	if (this->userLimit != 0) {
 		set += "l";
 		modeargs += to_string(this->getUserLimit());
 	}
-	else
-		unset += "l";
-
-	pair<string,string> p = std::make_pair(set + unset, modeargs);
+	pair<string,string> p = std::make_pair(set, modeargs);
 	return p;
 }
 
