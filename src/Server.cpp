@@ -98,18 +98,21 @@ void	Server::addConnection() {
 
 void	Server::closeConnection(const int fd) {
 	Msg("Connection closed on " + std::to_string(fd), "INFO");
-	close(fd);
+	//close(fd);
 
 	std::deque<Channel>& channels = this->e.getChannels();
 	std::deque<Client>::iterator client = this->e.getItToClientByFD(fd);
 	if (!channels.empty()) {
 		for (Channel& channel : channels) {
-			if (channel.hasMember(*client))
+			if (channel.hasMember(*client)) {
 				channel.removeMember(*client);
+				channel.sendMessageToOtherMembers(*client, ":" + (*client).getFullName() + " QUIT :lost connection\r\n");
+			}
 			if (channel.empty())
 				this->e.getChannels().erase(this->e.getItToChannelByName(channel.getName()));
 		}
 	}
+	close(fd);
 	this->e.getClients().erase(client);
 }
 
