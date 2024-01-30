@@ -136,6 +136,9 @@ int Executor::run(const Command& cmd, Client& caller) {
 	string message;
 	string command = cmd.getCommand();
 	mbrFuncPtr ptr;
+
+	if (caller.isExpelled() == true)
+		return false;
 	
 	// Handle unknown commands
 	try {
@@ -221,7 +224,7 @@ string Executor::run_PASS(const vector<string>& args, Client& caller) {
 	caller.setPassword(newpassword);
 
 	if (e.getPass().compare(newpassword) != 0) {
-		// #TODO close connection? and send ERROR
+		caller.expell();
 		return new_build_reply(getHostname(), ERR_PASSWDMISMATCH, caller.getNickname(), "Password incorrect"); //# TODO FIX MESSAGE FORMAT
 	}
 
@@ -550,7 +553,7 @@ string Executor::run_JOIN(const vector<string>& args, Client& caller) {
 	return message;
 }
 
-// Operator client wants to kick a user from a channel. #TODO check that the caller has the correct mode.
+
 /*
  * Incoming message: KICK [<channel>] <nick>[,<nick>] [<reason>]
  * Parameters: The channel and the nicknames, separated by a comma, to kick from the channel and the reason thereof; if no channel is given, the active channel will be used.
@@ -599,15 +602,10 @@ string Executor::run_KICK(const vector<string>& args, Client& caller) {
 
 		string reason;
 		if ((*reason_start).compare(":") == 0) {
-			reason = ":Default kick reason";
-			//ch.broadcastToChannel(":" + fullName + " QUIT " + reason + "\r\n");
-			//ch.kickMemberMessage
-			//ch.sendMessageToChannelMembers(caller, ": default kick reason\n", false);
+			reason = ":" + *target_it;
 		} else {
 			reason = *reason_start;
-			//ch.sendMessageToChannelMembers(caller, ": hoi\n", false);
 		}		
-		//message += ":" + caller.getFullName() + " KICK " + channelname + " " + *target_it + " " + reason + "\r\n";
 		ch.broadcastToChannel( ":" + caller.getFullName() + " KICK " + channelname + " " + *target_it + " " + reason + "\r\n");
 		ch.removeMember(victim);
 		victim.addSendData(":" + getHostname() + " You were kicked from " + channelname + " by " + caller.getNickname() + " " + reason + "\r\n");
