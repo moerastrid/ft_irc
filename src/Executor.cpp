@@ -105,7 +105,7 @@ Executor::Executor(Env& e) : e(e) {
 	this->argCount["MODE"] 		= {1, -1};
 	this->argCount["PING"] 		= {1, 1};
 	this->argCount["PRIVMSG"] 	= {2, -1};
-	this->argCount["NOTICE"]	= {2, -1}; // TODO  : wat is dit? Thibauld vragen om uitleg
+	this->argCount["NOTICE"]	= {2, -1};
 	// this->argCount["WHOIS"] 	= {0, -1};
 	this->argCount["JOIN"] 		= {1, 2};
 	this->argCount["KICK"] 		= {1, -1};
@@ -224,7 +224,7 @@ string Executor::run_PASS(const vector<string>& args, Client& caller) {
 
 	if (e.getPass().compare(newpassword) != 0) {
 		caller.expell();
-		return new_build_reply(getHostname(), ERR_PASSWDMISMATCH, caller.getNickname(), "Password incorrect"); //# TODO FIX MESSAGE FORMAT
+		return new_build_reply(getHostname(), ERR_PASSWDMISMATCH, caller.getNickname(), "Password incorrect");
 	}
 
 	return ""; // build_reply(NOTICE, "PASS", "PASS", "Remember to set your username and nickname with USER and PASS.");
@@ -633,7 +633,7 @@ string Executor::run_KICK(const vector<string>& args, Client& caller) {
 		cout << "reason_start " << *reason_start << "\n";
 
 		string reason;
-		if ((*reason_start).compare(":") == 0) {
+		if (reason_start == args.end() || (*reason_start).compare(":") == 0) {
 			reason = ":" + *target_it;
 		} else {
 			reason = *reason_start;

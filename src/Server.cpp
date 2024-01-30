@@ -1,12 +1,5 @@
 #include "Server.hpp"
 
-/* 
-TO DO (astrid)
-	-	try-catch blokken maken voor server setup (& die koppelen aan main?)
-*/
-
-
-
 // #TODO delete
 void printHex(const std::string& str) {
     for (char c : str) {
