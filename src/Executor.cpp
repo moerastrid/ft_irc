@@ -89,6 +89,7 @@ Executor::Executor(Env& e) : e(e) {
 	this->funcMap["MODE"] 		= &Executor::run_MODE;
 	this->funcMap["PING"] 		= &Executor::run_PING;
 	this->funcMap["PRIVMSG"] 	= &Executor::run_PRIVMSG;
+	this->funcMap["NOTICE"] 	= &Executor::run_NOTICE;
 	this->funcMap["WHOIS"] 		= &Executor::run_WHOIS;
 	this->funcMap["JOIN"] 		= &Executor::run_JOIN;
 	this->funcMap["KICK"] 		= &Executor::run_KICK;
@@ -104,6 +105,7 @@ Executor::Executor(Env& e) : e(e) {
 	this->argCount["MODE"] 		= {1, -1};
 	this->argCount["PING"] 		= {1, 1};
 	this->argCount["PRIVMSG"] 	= {2, -1};
+	this->argCount["NOTICE"]	= {2, -1}; // TODO  : wat is dit? Thibauld vragen om uitleg
 	this->argCount["WHOIS"] 	= {0, -1};
 	this->argCount["JOIN"] 		= {1, 2};
 	this->argCount["KICK"] 		= {1, -1};
