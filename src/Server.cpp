@@ -195,10 +195,6 @@ bool	Server::receivefromClient(Client &c) {
 
 	int nbytes = recv(c.getFD(), buf, sizeof(buf) - 1, MSG_DONTWAIT);
 	if (nbytes < 0) {
-		if (errno == EAGAIN)
-			Msg("EAGAIN!", "WARNING");
-		if (errno == EWOULDBLOCK)
-			Msg("EWOULDBLOCK!", "WARNING");
 		Msg("error in receiving data", "ERROR"); 
 		return (false);
 	}
@@ -219,10 +215,6 @@ bool	Server::sendtoClient(Client &c) {
 	}
 	int nbytes = send(c.getFD(), dataToSend.c_str(), dataToSend.size(), 0);
 	if (nbytes <= 0) {
-		if (errno == EAGAIN)
-			Msg("EAGAIN!", "WARNING");
-		if (errno == EWOULDBLOCK)
-			Msg("EWOULDBLOCK!", "WARNING");
 		Msg("error in sending data", "ERROR");
 		return (false);
 	}

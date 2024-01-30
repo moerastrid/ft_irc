@@ -154,16 +154,6 @@ void Client::setPassword(const string& password) {
 	this->password = password;
 }
 
-// Send a privmsg to the client.
-// If colon is true, add a colon before the actual message part.
-void Client::sendPrivMsg(const Client& sender, const string& message, bool colon = false) {
-	string prefix = ":" + sender.getFullName() + " PRIVMSG " + this->getNickname();
-	string colon_str = "";
-	if (colon)
-		colon_str = ":";
-	this->addSendData(prefix + " " + colon_str + message);
-}
-
 void Client::addSendData(const string& message) {
 	if (!message.empty()) {
 		addEvent(POLLOUT);

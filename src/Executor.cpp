@@ -397,6 +397,7 @@ string Executor::run_PRIVMSG(const vector<string>& args, Client& caller) {
 			data << " ";
 	}
 	data << "\r\n";
+	string message = ":" + caller.getFullName() + " PRIVMSG " + target + " " + data.str();
 
 	if (is_channel(target)) {
 		Channel& target_channel = this->getChannelByName(target);
@@ -405,7 +406,7 @@ string Executor::run_PRIVMSG(const vector<string>& args, Client& caller) {
 		if (!target_channel.hasMember(caller))
 			return new_build_reply(getHostname(), ERR_NOTONCHANNEL, caller.getNickname(), target, "You're not a member of that channel.");
 
-		target_channel.sendMessageToChannelMembers(caller, data.str(), false);
+		target_channel.sendMessageToOtherMembers(caller, message);
 		return "";
 	}
 
@@ -414,7 +415,39 @@ string Executor::run_PRIVMSG(const vector<string>& args, Client& caller) {
 		return new_build_reply(getHostname(), ERR_NOSUCHNICK, caller.getNickname(), target, "No such recipient");
 	}
 
-	recipient.sendPrivMsg(caller, data.str(), false);
+	recipient.addSendData(message);
+	return "";
+}
+
+string Executor::run_NOTICE(const vector<string>& args, Client& caller) {
+	string target = args[0];
+
+	stringstream data;
+	for (vector<string>::const_iterator it = next(args.begin()); it != args.end(); it++) {
+		data << *it;
+		if (next(it) != args.end())
+			data << " ";
+	}
+	data << "\r\n";
+	string message = ":" + caller.getFullName() + " NOTICE " + target + " " + data.str();
+
+	if (is_channel(target)) {
+		Channel& target_channel = this->getChannelByName(target);
+		if (target_channel == Channel::nullchan)
+			return "";
+		if (!target_channel.hasMember(caller))
+			return "";
+
+		target_channel.sendMessageToOtherMembers(caller, message);
+		return "";
+	}
+
+	Client& recipient = this->getClientByNick(target);
+	if (recipient == Client::nullclient) {
+		return "";
+	}
+
+	recipient.addSendData(message);
 	return "";
 }
 

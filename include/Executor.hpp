@@ -104,6 +104,7 @@ class Executor {
 		string				run_MODE(const vector<string>& args, Client& caller);
 		string				run_PING(const vector<string>& args, Client& caller);
 		string				run_PRIVMSG(const vector<string>& args, Client& caller);
+		string				run_NOTICE(const vector<string>& args, Client& caller);
 		string				run_WHOIS(const vector<string>& args, Client& caller);
 		string				run_JOIN(const vector<string>& args, Client& caller);
 		string				run_KICK(const vector<string>& args, Client& caller);

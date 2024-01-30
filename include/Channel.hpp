@@ -84,7 +84,7 @@ public:
 	bool	removeMember(const Client& client);
 	bool	removeInvited(const Client& client);
 
-	void	sendMessageToChannelMembers(const Client& sender, const string& message, bool colon);
+	void	sendMessageToOtherMembers(const Client& sender, const string& message);
 	void	broadcastToChannel(const string& message);
 };
 

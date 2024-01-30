@@ -68,8 +68,6 @@ public:
 
 	void					addSendData(const string& message);
 	void					addRecvData(const string& message);
-	void					sendPrivMsg(const Client& sender, const string& message, bool colon);
-
 
 	// Takers (getters, but these also modifiy the class by deleting what is taken)
 	const string			takeSendData();

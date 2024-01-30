@@ -301,21 +301,15 @@ void	Channel::broadcastToChannel(const string& message) {
 
 
 // old ?
-void	Channel::sendMessageToChannelMembers(const Client& sender, const string& message, bool colon) {
+void	Channel::sendMessageToOtherMembers(const Client& sender, const string& message) {
 
 	vector<Client *> channel_members = this->getMembers();
 	if (channel_members.empty())
 		return ;
 
-	string prefix = ":" + sender.getFullName() + " PRIVMSG " + this->getName();
-	string colon_str = "";
-	if (colon)
-		colon_str = ":";
-	string reply = prefix + " " + colon_str + message;
-
 	for (Client * member : channel_members) {
 		if (member != &sender)
-			member->addSendData(reply);
+			member->addSendData(message);
 	}
 }
 
