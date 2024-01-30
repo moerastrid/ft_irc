@@ -90,7 +90,7 @@ Executor::Executor(Env& e) : e(e) {
 	this->funcMap["PING"] 		= &Executor::run_PING;
 	this->funcMap["PRIVMSG"] 	= &Executor::run_PRIVMSG;
 	this->funcMap["NOTICE"] 	= &Executor::run_NOTICE;
-	this->funcMap["WHOIS"] 		= &Executor::run_WHOIS;
+	// this->funcMap["WHOIS"] 		= &Executor::run_WHOIS;
 	this->funcMap["JOIN"] 		= &Executor::run_JOIN;
 	this->funcMap["KICK"] 		= &Executor::run_KICK;
 	this->funcMap["PART"] 		= &Executor::run_PART;
@@ -106,7 +106,7 @@ Executor::Executor(Env& e) : e(e) {
 	this->argCount["PING"] 		= {1, 1};
 	this->argCount["PRIVMSG"] 	= {2, -1};
 	this->argCount["NOTICE"]	= {2, -1}; // TODO  : wat is dit? Thibauld vragen om uitleg
-	this->argCount["WHOIS"] 	= {0, -1};
+	// this->argCount["WHOIS"] 	= {0, -1};
 	this->argCount["JOIN"] 		= {1, 2};
 	this->argCount["KICK"] 		= {1, -1};
 	this->argCount["PART"] 		= {1, -1};
@@ -200,9 +200,6 @@ int Executor::run(const Command& cmd, Client& caller) {
  */
 string Executor::run_CAP([[maybe_unused]]const vector<string>& args, [[maybe_unused]]Client& caller) {
 	return "";
-	// return "CAP NAK :-\n";
-	return "CAP * LS :-\n"; // Correct reply for the correct case, but if the client starts doing weird things, capability negotiation does not follow protocol.
-	//We probably just want to ignore CAP completely. :(
 }
 
 /*
@@ -475,26 +472,26 @@ string Executor::run_NOTICE(const vector<string>& args, Client& caller) {
  * ERR_NOTOPLEVEL		(412 - 414 are returned by PRIVMSG to indicate that the message wasn't delivered for some reason. ERR_NOTOPLEVEL and ERR_WILDTOPLEVEL are errors that are returned when an invalid use of "PRIVMSG $<server>" or "PRIVMSG #<host>" is attempted.)
  * ERR_WILDTOPLEVEL 	(412 - 414 are returned by PRIVMSG to indicate that the message wasn't delivered for some reason. ERR_NOTOPLEVEL and ERR_WILDTOPLEVEL are errors that are returned when an invalid use of "PRIVMSG $<server>" or "PRIVMSG #<host>" is attempted.)
  */
-string Executor::run_WHOIS(const vector<string>& args, Client& caller) {
-	if (args.empty() || args[0].empty()) { // No args queries the caller.
-		string userinfo = caller.getUsername() + " " + caller.getHostname() + " * :" + caller.getRealname();
-		return build_WHOIS_reply(RPL_WHOISUSER, caller.getNickname(), caller.getNickname(), userinfo);
-	}
+// string Executor::run_WHOIS(const vector<string>& args, Client& caller) {
+// 	if (args.empty() || args[0].empty()) { // No args queries the caller.
+// 		string userinfo = caller.getUsername() + " " + caller.getHostname() + " * :" + caller.getRealname();
+// 		return build_WHOIS_reply(RPL_WHOISUSER, caller.getNickname(), caller.getNickname(), userinfo);
+// 	}
 
-	string message;
+// 	string message;
 
-	for (vector<string>::const_iterator it = args.begin(); it != args.end(); it++) {
-		Client& requestee = this->getClientByNick(*it);
-		if (requestee == Client::nullclient) {
-			message += new_build_reply(getHostname(), ERR_NOSUCHNICK, caller.getNickname(), *it, "No such nickname");
-		} else {
-			string userinfo = requestee.getUsername() + " " + requestee.getHostname() + " * :" + requestee.getRealname(); //#TODO fix servername? (servername == *)
-			message += build_WHOIS_reply(RPL_WHOISUSER, caller.getNickname(), *it, userinfo);
-		}
-	}
+// 	for (vector<string>::const_iterator it = args.begin(); it != args.end(); it++) {
+// 		Client& requestee = this->getClientByNick(*it);
+// 		if (requestee == Client::nullclient) {
+// 			message += new_build_reply(getHostname(), ERR_NOSUCHNICK, caller.getNickname(), *it, "No such nickname");
+// 		} else {
+// 			string userinfo = requestee.getUsername() + " " + requestee.getHostname() + " * :" + requestee.getRealname(); //#TODO fix servername? (servername == *)
+// 			message += build_WHOIS_reply(RPL_WHOISUSER, caller.getNickname(), *it, userinfo);
+// 		}
+// 	}
 
-	return message;
-}
+// 	return message;
+// }
 
 /*
  * Incoming message: JOIN [<channel> | <password>]+
@@ -819,7 +816,7 @@ string Executor::run_TOPIC(const vector<string>& args, Client& caller) {
  *
  * Possible replies: NONE
  */
-string Executor::run_QUIT([[maybe_unused]]const vector<string>& args,[[maybe_unused]] Client& caller) {
+string Executor::run_QUIT(const vector<string>& args, Client& caller) {
 	deque<Channel>& channels = this->getChannels();
 	
 	string	fullName = caller.getFullName();
@@ -921,49 +918,36 @@ string Executor::new_build_reply(const string& prefix, int response_code, const 
 }
 
 
-string Executor::build_reply(int response_code, string callername, string target, string message) {
-	if (response_code == NOTICE) {
-		return build_notice_reply(target, callername, message);
-	}
+// string Executor::build_reply(int response_code, string callername, string target, string message) {
+// 	if (response_code == NOTICE) {
+// 		return build_notice_reply(target, callername, message);
+// 	}
 
-	Client c = getClientByNick(callername);
-	if (c == Client::nullclient) {
-		return "SOME ERROR HERE\n";
-	}
+// 	Client& c = getClientByNick(callername);
+// 	if (c == Client::nullclient) {
+// 		return "SOME ERROR HERE\n";
+// 	}
 
-	stringstream response;
-	response << ":" << c.getFullName() << " ";
-	response << setw(3) << setfill('0') << response_code; // Ensures response_code is shown as a 3-digit number by adding leading zeroes if needed.
+// 	stringstream response;
+// 	response << ":" << c.getFullName() << " ";
+// 	response << setw(3) << setfill('0') << response_code; // Ensures response_code is shown as a 3-digit number by adding leading zeroes if needed.
 
-	return response.str() + " " + callername + " " + target + " :" + message + "\r\n";
-}
+// 	return response.str() + " " + callername + " " + target + " :" + message + "\r\n";
+// }
 
-string Executor::build_notice_reply(string callername, string target, string message) {
-	return "NOTICE " + callername + " " + target + " :" + message + "\r\n";
-}
+// string Executor::build_notice_reply(string callername, string target, string message) {
+// 	return "NOTICE " + callername + " " + target + " :" + message + "\r\n";
+// }
 
-string Executor::build_channel_reply(int response_code, string callername, string target, string channel, string message) {
-	if (response_code == NOTICE) {
-		return build_notice_reply(target, callername, message);
-	}
-	stringstream response;
-	response << setw(3) << setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
+// string Executor::build_channel_reply(int response_code, string callername, string target, string channel, string message) {
+// 	if (response_code == NOTICE) {
+// 		return build_notice_reply(target, callername, message);
+// 	}
+// 	stringstream response;
+// 	response << setw(3) << setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
 
-	return response.str() + " " + callername + " " + target + " " + channel + " :" + message + "\r\n";
-}
-
-string Executor::build_WHOIS_reply(int response_code, string callername, string target, string userinfo) {
-	stringstream response;
-	// Client& target_client = getClientByNick(target);
-	// if (target_client == Client::nullclient) {
-	// 	return "CLIENT NOT FOUND ERROR\n"; // #TODO put some not found error here.
-	// }
-
-	// response << target_client.getFullName() << " " << setw(3) << setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
-	response << setw(3) << setfill('0') << response_code; // Ensures response_code is shows as a 3-digit number by adding leading zeroes if needed.
-
-	return response.str() + " " + callername + " " + target + " " + userinfo + "\r\n";
-}
+// 	return response.str() + " " + callername + " " + target + " " + channel + " :" + message + "\r\n";
+// }
 
 std::ostream& operator<<(std::ostream& os, const Env& e) {
 	os << "env(" << e.getHostname() << ", " << e.getIP() << ", "<< e.getPort() << ")";

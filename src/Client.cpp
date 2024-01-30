@@ -1,6 +1,7 @@
 #include "Client.hpp"
 #include "Msg.hpp"
 
+
 Client::Client(int fd) {
 	this->pfd.fd = fd;
 	this->pfd.events = POLLIN|POLLHUP|POLLRDHUP;
@@ -20,7 +21,7 @@ Client::Client(const Client& other) {
 	this->realname = other.realname;
 	this->password = other.password;
 	this->pfd = other.pfd;
-	Msg("client - copy costructor", "CLASS");
+	Msg("client - copy constructor", "CLASS");
 }
 
 Client& Client::operator=(const Client& other) {

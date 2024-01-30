@@ -133,10 +133,10 @@ class Executor {
 		string				new_build_reply(const string& prefix, int response_code, const string& caller, const string& target, const string& message);
 		string				new_build_reply(const string& prefix, int response_code, const string& caller, const string& message);
 		
-		string				build_reply(int response_code, string callername, string target, string message);
-		string				build_notice_reply(string callername, string target, string message);
-		string				build_channel_reply(int response_code, string callername, string target, string channel, string message);
-		string				build_WHOIS_reply(int response_code, string callername, string target, string userinfo);
+		// string				build_reply(int response_code, string callername, string target, string message);
+		// string				build_notice_reply(string callername, string target, string message);
+		// string				build_channel_reply(int response_code, string callername, string target, string channel, string message);
+		// string				build_WHOIS_reply(int response_code, string callername, string target, string userinfo);
 		string				build_mode_reply(string callername, string target_channel, string modestring, string modeargs);
 
 		Client&				getClientByNick(const string nick);

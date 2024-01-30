@@ -9,10 +9,17 @@ static bool is_mode(char c) {
 	return false;
 }
 
-static bool hasArg(char mode) {
-	string valid = "kol";
-	if (valid.find(mode) != string::npos)
-		return true;
+static bool hasArg(char mode, bool add) {
+	string validPos = "kol";
+	string validNeg = "o";
+	if (add) {
+		if (validPos.find(mode) != string::npos)
+			return true;
+	}
+	else {
+		if (validNeg.find(mode) != string::npos)
+			return true;
+	}
 	return false;
 }
 
@@ -37,7 +44,7 @@ static vector<tuple<bool, signed char, string>> parse_modestring(string modestri
 		}
 		if (is_mode(el)) {
 			string arg = "";
-			if (hasArg(el) && add) {
+			if (hasArg(el, add)) {
 				try {
 					arg = modeargs.at(argcounter++);
 				} catch (std::out_of_range& e) {
@@ -47,7 +54,7 @@ static vector<tuple<bool, signed char, string>> parse_modestring(string modestri
 			}
 			modes.push_back(std::tuple<bool, signed char, string>(add, el, arg));
 		} else {
-			modes.push_back(std::tuple<bool, signed char, string>(add, 0, "")); // UNKNOWN MODE
+			modes.push_back(std::tuple<bool, signed char, string>(add, el, "")); // UNKNOWN MODE
 		}
 	}
 	return modes;
@@ -126,17 +133,17 @@ void Executor::handle_k_mode(const bool add, const string& arg, Channel& target)
 // Type A: must always have parameter, otherwise ignore command.
 void Executor::handle_o_mode(const bool add, const string& arg, Channel& target) {
 	if (!arg.size())
-		return;
+		throw std::invalid_argument("");
 	Client& c = this->getClientByNick(arg);
 	if (c == Client::nullclient)
-		return ;
+		throw std::domain_error("");
+	if (!target.hasMember(c))
+		throw std::runtime_error("");
 	if (add)
 		target.addOperator(c);
 	else
 		target.removeOperator(c);
-		// TO DO:
-		// if (target.removeOperator(c) == false)
-			// some error message
+	return ;
 }
 
 // Type C: If set and no parameter, ignore command.
@@ -201,9 +208,21 @@ string Executor::handle_modes(const Client& caller, const vector<tuple<bool, sig
 				message += build_mode_reply(caller.getNickname(), target.getName(), return_modestring(add, mode), modearg);
 				break;
 			case 'o':
-				cout << "o mode detected: " << add << endl;
-				message += build_mode_reply(caller.getNickname(), target.getName(), return_modestring(add, mode), modearg);
-				handle_o_mode(add, modearg, target); //#TODO check modearg for existence of user.
+				cout << "o mode detected: " << add << ", modearg: " << modearg << endl;
+				try {
+					handle_o_mode(add, modearg, target);
+					message += build_mode_reply(caller.getNickname(), target.getName(), return_modestring(add, mode), modearg);
+				} catch (const std::invalid_argument& e) {
+						message += new_build_reply(getHostname(), ERR_NEEDMOREPARAMS, caller.getNickname(), modearg, "Invalid or missing parameter");
+						cout << "ARG ERR" << endl;
+				} catch (const std::domain_error& e) {
+						message += new_build_reply(getHostname(), ERR_NOSUCHNICK, caller.getNickname(), modearg, "No such nick");
+						cout << "NONICK ERR" << endl;
+				} catch (const std::runtime_error& e) {
+						message += new_build_reply(getHostname(), ERR_USERNOTINCHANNEL, caller.getNickname(), target.getName(), "They aren't on that channel");
+						cout << "NOTINCHAN ERR" << endl;
+				}
+				
 				break;
 			case 'l':
 				cout << "l mode detected: " << add << endl;
@@ -217,14 +236,16 @@ string Executor::handle_modes(const Client& caller, const vector<tuple<bool, sig
 				break;
 			case 0:
 				cout << "0 mode detected: " << add << endl;
-				message += build_reply(ERR_UMODEUNKNOWNFLAG, caller.getNickname(), target.getName(), "Unknown MODE flag");
+				message += new_build_reply(getHostname(), ERR_UMODEUNKNOWNFLAG, target.getName(), "Unknown MODE flag: [" + to_string(mode) + "]");
 				break;
 			case -1: //ignored
 				cout << "-1 mode detected: " << add << endl;
 				break;
 			default:
 				cout << "default mode detected: " << add << endl;
-				message += build_reply(ERR_UMODEUNKNOWNFLAG, caller.getNickname(), target.getName(), "Unknown MODE flag");
+				string test = "";
+				test += mode;
+				message += new_build_reply(getHostname(), ERR_UMODEUNKNOWNFLAG, target.getName(), "Unknown MODE flag: [" + test + "]");
 				break;
 		}
 	}
@@ -266,18 +287,19 @@ string Executor::handle_modes(const Client& caller, const vector<tuple<bool, sig
 string Executor::run_MODE(const vector<string>& args, Client& caller) {
 
 	string target = args[0];
-	// Client& target_client = this->getClientByNick(target);
+	Client& target_client = this->getClientByNick(target);
 	Channel& channel = this->getChannelByName(target);
 	bool target_is_channel = is_channel(target);
 
-	if (!target_is_channel) { // If target is a user. (Commented code checks properly, but we don't support modes on users, only channels)
-		return new_build_reply(getHostname(), ERR_NOSUCHCHANNEL, caller.getNickname(), target, "No such channel as we don't support changing modes for users");
-		// if (target_client == Client::nullclient) // if target doesn't exist
-		// 	return build_reply(ERR_NOSUCHNICK, caller.getNickname(), target, "No such nick/channel");
-		// else if (caller.getNickname().compare(target) != 0) // if target doesn't match caller.
-		// 	return build_reply(ERR_USERSDONTMATCH, caller.getNickname(), target, "Cant change mode for other users");
+	if (!target_is_channel) {
+		if (target_client == Client::nullclient)
+			return new_build_reply(getHostname(), ERR_NOSUCHNICK, caller.getNickname(), target, "No such nick/channel");
+		else if (caller.getNickname().compare(target) != 0)
+			return this->new_build_reply(getHostname(), ERR_USERSDONTMATCH, caller.getNickname(), target, "Cant change mode for other users");
+		else
+			return "";
 	}
-	if (channel == Channel::nullchan) { // If target is a channel and it doesn't exist.
+	if (channel == Channel::nullchan) {
 		return new_build_reply(getHostname(), ERR_NOSUCHCHANNEL, caller.getNickname(), target, "No such channel");
 	}
 	if (args.size() == 1) { // No modestring
@@ -293,7 +315,7 @@ string Executor::run_MODE(const vector<string>& args, Client& caller) {
 	}
 
 	if (check_privileges(caller, channel, modestring) == false) {
-		return new_build_reply(getHostname(), ERR_CHANOPRIVSNEEDED, caller.getNickname(), target, "You're not an operator of " + target);
+		return new_build_reply(getHostname(), ERR_CHANOPRIVSNEEDED, target, "You're not an operator of " + target);
 	}
 
 	if (!modestring.size()) {
