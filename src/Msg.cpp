@@ -6,7 +6,7 @@
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/01/31 14:57:33 by ageels        #+#    #+#                 */
-/*   Updated: 2024/01/31 19:30:56 by ageels        ########   odam.nl         */
+/*   Updated: 2024/01/31 20:35:36 by ageels        ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,7 +57,7 @@ Msg::Msg(const string text, const string level) {
 	void	(Msg::*Msgptr[])(string) = {&Msg::structure, &Msg::customStream, &Msg::debug, &Msg::info, &Msg::warning, &Msg::error};
 	string severity[] = {"CLASS", "STREAM", "DEBUG", "INFO", "WARNING", "ERROR"};
 
-	for (int i(0); i < 5; i++)
+	for (int i(0); i < 6; i++)
 	{
 		if (level.compare(severity[i]) == 0)
 		{

@@ -6,7 +6,7 @@
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/01/31 14:56:22 by ageels        #+#    #+#                 */
-/*   Updated: 2024/01/31 14:56:23 by ageels        ########   odam.nl         */
+/*   Updated: 2024/01/31 20:34:26 by ageels        ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,9 @@
 	using std::vector;
 #include <algorithm>
 	using std::reverse;
+#include <iostream>
+	using std::cout;
+	using std::cerr;
 
 #include "Msg.hpp"
 #include "Server.hpp"
