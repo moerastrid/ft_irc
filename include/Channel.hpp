@@ -6,7 +6,7 @@
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/01/31 11:09:53 by ageels        #+#    #+#                 */
-/*   Updated: 2024/01/31 13:14:35 by ageels        ########   odam.nl         */
+/*   Updated: 2024/01/31 13:19:12 by ageels        ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,65 +37,65 @@
 #include "Msg.hpp"
 
 class Channel {
-private:
-	string				name;
-	string				password;
-	string				topic;
-	vector<Client *>	members;
-	vector<Client *>	operators; // merge with clients?
-	vector<Client *>	invited;
+	private:
+		string				name;
+		string				password;
+		string				topic;
+		vector<Client *>	members;
+		vector<Client *>	operators; // merge with clients?
+		vector<Client *>	invited;
 
-	bool				inviteOnly;
-	bool				operatorOnly = true;
-	size_t				userLimit;
+		bool				inviteOnly;
+		bool				operatorOnly = true;
+		size_t				userLimit;
 
-public:
-	static Channel		nullchan;
+	public:
+		static Channel		nullchan;
 
-	Channel();
-	~Channel();
-	Channel(const Channel& other);
-	Channel& operator=(const Channel& other);
-	Channel(string name, string password);
+		Channel();
+		~Channel();
+		Channel(const Channel& other);
+		Channel& operator=(const Channel& other);
+		Channel(string name, string password);
 
-	const string&			getName() const;
-	const string&			getPassword() const;
-	const string&			getTopic() const;
-	vector<Client *>&		getMembers();
-	const vector<Client *>&	getMembersConst() const;
-	const vector<Client *>&	getOperators() const;
-	size_t					getUserLimit() const;
-	pair<string,string>		getModes() const;
+		const string&			getName() const;
+		const string&			getPassword() const;
+		const string&			getTopic() const;
+		vector<Client *>&		getMembers();
+		const vector<Client *>&	getMembersConst() const;
+		const vector<Client *>&	getOperators() const;
+		size_t					getUserLimit() const;
+		pair<string,string>		getModes() const;
 
-	bool	empty() const;
-	bool	isInviteOnly() const;
-	bool	hasTopicRestricted() const;
-//	bool	hasMode(char mode) const;
-	bool	hasOperator(const Client& client) const;
-	bool	hasMember(const Client& client) const;
-	bool	hasInvited(const Client &client) const;
+		bool	empty() const;
+		bool	isInviteOnly() const;
+		bool	hasTopicRestricted() const;
+	//	bool	hasMode(char mode) const;
+		bool	hasOperator(const Client& client) const;
+		bool	hasMember(const Client& client) const;
+		bool	hasInvited(const Client &client) const;
 
-	void	setPassword(const string& password);
-	void	setTopic(const string& topic);
-//	void	toggleInviteOnly();
-	void	setUserLimit(size_t limit);
+		void	setPassword(const string& password);
+		void	setTopic(const string& topic);
+	//	void	toggleInviteOnly();
+		void	setUserLimit(size_t limit);
 
-	void	makeTopicOperatorOnly();
-	void	makeInviteOnly();
-//	void	addMode(char mode, const string& password, size_t userlimit);
-	void	addOperator(Client& client);
-	void	addMember(Client& client);
-	void	addInvited(Client& client);
+		void	makeTopicOperatorOnly();
+		void	makeInviteOnly();
+	//	void	addMode(char mode, const string& password, size_t userlimit);
+		void	addOperator(Client& client);
+		void	addMember(Client& client);
+		void	addInvited(Client& client);
 
-	void	takeTopicOperatorOnly();
-	void	takeInviteOnly();
-//	void	removeMode(char mode);
-	bool	removeOperator(const Client& client);
-	bool	removeMember(const Client& client);
-	bool	removeInvited(const Client& client);
+		void	takeTopicOperatorOnly();
+		void	takeInviteOnly();
+	//	void	removeMode(char mode);
+		bool	removeOperator(const Client& client);
+		bool	removeMember(const Client& client);
+		bool	removeInvited(const Client& client);
 
-	void	sendMessageToOtherMembers(const Client& sender, const string& message);
-	void	broadcastToChannel(const string& message);
+		void	sendMessageToOtherMembers(const Client& sender, const string& message);
+		void	broadcastToChannel(const string& message);
 };
 
 //std::ostream& operator<<(std::ostream& os, const Channel& channel);

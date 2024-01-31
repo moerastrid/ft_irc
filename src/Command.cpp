@@ -1,4 +1,38 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        ::::::::            */
+/*   Command.cpp                                        :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: ageels <ageels@student.codam.nl>             +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2024/01/31 13:29:45 by ageels        #+#    #+#                 */
+/*   Updated: 2024/01/31 13:29:46 by ageels        ########   odam.nl         */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "Command.hpp"
+
+// private
+void Command::addArg(string arg) {
+	this->args.push_back(arg);
+}
+void Command::setCmd(string cmd) {
+	this->command = cmd;
+}
+
+// public
+Command::Command() {
+	Msg("command - default constructor", "CLASS");
+}
+
+Command::~Command() {
+	Msg("command - default destructor", "CLASS");
+}
+
+Command::Command(const Command& other) {
+	*this = other;
+	Msg("command - copy constructor", "CLASS");
+}
 
 Command::Command(const string& client_message_string) {
 	stringstream ss(client_message_string);
@@ -11,50 +45,27 @@ Command::Command(const string& client_message_string) {
 	while (ss >> arg) {
 		this->addArg(arg);
 	}
-
 	this->combine_reason();
+	Msg("command - constructor(const string& client_message_string)", "CLASS");
 }
-
-Command::Command() {}
-
-Command::~Command() {}
 
 const Command& Command::operator=(const Command& other) {
 	if (this != &other) {
 		this->command = other.command;
 		this->args = other.args;
 	}
+	Msg("command - assignment operator", "CLASS");
 	return *this;
-}
-
-void Command::setCmd(string cmd) {
-	this->command = cmd;
-}
-
-void Command::addArg(string arg) {
-	this->args.push_back(arg);
 }
 
 const string Command::getCommand() const {
 	return this->command;
 }
-
-//throws exception if idx too large
-const string Command::getArg(size_t idx) const {
-	return this->args.at(idx);
-}
-
+// const string Command::getArg(size_t idx) const {
+// 	return this->args.at(idx);
+// }
 const vector<string> Command::getArgs() const {
 	return this->args;
-}
-
-bool find_reason(const string& str) {
-	auto it = str.begin();
-
-	while (it != str.end() && isspace(*it))
-		it++;
-
-	return (it != str.end() && *it == ':');
 }
 
 void Command::combine_reason() {
@@ -74,4 +85,13 @@ void Command::combine_reason() {
 
 	args.erase(it, args.end());
 	args.push_back(newstring);
+}
+
+bool find_reason(const string& str) {
+	auto it = str.begin();
+
+	while (it != str.end() && isspace(*it))
+		it++;
+
+	return (it != str.end() && *it == ':');
 }
