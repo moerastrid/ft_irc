@@ -53,6 +53,7 @@ private:
 	ostream& output_stream;
 };
 
+
 class Server {
 	private :
 		const string			name	= "REAL TALK IRC";

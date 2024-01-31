@@ -1,20 +1,16 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
-#include <string>
-using std::string;
-
 #include <ostream>
 using std::ostream;
 
 #include <string>
+using std::string;
 using std::to_string;
 
 #include <poll.h>
-#include <unistd.h>
 
 #include "Channel.hpp"
-#include <unistd.h>
 
 class Channel; // Forward declaration
 
@@ -92,4 +88,5 @@ public:
 
 bool operator==(const Client& lhs, const Client& rhs);
 std::ostream& operator<<(std::ostream& os, const Client& client);
+
 #endif /* end of include guard: CLIENT_HPP */

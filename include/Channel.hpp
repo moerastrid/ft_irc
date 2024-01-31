@@ -1,23 +1,36 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        ::::::::            */
+/*   Channel.hpp                                        :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: ageels <ageels@student.codam.nl>             +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2024/01/31 11:09:53 by ageels        #+#    #+#                 */
+/*   Updated: 2024/01/31 11:13:58 by ageels        ########   odam.nl         */
+/*                                                                            */
+/* ************************************************************************** */
+
 #ifndef CHANNEL_HPP
 #define CHANNEL_HPP
 
 #include <vector>
-using std::vector;
+	using std::vector;
 
 #include <ostream>
-using std::ostream;
+	using std::ostream;
 
 #include <algorithm>
-using std::find;
+	using std::find;
 
 #include <utility>
-using std::pair;
+	using std::pair;
 
 #include <string>
-using std::to_string;
+	using std::string;
+	using std::to_string;
 
 #include <deque>
-using std::deque;
+	using std::deque;
 
 #include "Client.hpp"
 
@@ -44,8 +57,6 @@ public:
 	Channel(const Channel& other);
 	Channel& operator=(const Channel& other);
 	Channel(string name, string password);
-
-	//Client&			getJoinedUser(string nickname);
 
 	const string&			getName() const;
 	const string&			getPassword() const;
@@ -79,7 +90,6 @@ public:
 	void	takeTopicOperatorOnly();
 	void	takeInviteOnly();
 	void	removeMode(char mode);
-	//void	removeOperator(const Client& client);
 	bool	removeOperator(const Client& client);
 	bool	removeMember(const Client& client);
 	bool	removeInvited(const Client& client);

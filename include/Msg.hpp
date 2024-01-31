@@ -15,8 +15,8 @@ class Msg {
 		void	error(string text);
 
 		Msg();								//default constructor
-		Msg(const Msg &src);			// copy constructor
-		Msg	&operator=(const Msg &src);	// = sign operator
+		Msg(const Msg &src);				// copy constructor
+		Msg	&operator=(const Msg &src);		// = sign operator
 		typedef void (Msg::*Msgptr)(string);
 
 	public	:
