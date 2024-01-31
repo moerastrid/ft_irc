@@ -6,7 +6,7 @@
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/01/31 13:56:29 by ageels        #+#    #+#                 */
-/*   Updated: 2024/01/31 19:58:59 by ageels        ########   odam.nl         */
+/*   Updated: 2024/01/31 20:03:53 by ageels        ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,11 +70,6 @@ bool Executor::name_exists(const string& name) {
 		}
 	}
 	return false;
-}
-
-
-string Executor::build_short_reply(const string& prefix, const string& command, const string& postfix) {
-	return ":" + prefix + " " + command + " :" + postfix + "\r\n";
 }
 
 string Executor::new_build_reply(int response_code, const string& caller, const string& message) {
@@ -179,7 +174,7 @@ string Executor::run_NICK(const vector<string>& args, Client& caller) {
 	} else if (first_time) {
 		return "";
 	} else {
-		return build_short_reply(old_fullname, "NICK", new_nickname);
+		return (":" + old_fullname + " NICK :" + new_nickname + "\r\n");
 	}
 }
 

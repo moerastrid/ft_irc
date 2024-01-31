@@ -6,7 +6,7 @@
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/01/31 11:09:53 by ageels        #+#    #+#                 */
-/*   Updated: 2024/01/31 13:32:41 by ageels        ########   odam.nl         */
+/*   Updated: 2024/01/31 20:26:45 by ageels        ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ class Channel {
 		string				password;
 		string				topic;
 		vector<Client *>	members;
-		vector<Client *>	operators; // merge with clients?
+		vector<Client *>	operators;
 		vector<Client *>	invited;
 
 		bool				inviteOnly;

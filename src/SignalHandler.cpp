@@ -1,19 +1,28 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        ::::::::            */
+/*   SignalHandler.cpp                                  :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: ageels <ageels@student.codam.nl>             +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2024/01/31 20:25:50 by ageels        #+#    #+#                 */
+/*   Updated: 2024/01/31 20:25:51 by ageels        ########   odam.nl         */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "SignalHandler.hpp"
 
-bool SignalHandler::interrupted = false;
+SignalHandler::SignalHandler() {}
+SignalHandler::~SignalHandler() {}
 
-void	SignalHandler::setCustom(void) {
-	signal(SIGINT, &SignalHandler::sigintHandler);
-}
+bool SignalHandler::interrupted = false;
 
 void	SignalHandler::setDefault(void) {
 	signal(SIGINT, SIG_DFL);
 }
-
-SignalHandler::SignalHandler() {}
-
-SignalHandler::~SignalHandler() {}
-
+void	SignalHandler::setCustom(void) {
+	signal(SIGINT, &SignalHandler::sigintHandler);
+}
 bool	SignalHandler::getInterrupted() {
 	return (interrupted);
 }

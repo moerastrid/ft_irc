@@ -6,7 +6,7 @@
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/01/31 12:53:56 by ageels        #+#    #+#                 */
-/*   Updated: 2024/01/31 13:19:33 by ageels        ########   odam.nl         */
+/*   Updated: 2024/01/31 20:29:32 by ageels        ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,7 +79,7 @@ class Client {
 
 		bool					hasSendData() const;
 		bool					hasRecvData() const;
-		bool					isOperator(const Channel& c) const;
+	//	bool					isOperator(const Channel& c) const;
 	//	bool					checkEvent(short event) const;
 		bool					checkRevent(short revent) const;
 		bool					isRegistered() const;

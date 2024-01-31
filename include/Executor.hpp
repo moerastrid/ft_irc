@@ -6,7 +6,7 @@
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/01/31 13:56:15 by ageels        #+#    #+#                 */
-/*   Updated: 2024/01/31 19:49:57 by ageels        ########   odam.nl         */
+/*   Updated: 2024/01/31 20:27:12 by ageels        ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -110,7 +110,7 @@ class Executor {
 		void	addChannel(const string& name, const string& password, Client& caller);
 		bool	name_exists(const string& name);
 
-		string	build_short_reply(const string& prefix, const string& command, const string& postfix);
+	//	string	build_short_reply(const string& prefix, const string& command, const string& postfix);
 		string	new_build_reply(int response_code, const string& caller, const string& target, const string& channel, const string& message);
 		string	new_build_reply(int response_code, const string& caller, const string& target, const string& message);
 		string	new_build_reply(int response_code, const string& caller, const string& message);

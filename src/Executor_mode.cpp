@@ -6,7 +6,7 @@
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/01/31 14:43:53 by ageels        #+#    #+#                 */
-/*   Updated: 2024/01/31 19:50:29 by ageels        ########   odam.nl         */
+/*   Updated: 2024/01/31 20:30:23 by ageels        ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,18 +74,18 @@ static vector<tuple<bool, signed char, string>> parse_modestring(string modestri
 static bool check_privileges(const Client& caller, const Channel& target, const string& modestring) {
 	bool res = true;
 	if (modestring.find('i') != string::npos) {
-		res = res && caller.isOperator(target);
+		res = res && target.hasOperator(caller);
 	}
 	if (modestring.find('t') != string::npos) {
 		if (target.hasTopicRestricted())
-			res = res && caller.isOperator(target);
+			res = res && target.hasOperator(caller);
 	}
 	if (modestring.find('k') != string::npos)
-		res = res && caller.isOperator(target);
+		res = res && target.hasOperator(caller);
 	if (modestring.find('o') != string::npos)
-		res = res && (caller.isOperator(target));
+		res = res && target.hasOperator(caller);
 	if (modestring.find('l') != string::npos)
-		res = res && caller.isOperator(target);
+		res = res && target.hasOperator(caller);
 	return res;
 }
 
@@ -173,11 +173,13 @@ void Executor::handle_l_mode(const bool add, const string& arg, Channel& target)
 		try {
 			num = std::stoi(arg);
 		} catch (const std::exception& e) {
-			cout << "ERR" << endl;
-			return ;
+			throw std::runtime_error("");
 		}
 		std::cerr << "num: " << num << endl;
-		target.setUserLimit(num);
+		if (num > 1)
+			target.setUserLimit(num);
+		else
+			throw std::runtime_error("");
 	}
 	else
 		target.takeInviteOnly();
@@ -232,12 +234,11 @@ string Executor::handle_modes(const Client& caller, const vector<tuple<bool, sig
 				break;
 			case 'l':
 				cout << "l mode detected: " << add << endl;
-				message += build_mode_reply(caller.getNickname(), target.getName(), return_modestring(add, mode), modearg);
 				try {
 					handle_l_mode(add, modearg, target);
-				} catch (const std::exception& e) {
-					//#TODO give invalid argument message here?
-					//:servername 461 nickname mode :Invalid mode parameter
+					message += build_mode_reply(caller.getNickname(), target.getName(), return_modestring(add, mode), modearg);
+				} catch (const std::runtime_error& e) {
+					message += new_build_reply(ERR_NEEDMOREPARAMS, target.getName(), "Invalid mode parameter: [" + modearg + "]");
 				}
 				break;
 			case 0:

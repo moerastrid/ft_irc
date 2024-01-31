@@ -6,7 +6,7 @@
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/01/31 12:53:59 by ageels        #+#    #+#                 */
-/*   Updated: 2024/01/31 13:14:13 by ageels        ########   odam.nl         */
+/*   Updated: 2024/01/31 20:29:30 by ageels        ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,56 +76,6 @@ const string	Client::getFullName() const {
 	std::string temp = this->getNickname() + "!" + this->getUsername() + "@" + this->getHostname();
 	return(temp);
 }
-
-/*
-In IRC, there are certain messages where the full user!nick@host format (often referred to as the "prefix") is expected. This prefix provides additional information about the user sending the message, including their username and host. Here are some common examples:
-
-    Private Message (PRIVMSG) and Notice (NOTICE):
-        The prefix is often included in messages to indicate the sender's identity.
-        Example:
-
-        ruby
-
-    :user!nick@host PRIVMSG #channel :Hello, everyone!
-
-Join (JOIN), Part (PART), Quit (QUIT), Kick (KICK), Mode (MODE):
-
-    These messages typically include the full user!nick@host prefix to identify the user performing the action.
-    Example:
-
-    ruby
-
-    :user!nick@host JOIN #channel
-
-Topic (TOPIC):
-
-    The user!nick@host prefix is used in messages related to changing or querying the channel topic.
-    Example:
-
-    ruby
-
-    :user!nick@host TOPIC #channel :New topic
-
-Nick Change (NICK):
-
-    The user!nick@host prefix is used to indicate the user changing their nickname.
-    Example:
-
-    ruby
-
-    :olduser!oldnick@oldhost NICK newnick
-
-Channel Mode (MODE):
-
-    The prefix is often included to identify the user setting or removing channel modes.
-    Example:
-
-    ruby
-
-        :user!nick@host MODE #channel +o otheruser
-
-These examples demonstrate scenarios where the full user!nick@host format is commonly used. It's important to note that not all messages require the full prefix, and some may only use the nickname portion. The inclusion of the full prefix provides more detailed information about the sender's identity.
-*/
 
 
 void Client::setEvents(const short events) {
@@ -198,9 +148,9 @@ bool Client::hasSendData() const {
 bool Client::hasRecvData() const {
 	return this->datatorecv.find('\n') != string::npos;
 }
-bool Client::isOperator(const Channel& c) const {
-	return c.hasOperator(*this);
-}
+// bool Client::isOperator(const Channel& c) const {
+// 	return c.hasOperator(*this);
+// }
 // bool Client::checkEvent(short event) const {
 // 	return this->pfd.events & event;
 // }

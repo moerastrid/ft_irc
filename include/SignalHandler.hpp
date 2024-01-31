@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        ::::::::            */
+/*   SignalHandler.hpp                                  :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: ageels <ageels@student.codam.nl>             +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2024/01/31 20:25:54 by ageels        #+#    #+#                 */
+/*   Updated: 2024/01/31 20:25:55 by ageels        ########   odam.nl         */
+/*                                                                            */
+/* ************************************************************************** */
+
 #pragma once
 #include <iostream>
 #include <string>
@@ -17,6 +29,7 @@ class SignalHandler
 	public:
 		SignalHandler();
 		~SignalHandler();
+
 		void	setDefault(void);
 		void	setCustom(void);
 		bool	getInterrupted(void);
