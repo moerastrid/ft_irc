@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        ::::::::            */
+/*   Executor_mode.cpp                                  :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: ageels <ageels@student.codam.nl>             +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2024/01/31 14:43:53 by ageels        #+#    #+#                 */
+/*   Updated: 2024/01/31 14:45:55 by ageels        ########   odam.nl         */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "Executor.hpp"
 #include <cstdlib>
 
@@ -78,8 +90,7 @@ static bool check_privileges(const Client& caller, const Channel& target, const 
 	return res;
 }
 
-static pair<string,string> 
-get_current_modes(const Channel& ch) {
+static pair<string,string> get_current_modes(const Channel& ch) {
 	string modes = "+";
 	string args = "";
 	string password = ch.getPassword();
@@ -100,6 +111,15 @@ get_current_modes(const Channel& ch) {
 		args += userLimit;
 	}
 	return std::make_pair(modes, args);
+}
+
+static string return_modestring(bool add, char mode) {
+	string res = "-";
+	if (add) {
+		res = "+";
+	}
+	res += mode;
+	return res;
 }
 
 // Type D
@@ -163,20 +183,6 @@ void Executor::handle_l_mode(const bool add, const string& arg, Channel& target)
 	else
 		target.takeInviteOnly();
 }
-
-
-string return_modestring(bool add, char mode) {
-	string res = "-";
-	if (add) {
-		res = "+";
-	}
-	res += mode;
-	return res;
-}
-
-#include <iostream>
-using std::cout;
-using std::endl;
 
 string Executor::handle_modes(const Client& caller, const vector<tuple<bool, signed char, string>>& mode_cmds, Channel& target) {
 	string message = "";

@@ -1,121 +1,34 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        ::::::::            */
+/*   Executor.cpp                                       :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: ageels <ageels@student.codam.nl>             +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2024/01/31 13:56:29 by ageels        #+#    #+#                 */
+/*   Updated: 2024/01/31 14:41:59 by ageels        ########   odam.nl         */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "Executor.hpp"
 
-// some utilities #TODO move
+//private
 
-//https://modern.ircdocs.horse/#invite-message
-
-bool is_channel_char(char c) {
-	return isalnum(c) || string("!#$%'()+,-./").find(c) != string::npos;
+Client& Executor::getClientByNick(const string nick) {
+	return this->e.getClientByNick(nick);
 }
-
-bool is_channel(const string& name) {
-	for (const auto& c : name) {
-		if (!is_channel_char(c))
-			return false;
-	}
-	return !name.empty() && name.front() == '#';
+Channel& Executor::getChannelByName(const string name) {
+	return this->e.getChannelByName(name);
 }
-
-bool is_nickname_character(const char c) {
-	string valid = "_-[]\\^{}";
-	if (isalnum(c) || valid.find(c) != string::npos)
-		return true;
-	return false;
+deque<Client>& Executor::getClients() {
+	return this->e.getClients();
 }
-
-bool verify_name(const string& arg) {
-	for (string::const_iterator it = arg.begin(); it != arg.end(); ++it) {
-		if (!is_nickname_character(*it))
-			return false;
-	}
-	return true;
+deque<Channel>& Executor::getChannels() {
+	return this->e.getChannels();
 }
-
-bool verify_realname(const string& arg) {
-	for (string::const_iterator it = arg.begin(); it != arg.end(); ++it) {
-		if (!is_nickname_character(*it) && !isspace(*it))
-			return false;
-	}
-	return true;
+const string &Executor::getHostname() const {
+	return this->e.getHostname();
 }
-
-// Takes a comma-separated string of arguments, gives back a vector of said arguments.
-vector<string> split_args(const string& args) {
-	istringstream nameStream(args);
-	vector<string> res;
-
-	string buffer;
-	while (getline(nameStream, buffer, ',')) {
-		res.push_back(buffer);
-	}
-
-	return res;
-}
-
-//case insensitive string comparison
-bool compare_lowercase(const string& a, const string& b) {
-	string ac = a;
-	string bc = b;
-
-	transform(ac.begin(), ac.end(), ac.begin(), [](unsigned char c) {
-		return tolower(c);
-	});
-
-	transform(bc.begin(), bc.end(), bc.begin(), [](unsigned char c) {
-		return tolower(c);
-	});
-
-	return ac == bc;
-}
-
-bool Executor::name_exists(const string& name) {
-	for (const Client& c : this->getClients()) {
-		const string& clientName = c.getNickname();
-
-		if (compare_lowercase(name, clientName)) {
-			return true;
-		}
-	}
-	return false;
-}
-
-// Executor class
-
-Executor::Executor(Env& e) : e(e) {
-	this->funcMap["CAP"] 		= &Executor::run_CAP;
-	this->funcMap["PASS"] 		= &Executor::run_PASS;
-	this->funcMap["NICK"] 		= &Executor::run_NICK;
-	this->funcMap["USER"] 		= &Executor::run_USER;
-	this->funcMap["MODE"] 		= &Executor::run_MODE;
-	this->funcMap["PING"] 		= &Executor::run_PING;
-	this->funcMap["PRIVMSG"] 	= &Executor::run_PRIVMSG;
-	this->funcMap["NOTICE"] 	= &Executor::run_NOTICE;
-	// this->funcMap["WHOIS"] 		= &Executor::run_WHOIS;
-	this->funcMap["JOIN"] 		= &Executor::run_JOIN;
-	this->funcMap["KICK"] 		= &Executor::run_KICK;
-	this->funcMap["PART"] 		= &Executor::run_PART;
-	this->funcMap["INVITE"] 	= &Executor::run_INVITE;
-	this->funcMap["TOPIC"] 		= &Executor::run_TOPIC;
-	this->funcMap["QUIT"] 		= &Executor::run_QUIT;
-
-	this->argCount["CAP"] 		= {1, 1};
-	this->argCount["PASS"] 		= {1, 1};
-	this->argCount["NICK"] 		= {1, 1};
-	this->argCount["USER"] 		= {4, -1};
-	this->argCount["MODE"] 		= {1, -1};
-	this->argCount["PING"] 		= {1, 1};
-	this->argCount["PRIVMSG"] 	= {2, -1};
-	this->argCount["NOTICE"]	= {2, -1};
-	// this->argCount["WHOIS"] 	= {0, -1};
-	this->argCount["JOIN"] 		= {1, 2};
-	this->argCount["KICK"] 		= {1, -1};
-	this->argCount["PART"] 		= {1, -1};
-	this->argCount["INVITE"] 	= {1, 2};
-	this->argCount["TOPIC"] 	= {1, -1};
-	this->argCount["QUIT"] 		= {0, -1};
-}
-
-Executor::~Executor() {}
 
 int Executor::validateArguments(const string& command, int numArgs) {
 	if (this->argCount.find(command) != this->argCount.end()) {
@@ -130,122 +43,122 @@ int Executor::validateArguments(const string& command, int numArgs) {
 			return 1;
 		}
 	}
-
 	return 0;
 }
+bool Executor::parseUserArguments(const vector<string>& args, string& username, string& hostname, string& servername, string& realname) {
+	username = args[0];
+	hostname = args[1];
+	servername = args[2];
+	realname = args[3].substr(1);
 
-int Executor::run(const Command& cmd, Client& caller) {
-	string message;
-	string command = cmd.getCommand();
-	mbrFuncPtr ptr;
-
-	if (caller.isExpelled() == true)
-		return false;
-	
-	// Handle unknown commands
-	try {
-		ptr = this->funcMap.at(command);
+	for (size_t i = 4; i < args.size(); i++) {
+		realname += " " + args[i];
 	}
-	catch (std::out_of_range& e) {
-		message = new_build_reply(getHostname(), ERR_UNKNOWNCOMMAND, caller.getNickname(), command, "Unknown command from client");
-		caller.addSendData(message);
-		return true;
-	}
+	return !username.empty() && verify_name(username) && !hostname.empty() && !servername.empty() && (!realname.empty() || args[3] != ":");
+}
 
-	// Check password on commands other than PASS and CAP
-	static vector<string> passcmds = {"PASS", "CAP"};
-	if (find(passcmds.begin(), passcmds.end(), command) == passcmds.end() && caller.getPassword().empty()) {
-		caller.addSendData(new_build_reply(getHostname(), ERR_PASSWDMISMATCH, caller.getNickname(), "Password needed"));
-		return false;
-	}
+void Executor::addChannel(const string& name, const string& password, Client& caller) {
+	this->getChannels().emplace_back(name, password);
+	Channel& chan = this->getChannels().back();
+	chan.addOperator(caller);
+	chan.addMember(caller);
+}
 
-	// Check user is registered for commands other than PASS, CAP, NICK, USER.
-	static vector<string> regcmds = {"PASS", "CAP", "NICK", "USER"};
-	if (find(regcmds.begin(), regcmds.end(), command) == regcmds.end()) {
-		if (!caller.isRegistered())
-		{
-			caller.addSendData(new_build_reply(getHostname(), ERR_NOTREGISTERED, caller.getNickname(), "You have not registered (correctly)"));
-			return false;
+bool Executor::name_exists(const string& name) {
+	for (const Client& c : this->getClients()) {
+		const string& clientName = c.getNickname();
+
+		if (compare_lowercase(name, clientName)) {
+			return true;
 		}
 	}
+	return false;
+}
 
-	int numArgs = cmd.getArgs().size();
 
-	int res = validateArguments(command, numArgs);
-	if (res == -1) {
-		message = new_build_reply(getHostname(), ERR_NEEDMOREPARAMS, caller.getNickname(), command, "Not enough parameters");
-	} else if (res == 1) {
-		message = new_build_reply(getHostname(), ERR_TOOMANYPARAMS, caller.getNickname(), command, "Too many parameters");
+string Executor::build_short_reply(const string& prefix, const string& command, const string& postfix) {
+	return ":" + prefix + " " + command + " :" + postfix + "\r\n";
+}
+
+string Executor::new_build_reply(const string& prefix, int response_code, const string& caller, const string& message) {
+	return new_build_reply(prefix, response_code, caller, "", "", message);
+}
+
+string Executor::new_build_reply(const string& prefix, int response_code, const string& caller, const string& target, const string& message) {
+	return new_build_reply(prefix, response_code, caller, target, "", message);
+}
+
+string Executor::new_build_reply(const string& prefix, int response_code, const string& caller, const string& target, const string& channel, const string& message) {
+	stringstream response;
+	
+	// Optional prefix
+	if (!prefix.empty())
+		response << ":" << prefix << " ";
+
+	// Response code
+	if (response_code == NOTICE) {
+		response << "NOTICE";
 	} else {
-		message = (this->*ptr)(cmd.getArgs(), caller);
+		response << setw(3) << setfill('0') << response_code; // Ensures response_code is shown as a 3-digit number by adding leading zeroes if needed.
 	}
 
-	caller.addSendData(message);
-	if (message.find("Nickname collision KILL") != string::npos)
-		return false;
-	if (message.find("QUIT") != string::npos)
-		return false;
+	// Caller
+	response << " " << caller;
 
-	return true;
+	// Optional target
+	if (!target.empty())
+		response << " " << target;
+
+	// Optional channel
+	if (!channel.empty())
+		response << " " << channel;
+
+	// The message
+	if (message.begin()[0] == ':')
+		return response.str() + " " + message + "\r\n";
+	return response.str() + " :" + message + "\r\n";
 }
+
 
 /*
  * Incoming message: CAP LS
- * Possible replies: :<server=localhost> CAP NAK :<list of capabilities=->
- *
- * Responses handled:
- * :<server=localhost> CAP NAK :-
- *
- * Responses not (yet) handled:
  */
 string Executor::run_CAP([[maybe_unused]]const vector<string>& args, [[maybe_unused]]Client& caller) {
 	return "";
 }
 
 /*
- * Incoming message: PASS <password> (not a user command, sent by the server if a password is supplied)
- * Possible replies: ???
+ * Incoming message: PASS <password>
  *
  * Responses handled:
  * ERR_NEEDMOREPARAMS
  * ERR_ALREADYREGISTRED
  * ERR_PASSWDMISMATCH
- *
- * Responses not (yet) handled:
  */
 string Executor::run_PASS(const vector<string>& args, Client& caller) {
-
 	if (!caller.getNickname().empty() && !caller.getUsername().empty()) {
 		return new_build_reply(getHostname(), ERR_ALREADYREGISTERED, caller.getNickname(), "You may not reregister");
 	}
-
 	string newpassword = args[0];
 	caller.setPassword(newpassword);
-
 	if (e.getPass().compare(newpassword) != 0) {
 		caller.expell();
 		return new_build_reply(getHostname(), ERR_PASSWDMISMATCH, caller.getNickname(), "Password incorrect");
 	}
-
-	return ""; // build_reply(NOTICE, "PASS", "PASS", "Remember to set your username and nickname with USER and PASS.");
+	return "";
 }
 
 /*
  * Incoming message: NICK <nickname>
  * Parameters: Your new nickname.
- * Description: Changes your nickname on the active server.
- * Possible replies:
  *
  * Responses handled:
  * ERR_NICKCOLLISION
  * ERR_ERRONEUSNICKNAME
- *
- * Responses not yet handled:
+ * ERR_NICKNAMEINUSE
  *
  * Responses not handled:
- * ERR_NICKNAMEINUSE (override by ERR_NICKCOLLISION)
  * ERR_NONICKNAMEGIVEN (override by ERR_NEEDMOREPARAMS)
- *
  */
 #include <unistd.h>
 string Executor::run_NICK(const vector<string>& args, Client& caller) {
@@ -266,8 +179,8 @@ string Executor::run_NICK(const vector<string>& args, Client& caller) {
 	bool first_time = old_nickname.empty();
 	caller.setNickname(new_nickname);
 
-	if (first_time && !caller.getUsername().empty()) { // First time connection part 2: electric boogaloo. Accepting connection and sending welcome message.
-		return new_build_reply(getHostname(), RPL_WELCOME, new_nickname, "Welcome to Astrid's & Thibauld's IRC server, " + caller.getUsername() + "!"); //#todo FIX
+	if (first_time && !caller.getUsername().empty()) {
+		return new_build_reply(getHostname(), RPL_WELCOME, new_nickname, "Welcome to Astrid's & Thibauld's IRC server, " + caller.getUsername() + "!"); //#TODO FIX
 	} else if (first_time) {
 		return "";
 	} else {
@@ -276,53 +189,13 @@ string Executor::run_NICK(const vector<string>& args, Client& caller) {
 }
 
 /*
-RFC 1459
-4.1.3 User message
-
-	Command: USER
-	Parameters: <username> <hostname|ignored> <servername|ignored> <realname>
-
-	The USER message is used at the beginning of connection to specify
-	the username, hostname, servername and realname of s new user.  It is
-	also used in communication between servers to indicate new user
-	arriving on IRC, since only after both USER and NICK have been
-	received from a client does a user become registered.
-
-	Between servers USER must to be prefixed with client's NICKname.
-	Note that hostname and servername are normally ignored by the IRC
-	server when the USER command comes from a directly connected client
-	(for security reasons), but they are used in server to server
-	communication.  This means that a NICK must always be sent to a
-	remote server when a new user is being introduced to the rest of the
-	network before the accompanying USER is sent.
-
-	It must be noted that realname parameter must be the last parameter,
-	because it may contain space characters and must be prefixed with a
-	colon (':') to make sure this is recognised as such.
-
-	Since it is easy for a client to lie about its username by relying
-	solely on the USER message, the use of an "Identity Server" is
-	recommended.  If the host which a user connects from has such a
-	server enabled the username is set to that as in the reply from the
-	"Identity Server".
-*/
-
-/*
- * Incoming message: USER <username> <hostname> <servername> :<realname> (Not a user command, but automatically sent by the client on a new connection.)
- * Possible replies:
- *
- * Responses added:
- * ERR_ERRONEOUSNICKNAME
- * RPL_WELCOME
+ * Incoming message: USER <username> <hostname> <servername> :<realname>
  *
  * Responses handled:
+ * ERR_ERRONEOUSNICKNAME
+ * RPL_WELCOME
  * ERR_NEEDMOREPARAMS
  * ERR_ALREADYREGISTRED
- *
- * Responses not yet handled:
- *
- * Responses not handled:
- *
  */
 string Executor::run_USER(const vector<string>& args, Client& caller) {
 	string username, hostname, servername, realname;
@@ -332,7 +205,7 @@ string Executor::run_USER(const vector<string>& args, Client& caller) {
 		}
 		return new_build_reply(getHostname(), ERR_ERRONEOUSNICKNAME, caller.getNickname(), "USER", "Invalid user arguments");
 	}
-	if (caller.getUsername().empty()) { //first time connec part 2
+	if (caller.getUsername().empty()) {
 		caller.setUsername(username);
 		caller.setHostname(hostname);
 		caller.setServername(servername);
@@ -345,14 +218,11 @@ string Executor::run_USER(const vector<string>& args, Client& caller) {
 	return "";
 }
 
-/*s
- * Incoming message: PING {no args} (not a user command, just a reply to the automatic PING request from the server to indicate the connection is alive)
+/* Incoming message: PING {no args}
  * Possible replies: PONG <server=:localhost>
  *
  * Responses handled:
  * PONG <server=:localhost>
- *
- * Responses not (yet) handled:
  */
 string Executor::run_PING([[maybe_unused]]const vector<string>& args, [[maybe_unused]]Client& caller) {
 	return "PONG " + this->e.getHostname() + "\r\n";
@@ -368,9 +238,6 @@ string Executor::run_PING([[maybe_unused]]const vector<string>& args, [[maybe_un
  * `*` : Use the active nickname or channel
  * `,` : Last person who sent you a /msg
  * `.` : Last person you sent a /msg to
- * Description: Sends a message to a nickname or channel.
- *
- * Possible replies: ???
  *
  * Responses handled:
  * ERR_NOSUCHNICK
@@ -839,83 +706,131 @@ string Executor::run_QUIT(const vector<string>& args, Client& caller) {
 	return (":" + fullName + " QUIT " + reason + "\r\n");
 }
 
-bool Executor::parseUserArguments(const vector<string>& args, string& username, string& hostname, string& servername, string& realname) {
-	username = args[0];
-	hostname = args[1];
-	servername = args[2];
-	realname = args[3].substr(1);
 
-	for (size_t i = 4; i < args.size(); i++) {
-		realname += " " + args[i];
+Executor::Executor(const Executor &src) : e(src.e) {
+	*this = src;
+	Msg("Executor - copy constructor", "CLASS");
+}
+Executor &Executor::operator=(const Executor &src) {
+	(void)src;
+	return(*this);
+	Msg("Executor - assignment operator", "CLASS");
+}
+
+//public
+
+Executor::Executor(Env& e) : e(e) {
+	this->funcMap["CAP"] 		= &Executor::run_CAP;
+	this->funcMap["PASS"] 		= &Executor::run_PASS;
+	this->funcMap["NICK"] 		= &Executor::run_NICK;
+	this->funcMap["USER"] 		= &Executor::run_USER;
+	this->funcMap["MODE"] 		= &Executor::run_MODE;
+	this->funcMap["PING"] 		= &Executor::run_PING;
+	this->funcMap["PRIVMSG"] 	= &Executor::run_PRIVMSG;
+	this->funcMap["NOTICE"] 	= &Executor::run_NOTICE;
+	// this->funcMap["WHOIS"] 		= &Executor::run_WHOIS;
+	this->funcMap["JOIN"] 		= &Executor::run_JOIN;
+	this->funcMap["KICK"] 		= &Executor::run_KICK;
+	this->funcMap["PART"] 		= &Executor::run_PART;
+	this->funcMap["INVITE"] 	= &Executor::run_INVITE;
+	this->funcMap["TOPIC"] 		= &Executor::run_TOPIC;
+	this->funcMap["QUIT"] 		= &Executor::run_QUIT;
+
+	this->argCount["CAP"] 		= {1, 1};
+	this->argCount["PASS"] 		= {1, 1};
+	this->argCount["NICK"] 		= {1, 1};
+	this->argCount["USER"] 		= {4, -1};
+	this->argCount["MODE"] 		= {1, -1};
+	this->argCount["PING"] 		= {1, 1};
+	this->argCount["PRIVMSG"] 	= {2, -1};
+	this->argCount["NOTICE"]	= {2, -1};
+	// this->argCount["WHOIS"] 	= {0, -1};
+	this->argCount["JOIN"] 		= {1, 2};
+	this->argCount["KICK"] 		= {1, -1};
+	this->argCount["PART"] 		= {1, -1};
+	this->argCount["INVITE"] 	= {1, 2};
+	this->argCount["TOPIC"] 	= {1, -1};
+	this->argCount["QUIT"] 		= {0, -1};
+	Msg("Executor - constructor(env &e)", "CLASS");
+}
+Executor::~Executor() {
+	Msg("Executor - default destructor", "CLASS");
+}
+
+int Executor::run(const Command& cmd, Client& caller) {
+	string message;
+	string command = cmd.getCommand();
+	mbrFuncPtr ptr;
+
+	if (caller.isExpelled() == true)
+		return false;
+	
+	// Handle unknown commands
+	try {
+		ptr = this->funcMap.at(command);
+	}
+	catch (std::out_of_range& e) {
+		message = new_build_reply(getHostname(), ERR_UNKNOWNCOMMAND, caller.getNickname(), command, "Unknown command from client");
+		caller.addSendData(message);
+		return true;
 	}
 
-	return !username.empty() && verify_name(username) && !hostname.empty() && !servername.empty() && (!realname.empty() || args[3] != ":");
-}
+	// Check password on commands other than PASS and CAP
+	static vector<string> passcmds = {"PASS", "CAP"};
+	if (find(passcmds.begin(), passcmds.end(), command) == passcmds.end() && caller.getPassword().empty()) {
+		caller.addSendData(new_build_reply(getHostname(), ERR_PASSWDMISMATCH, caller.getNickname(), "Password needed"));
+		return false;
+	}
 
-void Executor::addChannel(const string& name, const string& password, Client& caller) {
-	// Channel ch(name, password);
-	// ch.addMember(caller);
-	// this->getChannels().push_back(ch);
-
-	this->getChannels().emplace_back(name, password);
-	Channel& chan = this->getChannels().back();
-	chan.addOperator(caller);
-	chan.addMember(caller);
-}
-
-string Executor::format_reason(vector<string>::iterator& reason_start, vector<string>& args) {
-	string message = "";
-	for (vector<string>::iterator it = reason_start; it != args.end(); it++) {
-		message += *it;
-		if (next(it) != args.end()) {
-			message += " ";
+	// Check user is registered for commands other than PASS, CAP, NICK, USER.
+	static vector<string> regcmds = {"PASS", "CAP", "NICK", "USER"};
+	if (find(regcmds.begin(), regcmds.end(), command) == regcmds.end()) {
+		if (!caller.isRegistered())
+		{
+			caller.addSendData(new_build_reply(getHostname(), ERR_NOTREGISTERED, caller.getNickname(), "You have not registered (correctly)"));
+			return false;
 		}
 	}
-	return message;
-}
 
-string Executor::build_short_reply(const string& prefix, const string& command, const string& postfix) {
-	return ":" + prefix + " " + command + " :" + postfix + "\r\n";
-}
+	int numArgs = cmd.getArgs().size();
 
-string Executor::new_build_reply(const string& prefix, int response_code, const string& caller, const string& message) {
-	return new_build_reply(prefix, response_code, caller, "", "", message);
-}
-
-string Executor::new_build_reply(const string& prefix, int response_code, const string& caller, const string& target, const string& message) {
-	return new_build_reply(prefix, response_code, caller, target, "", message);
-}
-
-string Executor::new_build_reply(const string& prefix, int response_code, const string& caller, const string& target, const string& channel, const string& message) {
-	stringstream response;
-	
-	// Optional prefix
-	if (!prefix.empty())
-		response << ":" << prefix << " ";
-
-	// Response code
-	if (response_code == NOTICE) {
-		response << "NOTICE";
+	int res = validateArguments(command, numArgs);
+	if (res == -1) {
+		message = new_build_reply(getHostname(), ERR_NEEDMOREPARAMS, caller.getNickname(), command, "Not enough parameters");
+	} else if (res == 1) {
+		message = new_build_reply(getHostname(), ERR_TOOMANYPARAMS, caller.getNickname(), command, "Too many parameters");
 	} else {
-		response << setw(3) << setfill('0') << response_code; // Ensures response_code is shown as a 3-digit number by adding leading zeroes if needed.
+		message = (this->*ptr)(cmd.getArgs(), caller);
 	}
 
-	// Caller
-	response << " " << caller;
-
-	// Optional target
-	if (!target.empty())
-		response << " " << target;
-
-	// Optional channel
-	if (!channel.empty())
-		response << " " << channel;
-
-	// The message
-	if (message.begin()[0] == ':')
-		return response.str() + " " + message + "\r\n";
-	return response.str() + " :" + message + "\r\n";
+	caller.addSendData(message);
+	if (message.find("Nickname collision KILL") != string::npos)
+		return false;
+	if (message.find("QUIT") != string::npos)
+		return false;
+	return true;
 }
+
+
+
+
+
+
+
+
+
+// string Executor::format_reason(vector<string>::iterator& reason_start, vector<string>& args) {
+// 	string message = "";
+// 	for (vector<string>::iterator it = reason_start; it != args.end(); it++) {
+// 		message += *it;
+// 		if (next(it) != args.end()) {
+// 			message += " ";
+// 		}
+// 	}
+// 	return message;
+// }
+
+
 
 
 // string Executor::build_reply(int response_code, string callername, string target, string message) {
@@ -949,23 +864,3 @@ string Executor::new_build_reply(const string& prefix, int response_code, const 
 // 	return response.str() + " " + callername + " " + target + " " + channel + " :" + message + "\r\n";
 // }
 
-
-Client& Executor::getClientByNick(const string nick) {
-	return this->e.getClientByNick(nick);
-}
-
-Channel& Executor::getChannelByName(const string name) {
-	return this->e.getChannelByName(name);
-}
-
-deque<Client>& Executor::getClients() {
-	return this->e.getClients();
-}
-
-deque<Channel>& Executor::getChannels() {
-	return this->e.getChannels();
-}
-
-const string &Executor::getHostname() const {
-	return this->e.getHostname();
-}

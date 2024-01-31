@@ -26,33 +26,34 @@
 
 #include <poll.h>
 
+class Executor; // Forward declaration
+
 class CustomOutputStream : public ostream {
-public:
-	CustomOutputStream(ostream& output) : ostream(output.rdbuf()), output_stream(output) {}
+	public:
+		CustomOutputStream(ostream& output) : ostream(output.rdbuf()), output_stream(output) {}
 
-	template <typename T>
-	CustomOutputStream& operator<<(const T& value) {
-		for (const auto& el : value) {
-			if (el == '\r')
-				output_stream << "\\r";
-			else if (el == '\n')
-				output_stream << "\\n";
-			else
-				output_stream << el;
-		}
-		return *this;
-	};
+		template <typename T>
+		CustomOutputStream& operator<<(const T& value) {
+			for (const auto& el : value) {
+				if (el == '\r')
+					output_stream << "\\r";
+				else if (el == '\n')
+					output_stream << "\\n";
+				else
+					output_stream << el;
+			}
+			return *this;
+		};
 
-	// Override the << operator for endl
-	CustomOutputStream& operator<<(ostream& (*manipulator)(ostream&)) {
-		manipulator(output_stream);
-		return *this;
-	};
+		// Override the << operator for endl
+		CustomOutputStream& operator<<(ostream& (*manipulator)(ostream&)) {
+			manipulator(output_stream);
+			return *this;
+		};
 
-private:
-	ostream& output_stream;
+	private:
+		ostream& output_stream;
 };
-
 
 class Server {
 	private :
