@@ -6,7 +6,7 @@
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/01/31 11:13:19 by ageels        #+#    #+#                 */
-/*   Updated: 2024/01/31 11:25:24 by ageels        ########   odam.nl         */
+/*   Updated: 2024/01/31 12:51:14 by ageels        ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -114,21 +114,21 @@ bool Channel::isInviteOnly() const {
 bool Channel::hasTopicRestricted() const {
 	return this->operatorOnly;
 }
-bool Channel::hasMode(char mode) const {
-	if (mode == 'i') {
-		return this->isInviteOnly();
-	}
-	if (mode == 't') {
-		return this->hasTopicRestricted();
-	}
-	if (mode == 'k') {
-		return this->password.size() == 0;
-	}
-	if (mode == 'l') {
-		return this->userLimit != 0;
-	}
-	return false;
-}
+// bool Channel::hasMode(char mode) const {
+// 	if (mode == 'i') {
+// 		return this->isInviteOnly();
+// 	}
+// 	if (mode == 't') {
+// 		return this->hasTopicRestricted();
+// 	}
+// 	if (mode == 'k') {
+// 		return this->password.size() == 0;
+// 	}
+// 	if (mode == 'l') {
+// 		return this->userLimit != 0;
+// 	}
+// 	return false;
+// }
 bool Channel::hasOperator(const Client &client) const {
 	if (find(this->operators.begin(), this->operators.end(), &client) != this->operators.end()) {
 		return true;
@@ -154,14 +154,14 @@ void Channel::setPassword(const string& password) {
 void Channel::setTopic(const string& topic) {
 	this->topic = topic;
 }
-void Channel::toggleInviteOnly()
-{
-	if (this->isInviteOnly()) {
-		this->takeInviteOnly();
-	} else {
-		this->makeInviteOnly();
-	}
-}
+// void Channel::toggleInviteOnly()
+// {
+// 	if (this->isInviteOnly()) {
+// 		this->takeInviteOnly();
+// 	} else {
+// 		this->makeInviteOnly();
+// 	}
+// }
 void Channel::setUserLimit(size_t limit) {
 	this->userLimit = limit;
 }
@@ -172,20 +172,20 @@ void Channel::makeTopicOperatorOnly() {
 void Channel::makeInviteOnly() {
 	this->inviteOnly = true;
 }
-void Channel::addMode(char mode, const string& password, size_t userLimit) {
-	if (mode == 'i') {
-		this->makeInviteOnly();
-	}
-	if (mode == 't') {
-		this->makeTopicOperatorOnly();
-	}
-	if (mode == 'k') {
-		this->password = password;
-	}
-	if (mode == 'l') {
-		this->userLimit = userLimit;
-	}
-}
+// void Channel::addMode(char mode, const string& password, size_t userLimit) {
+// 	if (mode == 'i') {
+// 		this->makeInviteOnly();
+// 	}
+// 	if (mode == 't') {
+// 		this->makeTopicOperatorOnly();
+// 	}
+// 	if (mode == 'k') {
+// 		this->password = password;
+// 	}
+// 	if (mode == 'l') {
+// 		this->userLimit = userLimit;
+// 	}
+// }
 void Channel::addOperator(Client &client) {
 	if (find(operators.begin(), operators.end(), &client) == operators.end()) {
 		this->operators.push_back(&client);
@@ -211,20 +211,20 @@ void Channel::takeTopicOperatorOnly() {
 void Channel::takeInviteOnly() {
 	this->inviteOnly = false;
 }
-void Channel::removeMode(char mode) {
-	if (mode == 'i') {
-		this->takeInviteOnly();
-	}
-	if (mode == 't') {
-		this->takeTopicOperatorOnly();
-	}
-	if (mode == 'k') {
-		this->password = "";
-	}
-	if (mode == 'l') {
-		this->userLimit = 0;
-	}
-}
+// void Channel::removeMode(char mode) {
+// 	if (mode == 'i') {
+// 		this->takeInviteOnly();
+// 	}
+// 	if (mode == 't') {
+// 		this->takeTopicOperatorOnly();
+// 	}
+// 	if (mode == 'k') {
+// 		this->password = "";
+// 	}
+// 	if (mode == 'l') {
+// 		this->userLimit = 0;
+// 	}
+// }
 bool Channel::removeOperator(const Client& client) {
 	auto it = find(operators.begin(), operators.end(), &client);
 	if (it == operators.end()) {
@@ -279,19 +279,19 @@ void	Channel::broadcastToChannel(const string& message) {
 	}
 }
 
-ostream& operator<<(ostream& os, const Channel& channel) {
-	os << "Channel(" << channel.getName() << ", [";
-	const vector<Client *>& members = channel.getMembersConst();
-	for (vector<Client *>::const_iterator it = members.begin(); it != members.end(); it++) {
-		os << *it;
-		if (it + 1 != members.end()) {
-			os << ", ";
-		}
-	}
-	os << "])";
+// ostream& operator<<(ostream& os, const Channel& channel) {
+// 	os << "Channel(" << channel.getName() << ", [";
+// 	const vector<Client *>& members = channel.getMembersConst();
+// 	for (vector<Client *>::const_iterator it = members.begin(); it != members.end(); it++) {
+// 		os << *it;
+// 		if (it + 1 != members.end()) {
+// 			os << ", ";
+// 		}
+// 	}
+// 	os << "])";
 
-	return os;
-}
+// 	return os;
+// }
 
 bool operator==(const Channel& lhs, const Channel& rhs) {
 	return lhs.getName() == rhs.getName();
