@@ -6,7 +6,7 @@
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/01/31 11:09:53 by ageels        #+#    #+#                 */
-/*   Updated: 2024/01/31 13:19:12 by ageels        ########   odam.nl         */
+/*   Updated: 2024/01/31 13:32:41 by ageels        ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,20 +14,15 @@
 
 #include <vector>
 	using std::vector;
-
 #include <ostream>
 	using std::ostream;
-
 #include <algorithm>
 	using std::find;
-
 #include <utility>
 	using std::pair;
-
 #include <string>
 	using std::string;
 	using std::to_string;
-
 #include <deque>
 	using std::deque;
 

@@ -949,10 +949,6 @@ string Executor::new_build_reply(const string& prefix, int response_code, const 
 // 	return response.str() + " " + callername + " " + target + " " + channel + " :" + message + "\r\n";
 // }
 
-std::ostream& operator<<(std::ostream& os, const Env& e) {
-	os << "env(" << e.getHostname() << ", " << e.getIP() << ", "<< e.getPort() << ")";
-	return os;
-}
 
 Client& Executor::getClientByNick(const string nick) {
 	return this->e.getClientByNick(nick);

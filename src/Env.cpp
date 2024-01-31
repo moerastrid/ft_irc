@@ -1,5 +1,32 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        ::::::::            */
+/*   Env.cpp                                            :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: ageels <ageels@student.codam.nl>             +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2024/01/31 13:34:54 by ageels        #+#    #+#                 */
+/*   Updated: 2024/01/31 13:51:48 by ageels        ########   odam.nl         */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "Env.hpp"
-#include "Msg.hpp"
+
+Env::Env() {
+	Msg("env - default constructor", "CLASS");
+}
+Env::Env(const Env &src) {
+	*this = src;
+	Msg("env - copy constructor", "CLASS");
+}
+Env &Env::operator=(const Env &src) {
+	(void)src;
+	Msg("env - assignation operator", "CLASS");
+	return (*this);
+}
+Env::~Env() {
+	Msg("env - default destructor", "CLASS");
+}
 
 Env::Env(int port, string pass) : pass(pass), port(port) {
 	Msg("env - constructor(port, pass)", "CLASS");
@@ -38,13 +65,13 @@ deque<Client>::iterator	Env::getItToClientByFD(int fd) {
 	return clients.end();
 }
 
-deque<Client>::iterator	Env::getItToClientByNick(const string& nick) {
-	for (deque<Client>::iterator it = clients.begin(); it != clients.end(); it++) {
-		if (it->getNickname() == nick)
-			return it;
-	}
-	return clients.end();
-}
+// deque<Client>::iterator	Env::getItToClientByNick(const string& nick) {
+// 	for (deque<Client>::iterator it = clients.begin(); it != clients.end(); it++) {
+// 		if (it->getNickname() == nick)
+// 			return it;
+// 	}
+// 	return clients.end();
+// }
 
 deque<Channel>::iterator	Env::getItToChannelByName(const string& name) {
 	for (deque<Channel>::iterator it = channels.begin(); it != channels.end(); it++) {
@@ -54,9 +81,9 @@ deque<Channel>::iterator	Env::getItToChannelByName(const string& name) {
 	return channels.end();
 }
 
-deque<Channel>::iterator	Env::getItToChannels() {
-	return	channels.begin();
-}
+// deque<Channel>::iterator	Env::getItToChannels() {
+// 	return	channels.begin();
+// }
 
 deque<Client>&	Env::getClients() {
 	return this->clients;
@@ -82,11 +109,15 @@ const	string&	Env::getIP() const {
 	return this->ip;
 }
 
-//setters
 void	Env::setHostname(const string &hostname) {
 	this->hostname = hostname;
 }
 
 void	Env::setIP(const string &ip) {
 	this->ip = ip;
+}
+
+std::ostream& operator<<(std::ostream& os, const Env& e) {
+	os << "env(" << e.getHostname() << ", " << e.getIP() << ", "<< e.getPort() << ")";
+	return os;
 }

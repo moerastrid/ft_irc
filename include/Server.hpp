@@ -62,6 +62,10 @@ class Server {
 		struct sockaddr_in		sockin;
 		struct pollfd			sockfd;
 
+		// #TODO default constructor
+		Server(const Server &src);						// copy constructor
+		Server &operator=(const Server &src);			// = sign operator
+
 		void	setUp();
 		void	setInfo();
 		int		setPoll();
@@ -78,8 +82,6 @@ class Server {
 
 		Server(Env& env);								// constructor (env)
 		~Server();										// default destructor
-		Server(const Server &src);						// copy constructor
-		Server &operator=(const Server &src);			// = sign operator
 		
 		void						run(Executor& ex);
 		const string				getName() const;

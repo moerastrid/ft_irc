@@ -21,7 +21,7 @@ Server::Server(const Server &src) : e(src.e) {
 Server &Server::operator=(const Server &src) {
 	Msg("Server - assignment operator", "CLASS");
 	if (this != &src) {
-		this->e = src.e;
+	//	this->e = src.e; #TODO look into this
 		this->sockin = src.sockin;
 		this->sockfd = src.sockfd;
 	}
