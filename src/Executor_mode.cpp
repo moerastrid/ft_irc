@@ -6,7 +6,7 @@
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/01/31 14:43:53 by ageels        #+#    #+#                 */
-/*   Updated: 2024/01/31 18:17:30 by ageels        ########   odam.nl         */
+/*   Updated: 2024/01/31 19:50:29 by ageels        ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -154,7 +154,7 @@ void Executor::handle_k_mode(const bool add, const string& arg, Channel& target)
 void Executor::handle_o_mode(const bool add, const string& arg, Channel& target) {
 	if (!arg.size())
 		throw std::invalid_argument("");
-	Client& c = this->getClientByNick(arg);
+	Client& c = this->e.getClientByNick(arg);
 	if (c == Client::nullclient)
 		throw std::domain_error("");
 	if (!target.hasMember(c))
@@ -219,13 +219,13 @@ string Executor::handle_modes(const Client& caller, const vector<tuple<bool, sig
 					handle_o_mode(add, modearg, target);
 					message += build_mode_reply(caller.getNickname(), target.getName(), return_modestring(add, mode), modearg);
 				} catch (const std::invalid_argument& e) {
-						message += new_build_reply(getHostname(), ERR_NEEDMOREPARAMS, caller.getNickname(), modearg, "Invalid or missing parameter");
+						message += new_build_reply(ERR_NEEDMOREPARAMS, caller.getNickname(), modearg, "Invalid or missing parameter");
 						cout << "ARG ERR" << endl;
 				} catch (const std::domain_error& e) {
-						message += new_build_reply(getHostname(), ERR_NOSUCHNICK, caller.getNickname(), modearg, "No such nick");
+						message += new_build_reply(ERR_NOSUCHNICK, caller.getNickname(), modearg, "No such nick");
 						cout << "NONICK ERR" << endl;
 				} catch (const std::runtime_error& e) {
-						message += new_build_reply(getHostname(), ERR_USERNOTINCHANNEL, caller.getNickname(), target.getName(), "They aren't on that channel");
+						message += new_build_reply(ERR_USERNOTINCHANNEL, caller.getNickname(), target.getName(), "They aren't on that channel");
 						cout << "NOTINCHAN ERR" << endl;
 				}
 				
@@ -242,7 +242,7 @@ string Executor::handle_modes(const Client& caller, const vector<tuple<bool, sig
 				break;
 			case 0:
 				cout << "0 mode detected: " << add << endl;
-				message += new_build_reply(getHostname(), ERR_UMODEUNKNOWNFLAG, target.getName(), "Unknown MODE flag: [" + to_string(mode) + "]");
+				message += new_build_reply(ERR_UMODEUNKNOWNFLAG, target.getName(), "Unknown MODE flag: [" + to_string(mode) + "]");
 				break;
 			case -1: //ignored
 				cout << "-1 mode detected: " << add << endl;
@@ -251,7 +251,7 @@ string Executor::handle_modes(const Client& caller, const vector<tuple<bool, sig
 				cout << "default mode detected: " << add << endl;
 				string test = "";
 				test += mode;
-				message += new_build_reply(getHostname(), ERR_UMODEUNKNOWNFLAG, target.getName(), "Unknown MODE flag: [" + test + "]");
+				message += new_build_reply(ERR_UMODEUNKNOWNFLAG, target.getName(), "Unknown MODE flag: [" + test + "]");
 				break;
 		}
 	}
@@ -293,20 +293,20 @@ string Executor::handle_modes(const Client& caller, const vector<tuple<bool, sig
 string Executor::run_MODE(const vector<string>& args, Client& caller) {
 
 	string target = args[0];
-	Client& target_client = this->getClientByNick(target);
-	Channel& channel = this->getChannelByName(target);
+	Client& target_client = this->e.getClientByNick(target);
+	Channel& channel = this->e.getChannelByName(target);
 	bool target_is_channel = is_channel(target);
 
 	if (!target_is_channel) {
 		if (target_client == Client::nullclient)
-			return new_build_reply(getHostname(), ERR_NOSUCHNICK, target, "No such nick/channel");
+			return new_build_reply(ERR_NOSUCHNICK, target, "No such nick/channel");
 		else if (caller.getNickname().compare(target) != 0)
-			return this->new_build_reply(getHostname(), ERR_USERSDONTMATCH, target, "Cant change mode for other users");
+			return this->new_build_reply(ERR_USERSDONTMATCH, target, "Cant change mode for other users");
 		else
 			return "";
 	}
 	if (channel == Channel::nullchan) {
-		return new_build_reply(getHostname(), ERR_NOSUCHCHANNEL, target, "No such channel");
+		return new_build_reply(ERR_NOSUCHCHANNEL, target, "No such channel");
 	}
 	if (args.size() == 1) { // No modestring
 		pair<string, string> replymodes = channel.getModes();
@@ -321,7 +321,7 @@ string Executor::run_MODE(const vector<string>& args, Client& caller) {
 	}
 
 	if (check_privileges(caller, channel, modestring) == false) {
-		return new_build_reply(getHostname(), ERR_CHANOPRIVSNEEDED, target, "You're not an operator of " + target);
+		return new_build_reply(ERR_CHANOPRIVSNEEDED, target, "You're not an operator of " + target);
 	}
 
 	if (!modestring.size()) {

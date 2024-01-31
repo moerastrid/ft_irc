@@ -6,7 +6,7 @@
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/01/31 18:15:53 by ageels        #+#    #+#                 */
-/*   Updated: 2024/01/31 19:32:05 by ageels        ########   odam.nl         */
+/*   Updated: 2024/01/31 19:34:27 by ageels        ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,10 +42,6 @@ class Server {
 		Env& 					e;
 		struct sockaddr_in		sockin;
 		struct pollfd			sockfd;
-
-		// #TODO default constructor
-		Server(const Server &src);
-		Server &operator=(const Server &src);
 
 		void	setUp();
 		void	setInfo();

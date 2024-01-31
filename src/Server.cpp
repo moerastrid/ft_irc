@@ -6,26 +6,13 @@
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/01/31 18:15:47 by ageels        #+#    #+#                 */
-/*   Updated: 2024/01/31 19:32:39 by ageels        ########   odam.nl         */
+/*   Updated: 2024/01/31 19:34:22 by ageels        ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 
 //private
-Server::Server(const Server &src) : e(src.e) {
-	Msg("Server - copy contructor", "CLASS");
-	*this = src;
-}
-Server &Server::operator=(const Server &src) {
-	Msg("Server - assignment operator", "CLASS");
-	if (this != &src) {
-	//	this->e = src.e; #TODO look into this
-		this->sockin = src.sockin;
-		this->sockfd = src.sockfd;
-	}
-	return (*this);
-}
 
 void	Server::setUp() {
 	this->sockfd.fd = socket(AF_INET, SOCK_STREAM|SOCK_NONBLOCK, 0);
