@@ -6,13 +6,13 @@
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/01/31 11:13:19 by ageels        #+#    #+#                 */
-/*   Updated: 2024/01/31 12:51:14 by ageels        ########   odam.nl         */
+/*   Updated: 2024/01/31 13:14:30 by ageels        ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Channel.hpp"
-#include "Msg.hpp"
 
+// Static
 Channel Channel::nullchan;
 
 Channel::Channel() {

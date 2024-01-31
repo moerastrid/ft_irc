@@ -1,18 +1,30 @@
-#ifndef CLIENT_HPP
-#define CLIENT_HPP
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        ::::::::            */
+/*   Client.hpp                                         :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: ageels <ageels@student.codam.nl>             +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2024/01/31 12:53:56 by ageels        #+#    #+#                 */
+/*   Updated: 2024/01/31 13:14:20 by ageels        ########   odam.nl         */
+/*                                                                            */
+/* ************************************************************************** */
+
+#pragma once
 
 #include <ostream>
-using std::ostream;
+	using std::ostream;
 
 #include <string>
-using std::string;
-using std::to_string;
+	using std::string;
+	using std::to_string;
 
 #include <poll.h>
 
 #include "Channel.hpp"
+	class Channel; // Forward declaration
 
-class Channel; // Forward declaration
+#include "Msg.hpp"
 
 class Client {
 private:
@@ -24,7 +36,6 @@ private:
 	string			servername = "";
 	string			realname = "";
 	string			password = "";
-
 	string			datatosend = ""; // data we need to send to this client
 	string			datatorecv = ""; // data we need to recv from this client
 	bool			expelled = false;
@@ -37,18 +48,16 @@ public:
 	Client(const Client& other);
 	Client& operator=(const Client& other);
 
-	// Getters
 	const struct pollfd&	getPFD() const;
 	int						getFD() const;
 	const string&			getNickname() const;
 	const string&			getUsername() const;
 	const string&			getHostname() const;
-	const string&			getServername() const;
+//	const string&			getServername() const;
 	const string&			getRealname() const;
 	const string&			getPassword() const;
-	const string			getFullName() const;
+	const string			getFullName() const;	// full name : user!name@host 
 
-	// Setters
 	void					setEvents(const short events);
 	void					setRevents(const short revents);
 	void					addEvent(const short event);
@@ -65,28 +74,21 @@ public:
 	void					addSendData(const string& message);
 	void					addRecvData(const string& message);
 
-	// Takers (getters, but these also modifiy the class by deleting what is taken)
 	const string			takeSendData();
 	const string			takeRecvData();
 
-	// Havers (bool)
 	bool					hasSendData() const;
 	bool					hasRecvData() const;
 	bool					isOperator(const Channel& c) const;
-	bool					checkEvent(short event) const;
+//	bool					checkEvent(short event) const;
 	bool					checkRevent(short revent) const;
 	bool					isRegistered() const;
 	const bool&				isExpelled() const;
 
-	// Changers (set values on some other object)
-	void					makeOperator(Channel& c);
-	void					takeOperator(Channel& c);
+//	void					makeOperator(Channel& c);
+//	void					takeOperator(Channel& c);
 
-	// Old
-	void					removeSuccesfullySentDataFromBuffer(size_t	nbytes); //deprecated by takeSendData()
 };
 
 bool operator==(const Client& lhs, const Client& rhs);
-std::ostream& operator<<(std::ostream& os, const Client& client);
-
-#endif /* end of include guard: CLIENT_HPP */
+//std::ostream& operator<<(std::ostream& os, const Client& client);

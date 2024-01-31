@@ -1,18 +1,29 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        ::::::::            */
+/*   Client.cpp                                         :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: ageels <ageels@student.codam.nl>             +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2024/01/31 12:53:59 by ageels        #+#    #+#                 */
+/*   Updated: 2024/01/31 13:14:13 by ageels        ########   odam.nl         */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "Client.hpp"
-#include "Msg.hpp"
 
+// Static
+Client Client::nullclient = Client(-1);
 
+Client::~Client() { 
+	Msg("client - default destructor", "CLASS");
+}
 Client::Client(int fd) {
 	this->pfd.fd = fd;
 	this->pfd.events = POLLIN|POLLHUP|POLLRDHUP;
 	this->pfd.revents = 0;
 	Msg("client - default constructor", "CLASS");
-};
-
-Client::~Client() { 
-	Msg("client - default destructor", "CLASS");
 }
-
 Client::Client(const Client& other) {
 	this->nickname = other.nickname;
 	this->username = other.username;
@@ -23,7 +34,6 @@ Client::Client(const Client& other) {
 	this->pfd = other.pfd;
 	Msg("client - copy constructor", "CLASS");
 }
-
 Client& Client::operator=(const Client& other) {
 	if (this != &other) {
 		this->nickname = other.nickname;
@@ -38,7 +48,6 @@ Client& Client::operator=(const Client& other) {
 	return *this;
 }
 
-// Getters
 const struct pollfd	&Client::getPFD() const {
 	return this->pfd;
 }
@@ -54,14 +63,18 @@ const string& Client::getUsername() const {
 const string& Client::getHostname() const {
 	return this->hostname;
 }
-const string& Client::getServername() const {
-	return this->servername;
-}
+// const string& Client::getServername() const {
+// 	return this->servername;
+// }
 const string& Client::getRealname() const {
 	return this->realname;
 }
 const string& Client::getPassword() const {
 	return this->password;
+}
+const string	Client::getFullName() const {
+	std::string temp = this->getNickname() + "!" + this->getUsername() + "@" + this->getHostname();
+	return(temp);
 }
 
 /*
@@ -114,13 +127,7 @@ Channel Mode (MODE):
 These examples demonstrate scenarios where the full user!nick@host format is commonly used. It's important to note that not all messages require the full prefix, and some may only use the nickname portion. The inclusion of the full prefix provides more detailed information about the sender's identity.
 */
 
-// full name : user!name@host 
-const string	Client::getFullName() const {
-	std::string temp = this->getNickname() + "!" + this->getUsername() + "@" + this->getHostname();
-	return(temp);
-}
 
-// Setters
 void Client::setEvents(const short events) {
 	this->pfd.events = events;
 }
@@ -136,6 +143,7 @@ void Client::removeEvent(const short event) {
 void Client::expell() {
 	this->expelled = true;
 }
+
 void Client::setNickname(const string& nickname) {
 	this->nickname = nickname;
 }
@@ -165,9 +173,7 @@ void Client::addRecvData(const string& message) {
 	this->datatorecv += message;
 }
 
-
-// Takers
-const string Client::takeSendData() { //was GetSendData(). I've changed it to return just one full line, or an empty string if there is no newline, and it also removes the line from the buffer if it has taken one.
+const string Client::takeSendData() {
 	string res = "";
 	size_t pos = this->datatosend.find('\n');
 	if (pos != string::npos) {
@@ -186,7 +192,6 @@ const string Client::takeRecvData() {
 	return res;
 }
 
-// Havers (bool)
 bool Client::hasSendData() const {
 	return this->datatosend.find('\n') != string::npos;
 }
@@ -196,47 +201,36 @@ bool Client::hasRecvData() const {
 bool Client::isOperator(const Channel& c) const {
 	return c.hasOperator(*this);
 }
-
-bool Client::checkEvent(short event) const {
-	return this->pfd.events & event;
-}
+// bool Client::checkEvent(short event) const {
+// 	return this->pfd.events & event;
+// }
 bool Client::checkRevent(short revent) const {
 	return this->pfd.revents & revent;
 }
 bool Client::isRegistered() const {
 	return !username.empty() && !nickname.empty();
 }
-
 const bool&	Client::isExpelled() const {
 	return(this->expelled);
 }
 
-// Changers
-void Client::makeOperator(Channel& c) {
-	c.addOperator(*this);
-}
-void Client::takeOperator(Channel& c) {
-	c.removeOperator(*this);
-}
+// void Client::makeOperator(Channel& c) {
+// 	c.addOperator(*this);
+// }
+// void Client::takeOperator(Channel& c) {
+// 	c.removeOperator(*this);
+// }
 
-
-// Old
-void Client::removeSuccesfullySentDataFromBuffer(size_t nbytes) {
-	datatosend.erase(0, nbytes);
-}
-
-// Static
-Client Client::nullclient = Client(-1);
 
 // Out of Class stuff
-ostream& operator<<(ostream& os, const Client& client) {
-	string str = string("Client(") + to_string(client.getFD()) + ", " + client.getNickname() + ", " + client.getUsername() + ", " + client.getHostname() + ", " + client.getServername() + ", " + client.getRealname() + ")";
-	os << str;
-	return os;
-}
 bool operator==(const Client &lhs, const Client &rhs) {
 	return 	lhs.getFD() == rhs.getFD() &&
 			lhs.getNickname() == rhs.getNickname() &&
 			lhs.getUsername() == rhs.getUsername();
 }
+// ostream& operator<<(ostream& os, const Client& client) {
+// 	string str = string("Client(") + to_string(client.getFD()) + ", " + client.getNickname() + ", " + client.getUsername() + ", " + client.getHostname() + ", " + client.getServername() + ", " + client.getRealname() + ")";
+// 	os << str;
+// 	return os;
+// }
 

@@ -6,12 +6,11 @@
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/01/31 11:09:53 by ageels        #+#    #+#                 */
-/*   Updated: 2024/01/31 12:51:17 by ageels        ########   odam.nl         */
+/*   Updated: 2024/01/31 13:14:35 by ageels        ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef CHANNEL_HPP
-#define CHANNEL_HPP
+#pragma once
 
 #include <vector>
 	using std::vector;
@@ -33,8 +32,9 @@
 	using std::deque;
 
 #include "Client.hpp"
+	class Client; // Forward declaration;
 
-class Client; // Forward declaration;
+#include "Msg.hpp"
 
 class Channel {
 private:
@@ -100,7 +100,3 @@ public:
 
 //std::ostream& operator<<(std::ostream& os, const Channel& channel);
 bool operator==(const Channel& lhs, const Channel& rhs);
-
-#endif /* end of include guard: CHANNEL_HPP */
-
-
