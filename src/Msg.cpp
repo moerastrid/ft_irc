@@ -6,25 +6,38 @@
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/01/31 14:57:33 by ageels        #+#    #+#                 */
-/*   Updated: 2024/01/31 14:57:34 by ageels        ########   odam.nl         */
+/*   Updated: 2024/01/31 19:30:56 by ageels        ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Msg.hpp"
 
-void	Msg::structure(string text) {
+void	Msg::structure(const string text) {
 	cout << "\x1B[35m" << "CLASS-\t\t" << text << "\x1B[0m" << endl;
 }
-void	Msg::debug(string text) {
+void	Msg::customStream(const string text) {
+	cout << "\x1B[44m" << "STREAM-\t\t";
+	for (auto i : text) {
+		if (i == '\r') {
+			cout << "\\r";
+		} else if (i == '\n') {
+			cout << "\\n";
+		} else {
+			cout << i;
+		}
+	}
+	cout << "\033[0m" << endl;
+}
+void	Msg::debug(const string text) {
 	cout << "\x1B[36m" << "DEBUG-\t\t" << text << "\x1B[0m" << endl;
 }
-void	Msg::info(string text) {
+void	Msg::info(const string text) {
 	cout << "\x1B[34m" << "INFO-\t\t" << text << "\x1B[0m" << endl;
 }
-void	Msg::warning(string text) {
+void	Msg::warning(const string text) {
 	cout << "\x1B[33m" << "WARNING-\t" << text << "\x1B[0m" << endl;
 }
-void	Msg::error(string text) {
+void	Msg::error(const string text) {
 	cout << "\x1B[31m" << "ERROR-\t\t" << text << "\x1B[0m" << endl;
 }
 
@@ -40,9 +53,9 @@ Msg	&Msg::operator=(const Msg &src) {
 typedef void (Msg::*Msgptr)(void);
 
 Msg::~Msg() { }
-Msg::Msg(string text, string level) {
-	void	(Msg::*Msgptr[])(string) = {&Msg::structure, &Msg::debug, &Msg::info, &Msg::warning, &Msg::error};
-	string severity[] = {"CLASS", "DEBUG", "INFO", "WARNING", "ERROR"};
+Msg::Msg(const string text, const string level) {
+	void	(Msg::*Msgptr[])(string) = {&Msg::structure, &Msg::customStream, &Msg::debug, &Msg::info, &Msg::warning, &Msg::error};
+	string severity[] = {"CLASS", "STREAM", "DEBUG", "INFO", "WARNING", "ERROR"};
 
 	for (int i(0); i < 5; i++)
 	{
@@ -52,5 +65,6 @@ Msg::Msg(string text, string level) {
 			return ;
 		}
 	}
+	cout << "\x1B[31m" << "severity lvl not found for message-\t\t" << text << "\x1B[0m" << endl;
 }
 

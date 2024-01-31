@@ -1,17 +1,29 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        ::::::::            */
+/*   Server.hpp                                         :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: ageels <ageels@student.codam.nl>             +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2024/01/31 18:15:53 by ageels        #+#    #+#                 */
+/*   Updated: 2024/01/31 19:32:05 by ageels        ########   odam.nl         */
+/*                                                                            */
+/* ************************************************************************** */
+
 #pragma once
+
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/param.h>
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
-#include <unistd.h>
-#include <cstdlib>
-#include <cstring>
+#include <poll.h>
 
+#include <cstring>
+#include <fstream>
 #include <string>
 	using std::string;
-
 #include <vector>
 	using std::vector;
 
@@ -20,72 +32,40 @@
 #include "Executor.hpp"
 #include "Env.hpp"
 
-#include <fstream>
-
 #define BUFSIZE 512
 
-#include <poll.h>
-
 class Executor; // Forward declaration
-
-class CustomOutputStream : public ostream {
-	public:
-		CustomOutputStream(ostream& output) : ostream(output.rdbuf()), output_stream(output) {}
-
-		template <typename T>
-		CustomOutputStream& operator<<(const T& value) {
-			for (const auto& el : value) {
-				if (el == '\r')
-					output_stream << "\\r";
-				else if (el == '\n')
-					output_stream << "\\n";
-				else
-					output_stream << el;
-			}
-			return *this;
-		};
-
-		// Override the << operator for endl
-		CustomOutputStream& operator<<(ostream& (*manipulator)(ostream&)) {
-			manipulator(output_stream);
-			return *this;
-		};
-
-	private:
-		ostream& output_stream;
-};
 
 class Server {
 	private :
 		const string			name	= "REAL TALK IRC";
-		const string			slogan	= "Now we're talking";
 		Env& 					e;
 		struct sockaddr_in		sockin;
 		struct pollfd			sockfd;
 
 		// #TODO default constructor
-		Server(const Server &src);						// copy constructor
-		Server &operator=(const Server &src);			// = sign operator
+		Server(const Server &src);
+		Server &operator=(const Server &src);
 
 		void	setUp();
 		void	setInfo();
 		int		setPoll();
+
 		void	addConnection();
 		void	closeConnection(const int fd);
+
 		bool	receivefromClient(Client &cl);
 		bool	sendtoClient(Client &cl);
+
 		bool	comm_pollin(Executor& ex, Client &client);
 		void	comm_pollout(Client &client);
 
 	public :
-		static CustomOutputStream customOut; //#TODO delete all CustomOutput related code before handing in.
-		static CustomOutputStream customErr;
-
-		Server(Env& env);								// constructor (env)
-		~Server();										// default destructor
+		Server(Env& env);
+		~Server();
 		
-		void						run(Executor& ex);
-		const string				getName() const;
+		void			run(Executor& ex);
+		const string	getName() const;
 
 		class ServerException : public std::runtime_error {
 		public:

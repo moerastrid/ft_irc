@@ -1,23 +1,22 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        ::::::::            */
+/*   Server.cpp                                         :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: ageels <ageels@student.codam.nl>             +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2024/01/31 18:15:47 by ageels        #+#    #+#                 */
+/*   Updated: 2024/01/31 19:32:39 by ageels        ########   odam.nl         */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "Server.hpp"
 
-// #TODO delete
-void printHex(const std::string& str) {
-    for (char c : str) {
-        std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(static_cast<unsigned char>(c)) << " ";
-    }
-    std::cout << std::dec << std::endl;
-}
-
-Server::~Server() {
-	Msg("Server - default destructor", "CLASS");
-	close(sockfd.fd);
-}
-
+//private
 Server::Server(const Server &src) : e(src.e) {
 	Msg("Server - copy contructor", "CLASS");
 	*this = src;
 }
-
 Server &Server::operator=(const Server &src) {
 	Msg("Server - assignment operator", "CLASS");
 	if (this != &src) {
@@ -26,36 +25,6 @@ Server &Server::operator=(const Server &src) {
 		this->sockfd = src.sockfd;
 	}
 	return (*this);
-}
-
-Server::Server(Env& e) : e(e) {
-	Msg("Server - constructor (e)", "CLASS");
-	memset(&this->sockin, 0, sizeof(this->sockin));
-	memset(&this->sockfd, 0, sizeof(this->sockfd));
-
-	this->sockfd.events = POLLIN|POLLHUP|POLLRDHUP;
-	this->sockin.sin_family = AF_INET;
-	this->sockin.sin_port = htons(this->e.getPort());
-	this->sockin.sin_addr.s_addr = INADDR_ANY;
-
-	Server::setUp();
-	Server::setInfo();
-
-	Msg("server waiting for connections ... ", "INFO");
-}
-
-void	Server::setInfo() {
-	char	hostname[MAXHOSTNAMELEN];
-	bzero(hostname, sizeof(hostname));
-	if (gethostname(hostname, MAXHOSTNAMELEN) != 0)
-		throw ServerException("error inServer::setInfo - gethostname");
-	this->e.setHostname(hostname);
-	struct hostent *host_entry;
-	host_entry = gethostbyname(hostname);
-	if (host_entry == NULL)
-		throw ServerException("error inServer::setInfo - gethostbyname");
-	string ip = inet_ntoa(*((struct in_addr*)host_entry->h_addr_list[0]));
-	this->e.setIP(ip);
 }
 
 void	Server::setUp() {
@@ -74,6 +43,48 @@ void	Server::setUp() {
 	if (listen(this->sockfd.fd, SOMAXCONN) == -1)
 		throw ServerException("error in Server::setUp - listen");
 }
+void	Server::setInfo() {
+	char	hostname[MAXHOSTNAMELEN];
+	bzero(hostname, sizeof(hostname));
+	if (gethostname(hostname, MAXHOSTNAMELEN) != 0)
+		throw ServerException("error inServer::setInfo - gethostname");
+	this->e.setHostname(hostname);
+	struct hostent *host_entry;
+	host_entry = gethostbyname(hostname);
+	if (host_entry == NULL)
+		throw ServerException("error inServer::setInfo - gethostbyname");
+	string ip = inet_ntoa(*((struct in_addr*)host_entry->h_addr_list[0]));
+	this->e.setIP(ip);
+}
+int	Server::setPoll() {
+	vector<struct pollfd>	pollFds;
+
+	pollFds.push_back(sockfd);
+	for (const Client& client : this->e.getClients()) {
+		pollFds.push_back(client.getPFD());
+	}
+	int ret = poll(pollFds.data(), pollFds.size(), -1);
+	if (ret < 0) {
+		if (errno == EINTR)
+			Msg("poll returned -1", "INFO");
+		else
+			throw ServerException("error in Server::setPoll - poll");
+		return (0);
+	} else if (ret == 0) {
+		//Msg("None of the FD's are ready", "INFO");
+		return (ret);
+	}
+
+	for (const auto &pollFd : pollFds) {
+		if (pollFd.fd == sockfd.fd) {
+			sockfd.revents = pollFd.revents;
+		} else {
+			Client& c = this->e.getClientByFD(pollFd.fd);
+			c.setRevents(pollFd.revents);
+		}
+	}
+	return(ret);
+}
 
 void	Server::addConnection() {
 	socklen_t	tempSize = sizeof(sockin);
@@ -88,11 +99,7 @@ void	Server::addConnection() {
 		this->e.getClients().emplace_back(new_fd);
 	}
 }
-
 void	Server::closeConnection(const int fd) {
-	Msg("Connection closed on " + std::to_string(fd), "INFO");
-	//close(fd);
-
 	std::deque<Channel>& channels = this->e.getChannels();
 	std::deque<Client>::iterator client = this->e.getItToClientByFD(fd);
 	if (!channels.empty()) {
@@ -105,14 +112,41 @@ void	Server::closeConnection(const int fd) {
 				this->e.getChannels().erase(this->e.getItToChannelByName(channel.getName()));
 		}
 	}
+	Msg("Connection closed on " + std::to_string(fd), "INFO");
 	close(fd);
 	this->e.getClients().erase(client);
 }
 
-#include <string>
-#define BG_COLOR_MAGENTA "\033[45m" // #TODO delete
-#define COLOR_GREEN "\033[32m"
-#define COLOR_RESET "\033[0m"
+bool	Server::receivefromClient(Client &c) {
+	char	buf[BUFSIZE];
+	memset(&buf, 0, sizeof(buf));
+
+	int nbytes = recv(c.getFD(), buf, sizeof(buf) - 1, MSG_DONTWAIT);
+	if (nbytes < 0) {
+		Msg("error in receiving data", "ERROR"); 
+		return (false);
+	}
+	if (nbytes == 0) {
+		Msg("no connection with Client " + to_string(c.getFD()), "WARNING"); 
+		return (false);
+	}
+	c.addRecvData(string(buf));
+	return (true);
+}
+bool	Server::sendtoClient(Client &c) {
+	string	dataToSend = c.takeSendData();
+	if (dataToSend.empty()) {
+		c.setEvents(POLLIN|POLLHUP|POLLRDHUP);
+		return (true);
+	}
+	int nbytes = send(c.getFD(), dataToSend.c_str(), dataToSend.size(), 0);
+	if (nbytes <= 0) {
+		Msg("error in sending data", "ERROR");
+		return (false);
+	}
+	Msg("Sending: [" + dataToSend + "]", "STREAM");
+	return (true);
+}
 
 bool	Server::comm_pollin(Executor& ex, Client &client) {
 	if (receivefromClient(client) == false) {
@@ -120,12 +154,11 @@ bool	Server::comm_pollin(Executor& ex, Client &client) {
 		return false;
 	}
 
-	// Execute:
 	while (client.hasRecvData()) {
-		string receiveData = client.takeRecvData(); // Get the line. 
-		this->customOut << BG_COLOR_MAGENTA << "EXECUTING: [" << receiveData << "]" << COLOR_RESET << endl; // #TODO delete
-		Command cmd(receiveData);					// Turn it into a command.
-		if (ex.run(cmd, client) == false) {			// Run the command.
+		string receiveData = client.takeRecvData();
+		Msg("Executing [" + receiveData + "]", "STREAM");
+		Command cmd(receiveData);
+		if (ex.run(cmd, client) == false) {
 			if (!client.hasSendData())
 				closeConnection(client.getFD());
 			else
@@ -135,17 +168,39 @@ bool	Server::comm_pollin(Executor& ex, Client &client) {
 	}
 	return true ;
 }
-
 void	Server::comm_pollout(Client &client) {
 	if (sendtoClient(client) == false) {
 		closeConnection(client.getFD());
 	}
-	if (!client.hasSendData()) //check for more messages. If none, remove event.
+	if (!client.hasSendData())
 	{
 		client.removeEvent(POLLOUT);
 		if (client.isExpelled())
 			closeConnection(client.getFD());
 	}
+}
+
+
+//public
+Server::Server(Env& e) : e(e) {
+	Msg("Server - constructor (e)", "CLASS");
+	memset(&this->sockin, 0, sizeof(this->sockin));
+	memset(&this->sockfd, 0, sizeof(this->sockfd));
+
+	this->sockfd.events = POLLIN|POLLHUP|POLLRDHUP;
+	this->sockin.sin_family = AF_INET;
+	this->sockin.sin_port = htons(this->e.getPort());
+	this->sockin.sin_addr.s_addr = INADDR_ANY;
+
+	Server::setUp();
+	Server::setInfo();
+
+	Msg("server waiting for connections ... ", "INFO");
+}
+
+Server::~Server() {
+	Msg("Server - default destructor", "CLASS");
+	close(sockfd.fd);
 }
 
 void	Server::run(Executor& ex) {
@@ -185,69 +240,6 @@ void	Server::run(Executor& ex) {
 	}
 }
 
-bool	Server::receivefromClient(Client &c) {
-	char	buf[BUFSIZE];
-	memset(&buf, 0, sizeof(buf));
-
-	int nbytes = recv(c.getFD(), buf, sizeof(buf) - 1, MSG_DONTWAIT);
-	if (nbytes < 0) {
-		Msg("error in receiving data", "ERROR"); 
-		return (false);
-	}
-	if (nbytes == 0) {
-		Msg("no connection with Client " + to_string(c.getFD()), "WARNING"); 
-		return (false);
-	}
-	c.addRecvData(string(buf));
-
-	return (true);
-}
-
-bool	Server::sendtoClient(Client &c) {
-	string	dataToSend = c.takeSendData();
-	if (dataToSend.empty()) {
-		c.setEvents(POLLIN|POLLHUP|POLLRDHUP);
-		return (true);
-	}
-	int nbytes = send(c.getFD(), dataToSend.c_str(), dataToSend.size(), 0);
-	if (nbytes <= 0) {
-		Msg("error in sending data", "ERROR");
-		return (false);
-	}
-	this->customOut << COLOR_GREEN << "Sending: [" << dataToSend << "]" << COLOR_RESET << endl; //#TODO delete
-	return (true);
-}
-
-int	Server::setPoll() {
-	vector<struct pollfd>	pollFds;
-
-	pollFds.push_back(sockfd);
-	for (const Client& client : this->e.getClients()) {
-		pollFds.push_back(client.getPFD());
-	}
-	int ret = poll(pollFds.data(), pollFds.size(), -1);
-	if (ret < 0) {
-		if (errno == EINTR)
-			Msg("poll returned -1", "INFO");
-		else
-			throw ServerException("error in Server::setPoll - poll");
-		return (0);
-	} else if (ret == 0) {
-		//Msg("None of the FD's are ready", "INFO");
-		return (ret);
-	}
-
-	for (const auto &pollFd : pollFds) {
-		if (pollFd.fd == sockfd.fd) {
-			sockfd.revents = pollFd.revents;
-		} else {
-			Client& c = this->e.getClientByFD(pollFd.fd);
-			c.setRevents(pollFd.revents);
-		}
-	}
-	return(ret);
-}
-
 const string	Server::getName() const {
 	return name;
 }
@@ -256,12 +248,3 @@ std::ostream& operator<<(std::ostream& os, const Server& serv) {
 	os << "Server(" << serv.getName() << ")";
 	return os;
 }
-
-CustomOutputStream Server::customOut(std::cout);
-CustomOutputStream Server::customErr(std::cerr);
-// std::ofstream Server::outputfile("output.txt");
-
-
-// const char * Server::ServerException::what() const throw() {
-// 	return ("Server custom exception");
-// }

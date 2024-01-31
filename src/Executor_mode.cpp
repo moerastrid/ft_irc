@@ -6,12 +6,11 @@
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/01/31 14:43:53 by ageels        #+#    #+#                 */
-/*   Updated: 2024/01/31 14:45:55 by ageels        ########   odam.nl         */
+/*   Updated: 2024/01/31 18:17:30 by ageels        ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Executor.hpp"
-#include <cstdlib>
 
 static bool is_mode(char c) {
 	string modes = "itkol";

@@ -6,18 +6,11 @@
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/01/31 13:31:22 by ageels        #+#    #+#                 */
-/*   Updated: 2024/01/31 13:51:40 by ageels        ########   odam.nl         */
+/*   Updated: 2024/01/31 18:20:48 by ageels        ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
-
-#include <string.h>
-#include <poll.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/param.h>
-#include <netdb.h>
 
 #include <deque>
 	using std::deque;

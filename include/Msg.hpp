@@ -6,32 +6,36 @@
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/01/31 14:57:37 by ageels        #+#    #+#                 */
-/*   Updated: 2024/01/31 14:57:38 by ageels        ########   odam.nl         */
+/*   Updated: 2024/01/31 19:26:48 by ageels        ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 #include <iostream>
-using std::cout;
-using std::endl;
-
+	using std::cout;
+	using std::endl;
 #include <string>
-using std::string;
+	using std::string;
+	using std::next;
+	using std::find;
+#include <algorithm>
+	using std::replace;
 
 class Msg {
 	private	:
-		void	structure(string text);
-		void	debug(string text);
-		void	info(string text);
-		void	warning(string text);
-		void	error(string text);
+		void	structure(const string text);
+		void	customStream(const string text);
+		void	debug(const string text);
+		void	info(const string text);
+		void	warning(const string text);
+		void	error(const string text);
 
-		Msg();								//default constructor
-		Msg(const Msg &src);				// copy constructor
-		Msg	&operator=(const Msg &src);		// = sign operator
+		Msg();								
+		Msg(const Msg &src);				
+		Msg	&operator=(const Msg &src);		
 		typedef void (Msg::*Msgptr)(string);
 
 	public	:
-		~Msg();								// default destructor
-		Msg(string text, string level);
+		~Msg();								
+		Msg(const string text, const string level);
 };

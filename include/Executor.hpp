@@ -6,7 +6,7 @@
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/01/31 13:56:15 by ageels        #+#    #+#                 */
-/*   Updated: 2024/01/31 14:46:41 by ageels        ########   odam.nl         */
+/*   Updated: 2024/01/31 19:31:40 by ageels        ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -90,13 +90,10 @@
 #include "Command.hpp"
 #include "Env.hpp"
 
-//class Executor; // Forward declaration
-//typedef string (Executor::*mbrFuncPtr)(const vector<string>&, Client&);
 
 class Executor {
-	typedef string (Executor::*mbrFuncPtr)(const vector<string>&, Client&);
-
 	private:
+		typedef string (Executor::*mbrFuncPtr)(const vector<string>&, Client&);
 		map<string, mbrFuncPtr> funcMap;
 		map<string, pair<int, int>> argCount;
 		Env& e;
