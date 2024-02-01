@@ -6,7 +6,7 @@
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/01/31 14:56:22 by ageels        #+#    #+#                 */
-/*   Updated: 2024/01/31 20:34:26 by ageels        ########   odam.nl         */
+/*   Updated: 2024/02/01 15:46:02 by ageels        ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,8 @@ class Executor; // Forward declaration
 int				parse(int argc, char **argv);
 
 bool			is_channel(const string& name);
-bool			verify_name(const string& arg);
+bool 			is_name(const string &name);
+//bool			verify_name(const string& arg);
 //bool			verify_realname(const string& arg);
 vector<string>	split_args(const string& args);
 bool			compare_lowercase(const string& a, const string& b);

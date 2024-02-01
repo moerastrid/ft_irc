@@ -6,7 +6,7 @@
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/01/31 14:56:17 by ageels        #+#    #+#                 */
-/*   Updated: 2024/01/31 14:56:18 by ageels        ########   odam.nl         */
+/*   Updated: 2024/02/01 15:55:48 by ageels        ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,12 +16,9 @@ static bool is_channel_char(char c) {
 	return isalnum(c) || string("!#$%'()+,-./").find(c) != string::npos;
 }
 
-// static bool is_nickname_character(const char c) {
-// 	string valid = "_-[]\\^{}";
-// 	if (isalnum(c) || valid.find(c) != string::npos)
-// 		return true;
-// 	return false;
-// }
+static bool is_name_char(const char c) {
+	return (isalnum(c) || string("-_[]{}\\`|").find(c) != string::npos);
+}
 
 bool is_channel(const string& name) {
 	for (const auto& c : name) {
@@ -31,13 +28,22 @@ bool is_channel(const string& name) {
 	return !name.empty() && name.front() == '#';
 }
 
-bool verify_name(const string& arg) {
-	for (string::const_iterator it = arg.begin(); it != arg.end(); ++it) {
-		if (!(*it))
+bool is_name(const string &name) {
+	for (const auto& c: name) {
+		if (!is_name_char(c))
 			return false;
 	}
-	return true;
+	return !name.empty();
 }
+
+// bool verify_name(const string& arg) {
+// 	for (string::const_iterator it = arg.begin(); it != arg.end(); ++it) {
+// 		cout << "it " << (*it) << "\n";
+// 		if (!(*it))
+// 			return false;
+// 	}
+// 	return true;
+// }
 
 // bool verify_realname(const string& arg) {
 // 	for (string::const_iterator it = arg.begin(); it != arg.end(); ++it) {

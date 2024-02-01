@@ -6,7 +6,7 @@
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/01/31 13:56:29 by ageels        #+#    #+#                 */
-/*   Updated: 2024/01/31 20:03:53 by ageels        ########   odam.nl         */
+/*   Updated: 2024/02/01 15:58:41 by ageels        ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,7 @@ bool Executor::parseUserArguments(const vector<string>& args, string& username, 
 	for (size_t i = 4; i < args.size(); i++) {
 		realname += " " + args[i];
 	}
-	return !username.empty() && verify_name(username) && !hostname.empty() && !servername.empty() && (!realname.empty() || args[3] != ":");
+	return !username.empty() && is_name(username) && !hostname.empty() && !servername.empty() && (!realname.empty() || args[3] != ":");
 }
 
 void Executor::addChannel(const string& name, const string& password, Client& caller) {
@@ -152,16 +152,21 @@ string Executor::run_PASS(const vector<string>& args, Client& caller) {
  */
 #include <unistd.h>
 string Executor::run_NICK(const vector<string>& args, Client& caller) {
-	const string& new_nickname = args[0];
+	//const string& new_nickname = args[0];
+	string new_nickname = args[0];
+
+	if (new_nickname.empty() || !is_name(new_nickname)) {
+		return new_build_reply(ERR_ERRONEOUSNICKNAME, "NICK", new_nickname, "Erroneous nickname");
+	}
+	
+	if (new_nickname.length() > 9)
+		new_nickname.erase(9);
 
 	if (name_exists(new_nickname)) {
 		if (caller.getNickname().empty())
 			return new_build_reply(ERR_NICKNAMEINUSE, new_nickname, new_nickname, "Nickname is already in use");
 		else
 			return new_build_reply(ERR_NICKNAMEINUSE, caller.getNickname(), new_nickname, "Nickname is already in use");
-	}
-	if (new_nickname.empty() || !verify_name(new_nickname)) {
-		return new_build_reply(ERR_ERRONEOUSNICKNAME, "NICK", new_nickname, "Erroneous nickname");
 	}
 
 	string old_nickname = caller.getNickname();
@@ -407,8 +412,13 @@ string Executor::run_JOIN(const vector<string>& args, Client& caller) {
 		Channel& ch = this->e.getChannelByName(channelname);
 
 		if (ch == Channel::nullchan) { // Create new channel and have user join as the first member.
-			addChannel(channelname, channelpassword, caller);
-			message += new_build_reply(RPL_TOPIC, caller.getNickname(), channelname, "Welcome to channel " + channelname);
+			// check if channelname is valid
+			if (is_channel(channelname)) {
+				addChannel(channelname, channelpassword, caller);
+				message += new_build_reply(RPL_TOPIC, caller.getNickname(), channelname, "Welcome to channel " + channelname);
+			} else {
+				message += new_build_reply(ERR_NOSUCHCHANNEL, caller.getNickname(), channelname, "Invalid channel name");
+			}
 		} else {
 			string password = ch.getPassword();
 			const vector<Client *>& clients = ch.getMembers();
