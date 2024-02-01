@@ -6,7 +6,7 @@
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/01/31 13:56:29 by ageels        #+#    #+#                 */
-/*   Updated: 2024/02/01 15:58:41 by ageels        ########   odam.nl         */
+/*   Updated: 2024/02/01 16:13:49 by ageels        ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -438,7 +438,8 @@ string Executor::run_JOIN(const vector<string>& args, Client& caller) {
 				continue ;
 			}
 
-			if (!password.empty() && password.compare(channelpassword) != 0) {
+			if (!password.empty() && password.compare(channelpassword) != 0 && !ch.hasInvited(caller)) {
+
 				message += new_build_reply(ERR_BADCHANNELKEY, caller.getNickname(), channelname, "Cannot join channel (+k)");
 				continue;
 			}
