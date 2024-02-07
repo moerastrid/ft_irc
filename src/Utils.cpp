@@ -36,23 +36,6 @@ bool is_name(const string &name) {
 	return !name.empty();
 }
 
-// bool verify_name(const string& arg) {
-// 	for (string::const_iterator it = arg.begin(); it != arg.end(); ++it) {
-// 		cout << "it " << (*it) << "\n";
-// 		if (!(*it))
-// 			return false;
-// 	}
-// 	return true;
-// }
-
-// bool verify_realname(const string& arg) {
-// 	for (string::const_iterator it = arg.begin(); it != arg.end(); ++it) {
-// 		if (!is_nickname_character(*it) && !isspace(*it))
-// 			return false;
-// 	}
-// 	return true;
-// }
-
 // Takes a comma-separated string of arguments, gives back a vector of said arguments.
 vector<string> split_args(const string& args) {
 	istringstream nameStream(args);

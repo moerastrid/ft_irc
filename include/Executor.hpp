@@ -90,6 +90,8 @@
 #include "Command.hpp"
 #include "Env.hpp"
 
+#define NAME_MAX_SIZE 9ul
+
 
 class Executor {
 	private:
@@ -98,10 +100,10 @@ class Executor {
 		map<string, pair<int, int>> argCount;
 		Env& e;
 
-		// Channel&		getChannelByName(const string name);
-		// deque<Client>&	getClients();
-		// deque<Channel>&	getChannels();
-		// const string&	getHostname() const;
+		Channel&		getChannelByName(const string name);
+		deque<Client>&	getClients();
+		deque<Channel>&	getChannels();
+		const string&	getHostname() const;
 
 		int		validateArguments(const string& command, int numArgs);
 		bool	parseUserArguments(const vector<string>& args, string& username,
@@ -110,10 +112,9 @@ class Executor {
 		void	addChannel(const string& name, const string& password, Client& caller);
 		bool	name_exists(const string& name);
 
-	//	string	build_short_reply(const string& prefix, const string& command, const string& postfix);
-		string	new_build_reply(int response_code, const string& caller, const string& target, const string& channel, const string& message);
-		string	new_build_reply(int response_code, const string& caller, const string& target, const string& message);
-		string	new_build_reply(int response_code, const string& caller, const string& message);
+		string	build_reply(int response_code, const string& caller, const string& target, const string& channel, const string& message);
+		string	build_reply(int response_code, const string& caller, const string& target, const string& message);
+		string	build_reply(int response_code, const string& caller, const string& message);
 
 		string	run_CAP(const vector<string>& args, Client& caller);
 		string	run_PASS(const vector<string>& args, Client& caller);
@@ -122,7 +123,6 @@ class Executor {
 		string	run_PING(const vector<string>& args, Client& caller);
 		string	run_PRIVMSG(const vector<string>& args, Client& caller);
 		string	run_NOTICE(const vector<string>& args, Client& caller);
-//		string	run_WHOIS(const vector<string>& args, Client& caller);
 		string	run_JOIN(const vector<string>& args, Client& caller);
 		string	run_KICK(const vector<string>& args, Client& caller);
 		string	run_PART(const vector<string>& args, Client& caller);
@@ -132,7 +132,6 @@ class Executor {
 	
 		// MODE functions are in : executor_mode.cpp
 		string	run_MODE(const vector<string>& args, Client& caller); 
-		
 		void	handle_i_mode(const bool add, Channel& target);
 		void	handle_t_mode(const bool add, Channel& target);
 		void	handle_k_mode(const bool add, const string& arg, Channel& target);
@@ -142,8 +141,6 @@ class Executor {
 		string	build_mode_reply(string callername, string target_channel, string modestring, string modeargs);
 		// end of MODE functions
 
-
-		//Executor();
 		Executor(const Executor &src);
 		Executor &operator=(const Executor &src);
 
@@ -152,18 +149,5 @@ class Executor {
 		~Executor();
 
 		int					run(const Command& cmd, Client& caller);
-
-
-		
-
-		// void				addClient(string username, string nickname, string hostname, string servername, string realname, int fd);
-
-	//	string				format_reason(vector<string>::iterator& reason_it, vector<string>& args);
-		
-		// string				build_reply(int response_code, string callername, string target, string message);
-		// string				build_notice_reply(string callername, string target, string message);
-		// string				build_channel_reply(int response_code, string callername, string target, string channel, string message);
-		// string				build_WHOIS_reply(int response_code, string callername, string target, string userinfo);
-
 };
 

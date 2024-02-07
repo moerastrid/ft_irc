@@ -65,14 +65,6 @@ deque<Client>::iterator	Env::getItToClientByFD(int fd) {
 	return clients.end();
 }
 
-// deque<Client>::iterator	Env::getItToClientByNick(const string& nick) {
-// 	for (deque<Client>::iterator it = clients.begin(); it != clients.end(); it++) {
-// 		if (it->getNickname() == nick)
-// 			return it;
-// 	}
-// 	return clients.end();
-// }
-
 deque<Channel>::iterator	Env::getItToChannelByName(const string& name) {
 	for (deque<Channel>::iterator it = channels.begin(); it != channels.end(); it++) {
 		if (it->getName() == name)
@@ -80,10 +72,6 @@ deque<Channel>::iterator	Env::getItToChannelByName(const string& name) {
 	}
 	return channels.end();
 }
-
-// deque<Channel>::iterator	Env::getItToChannels() {
-// 	return	channels.begin();
-// }
 
 deque<Client>&	Env::getClients() {
 	return this->clients;

@@ -53,7 +53,6 @@ class Client {
 		const string&			getNickname() const;
 		const string&			getUsername() const;
 		const string&			getHostname() const;
-	//	const string&			getServername() const;
 		const string&			getRealname() const;
 		const string&			getPassword() const;
 		const string			getFullName() const;	// full name : user!name@host 
@@ -79,14 +78,9 @@ class Client {
 
 		bool					hasSendData() const;
 		bool					hasRecvData() const;
-	//	bool					isOperator(const Channel& c) const;
-	//	bool					checkEvent(short event) const;
 		bool					checkRevent(short revent) const;
 		bool					isRegistered() const;
 		const bool&				isExpelled() const;
-
-	//	void					makeOperator(Channel& c);
-	//	void					takeOperator(Channel& c);
 };
 
 bool operator==(const Client& lhs, const Client& rhs);

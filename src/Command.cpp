@@ -61,9 +61,6 @@ const Command& Command::operator=(const Command& other) {
 const string Command::getCommand() const {
 	return this->command;
 }
-// const string Command::getArg(size_t idx) const {
-// 	return this->args.at(idx);
-// }
 const vector<string> Command::getArgs() const {
 	return this->args;
 }

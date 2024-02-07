@@ -65,26 +65,22 @@ class Channel {
 		bool	empty() const;
 		bool	isInviteOnly() const;
 		bool	hasTopicRestricted() const;
-	//	bool	hasMode(char mode) const;
 		bool	hasOperator(const Client& client) const;
 		bool	hasMember(const Client& client) const;
 		bool	hasInvited(const Client &client) const;
 
 		void	setPassword(const string& password);
 		void	setTopic(const string& topic);
-	//	void	toggleInviteOnly();
 		void	setUserLimit(size_t limit);
 
 		void	makeTopicOperatorOnly();
 		void	makeInviteOnly();
-	//	void	addMode(char mode, const string& password, size_t userlimit);
 		void	addOperator(Client& client);
 		void	addMember(Client& client);
 		void	addInvited(Client& client);
 
 		void	takeTopicOperatorOnly();
 		void	takeInviteOnly();
-	//	void	removeMode(char mode);
 		bool	removeOperator(const Client& client);
 		bool	removeMember(const Client& client);
 		bool	removeInvited(const Client& client);
@@ -93,5 +89,5 @@ class Channel {
 		void	broadcastToChannel(const string& message);
 };
 
-//std::ostream& operator<<(std::ostream& os, const Channel& channel);
 bool operator==(const Channel& lhs, const Channel& rhs);
+//std::ostream& operator<<(std::ostream& os, const Channel& channel);

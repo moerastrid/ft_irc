@@ -63,9 +63,6 @@ const string& Client::getUsername() const {
 const string& Client::getHostname() const {
 	return this->hostname;
 }
-// const string& Client::getServername() const {
-// 	return this->servername;
-// }
 const string& Client::getRealname() const {
 	return this->realname;
 }
@@ -73,10 +70,8 @@ const string& Client::getPassword() const {
 	return this->password;
 }
 const string	Client::getFullName() const {
-	std::string temp = this->getNickname() + "!" + this->getUsername() + "@" + this->getHostname();
-	return(temp);
+	return this->getNickname() + "!" + this->getUsername() + "@" + this->getHostname();
 }
-
 
 void Client::setEvents(const short events) {
 	this->pfd.events = events;
@@ -90,6 +85,7 @@ void Client::addEvent(const short event) {
 void Client::removeEvent(const short event) {
 	this->pfd.events &= ~event; // bitwise AND with bitwise negation (~).
 }
+
 void Client::expell() {
 	this->expelled = true;
 }
@@ -148,12 +144,6 @@ bool Client::hasSendData() const {
 bool Client::hasRecvData() const {
 	return this->datatorecv.find('\n') != string::npos;
 }
-// bool Client::isOperator(const Channel& c) const {
-// 	return c.hasOperator(*this);
-// }
-// bool Client::checkEvent(short event) const {
-// 	return this->pfd.events & event;
-// }
 bool Client::checkRevent(short revent) const {
 	return this->pfd.revents & revent;
 }
@@ -164,20 +154,13 @@ const bool&	Client::isExpelled() const {
 	return(this->expelled);
 }
 
-// void Client::makeOperator(Channel& c) {
-// 	c.addOperator(*this);
-// }
-// void Client::takeOperator(Channel& c) {
-// 	c.removeOperator(*this);
-// }
-
-
-// Out of Class stuff
+// Out of Class
 bool operator==(const Client &lhs, const Client &rhs) {
 	return 	lhs.getFD() == rhs.getFD() &&
 			lhs.getNickname() == rhs.getNickname() &&
 			lhs.getUsername() == rhs.getUsername();
 }
+
 // ostream& operator<<(ostream& os, const Client& client) {
 // 	string str = string("Client(") + to_string(client.getFD()) + ", " + client.getNickname() + ", " + client.getUsername() + ", " + client.getHostname() + ", " + client.getServername() + ", " + client.getRealname() + ")";
 // 	os << str;
