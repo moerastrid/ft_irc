@@ -15,9 +15,8 @@
 NAME := ircserv
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -Iinclude
-CXXFLAGS += -g
 # CXXFLAGS += -g -fsanitize=address
-MAKEFLAGS += --no-print-directory
+# MAKEFLAGS += --no-print-directory
 
 SRC_DIR = src
 OBJ_DIR = obj
@@ -48,9 +47,9 @@ SRC = $(SRC_DIR)/main.cpp \
 
 OBJ = $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRC))
 
-# all : $(NAME)
-all:
-	$(MAKE) -j $(NAME)
+all : $(NAME)
+# all:
+# 	$(MAKE) -j $(NAME)
 
 $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
