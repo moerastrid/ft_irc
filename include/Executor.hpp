@@ -75,9 +75,6 @@
 	using std::find_if;
 	using std::transform;
 
-#include <iostream>
-	using std::cout;
-
 #include <iomanip>
 	using std::setw;
 	using std::setfill;

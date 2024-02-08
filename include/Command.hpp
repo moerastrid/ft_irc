@@ -45,7 +45,6 @@ class Command {
 		const Command& operator=(const Command& other);
 
 		const string			getCommand() const;
-//		const string			getArg(size_t idx) const;
 		const vector<string>	getArgs() const;
 
 		void					combine_reason();

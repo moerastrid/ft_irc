@@ -34,7 +34,5 @@ int				parse(int argc, char **argv);
 
 bool			is_channel(const string& name);
 bool 			is_name(const string &name);
-//bool			verify_name(const string& arg);
-//bool			verify_realname(const string& arg);
 vector<string>	split_args(const string& args);
 bool			compare_lowercase(const string& a, const string& b);
