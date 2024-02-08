@@ -4,7 +4,7 @@
 /*   Env.hpp                                            :+:    :+:            */
 /*                                                     +:+                    */
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
-/*                                                   +#+                      */
+/*       tnuyten <tnuyten@student.codam.nl>			 +#+                      */
 /*   Created: 2024/01/31 13:31:22 by ageels        #+#    #+#                 */
 /*   Updated: 2024/01/31 18:20:48 by ageels        ########   odam.nl         */
 /*                                                                            */

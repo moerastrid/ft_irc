@@ -4,7 +4,7 @@
 /*   Channel.hpp                                        :+:    :+:            */
 /*                                                     +:+                    */
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
-/*                                                   +#+                      */
+/*       tnuyten <tnuyten@student.codam.nl>			 +#+                      */
 /*   Created: 2024/01/31 11:09:53 by ageels        #+#    #+#                 */
 /*   Updated: 2024/01/31 20:26:45 by ageels        ########   odam.nl         */
 /*                                                                            */

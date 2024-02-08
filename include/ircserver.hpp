@@ -4,7 +4,7 @@
 /*   ircserver.hpp                                      :+:    :+:            */
 /*                                                     +:+                    */
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
-/*                                                   +#+                      */
+/*       tnuyten <tnuyten@student.codam.nl>			 +#+                      */
 /*   Created: 2024/01/31 14:56:22 by ageels        #+#    #+#                 */
 /*   Updated: 2024/02/01 15:46:02 by ageels        ########   odam.nl         */
 /*                                                                            */

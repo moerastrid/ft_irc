@@ -4,7 +4,7 @@
 /*   Client.hpp                                         :+:    :+:            */
 /*                                                     +:+                    */
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
-/*                                                   +#+                      */
+/*       tnuyten <tnuyten@student.codam.nl>			 +#+                      */
 /*   Created: 2024/01/31 12:53:56 by ageels        #+#    #+#                 */
 /*   Updated: 2024/01/31 20:29:32 by ageels        ########   odam.nl         */
 /*                                                                            */

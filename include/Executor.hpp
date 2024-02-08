@@ -4,7 +4,7 @@
 /*   Executor.hpp                                       :+:    :+:            */
 /*                                                     +:+                    */
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
-/*                                                   +#+                      */
+/*       tnuyten <tnuyten@student.codam.nl>			 +#+                      */
 /*   Created: 2024/01/31 13:56:15 by ageels        #+#    #+#                 */
 /*   Updated: 2024/01/31 20:27:12 by ageels        ########   odam.nl         */
 /*                                                                            */

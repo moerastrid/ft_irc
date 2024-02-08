@@ -4,7 +4,7 @@
 /*   Utils.cpp                                          :+:    :+:            */
 /*                                                     +:+                    */
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
-/*                                                   +#+                      */
+/*       tnuyten <tnuyten@student.codam.nl>			 +#+                      */
 /*   Created: 2024/01/31 14:56:17 by ageels        #+#    #+#                 */
 /*   Updated: 2024/02/01 15:55:48 by ageels        ########   odam.nl         */
 /*                                                                            */

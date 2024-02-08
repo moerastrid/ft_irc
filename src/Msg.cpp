@@ -4,7 +4,7 @@
 /*   Msg.cpp                                            :+:    :+:            */
 /*                                                     +:+                    */
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
-/*                                                   +#+                      */
+/*       tnuyten <tnuyten@student.codam.nl>			 +#+                      */
 /*   Created: 2024/01/31 14:57:33 by ageels        #+#    #+#                 */
 /*   Updated: 2024/01/31 20:35:36 by ageels        ########   odam.nl         */
 /*                                                                            */

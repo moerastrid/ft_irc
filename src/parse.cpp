@@ -4,7 +4,7 @@
 /*   parse.cpp                                          :+:    :+:            */
 /*                                                     +:+                    */
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
-/*                                                   +#+                      */
+/*       tnuyten <tnuyten@student.codam.nl>			 +#+                      */
 /*   Created: 2024/01/31 14:56:26 by ageels        #+#    #+#                 */
 /*   Updated: 2024/01/31 14:56:27 by ageels        ########   odam.nl         */
 /*                                                                            */

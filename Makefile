@@ -1,3 +1,17 @@
+# **************************************************************************** #
+#                                                                              #
+#                                                         ::::::::             #
+#    Makefile                                           :+:    :+:             #
+#                                                      +:+                     #
+#    By: ageels <ageels@student.codam.nl>             +#+                      #
+#        tnuyten <tnuyten@student.codam.nl>			 +#+                       #
+#    Created: 2024/02/08 14:18:28 by ageels        #+#    #+#                  #
+#    Updated: 2024/02/08 14:18:29 by ageels        ########   odam.nl          #
+#                                                                              #
+# **************************************************************************** #
+
+
+
 NAME := ircserv
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -Iinclude

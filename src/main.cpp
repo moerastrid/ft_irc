@@ -4,9 +4,9 @@
 /*   main.cpp                                           :+:    :+:            */
 /*                                                     +:+                    */
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
-/*                                                   +#+                      */
+/*       tnuyten <tnuyten@student.codam.nl>			 +#+                      */
 /*   Created: 2024/01/31 20:36:07 by ageels        #+#    #+#                 */
-/*   Updated: 2024/01/31 20:36:08 by ageels        ########   odam.nl         */
+/*   Updated: 2024/02/08 14:17:18 by ageels        ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 

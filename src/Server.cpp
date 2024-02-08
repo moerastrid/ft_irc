@@ -4,7 +4,7 @@
 /*   Server.cpp                                         :+:    :+:            */
 /*                                                     +:+                    */
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
-/*                                                   +#+                      */
+/*       tnuyten <tnuyten@student.codam.nl>			 +#+                      */
 /*   Created: 2024/01/31 18:15:47 by ageels        #+#    #+#                 */
 /*   Updated: 2024/01/31 19:34:22 by ageels        ########   odam.nl         */
 /*                                                                            */

@@ -4,7 +4,7 @@
 /*   Env.cpp                                            :+:    :+:            */
 /*                                                     +:+                    */
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
-/*                                                   +#+                      */
+/*       tnuyten <tnuyten@student.codam.nl>			 +#+                      */
 /*   Created: 2024/01/31 13:34:54 by ageels        #+#    #+#                 */
 /*   Updated: 2024/01/31 13:51:48 by ageels        ########   odam.nl         */
 /*                                                                            */

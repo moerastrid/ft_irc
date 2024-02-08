@@ -4,7 +4,7 @@
 /*   Command.hpp                                        :+:    :+:            */
 /*                                                     +:+                    */
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
-/*                                                   +#+                      */
+/*       tnuyten <tnuyten@student.codam.nl>			 +#+                      */
 /*   Created: 2024/01/31 13:29:42 by ageels        #+#    #+#                 */
 /*   Updated: 2024/01/31 13:29:43 by ageels        ########   odam.nl         */
 /*                                                                            */
