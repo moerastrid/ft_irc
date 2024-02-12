@@ -21,6 +21,7 @@
 #include <iostream>
 	using std::cout;
 	using std::cerr;
+#include <unistd.h>
 
 #include "Msg.hpp"
 #include "Server.hpp"
