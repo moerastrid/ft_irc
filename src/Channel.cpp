@@ -215,7 +215,7 @@ void	Channel::sendMessageToOtherMembers(const Client& sender, const string& mess
 		return ;
 
 	for (Client * member : channel_members) {
-		if (member != &sender)
+		if (member->getFD() != sender.getFD())
 			member->addSendData(message);
 	}
 }

@@ -92,8 +92,8 @@ void	Server::closeConnection(const int fd) {
 	if (!channels.empty()) {
 		for (Channel& channel : channels) {
 			if (channel.hasMember(*client)) {
-				channel.removeMember(*client);
 				channel.sendMessageToOtherMembers(*client, ":" + (*client).getFullName() + " QUIT :lost connection\r\n");
+				channel.removeMember(*client);
 			}
 			if (channel.empty())
 				this->e.getChannels().erase(this->e.getItToChannelByName(channel.getName()));
