@@ -22,6 +22,12 @@ Client::Client(int fd) {
 	this->pfd.fd = fd;
 	this->pfd.events = POLLIN|POLLHUP|POLLRDHUP;
 	this->pfd.revents = 0;
+	Msg("client - constructor(FD)", "CLASS");
+}
+Client::Client() {
+	this->pfd.fd = 0;
+	this->pfd.events = POLLIN|POLLHUP|POLLRDHUP;
+	this->pfd.revents = 0;
 	Msg("client - default constructor", "CLASS");
 }
 Client::Client(const Client& other) {
@@ -161,9 +167,9 @@ bool operator==(const Client &lhs, const Client &rhs) {
 			lhs.getUsername() == rhs.getUsername();
 }
 
-// ostream& operator<<(ostream& os, const Client& client) {
-// 	string str = string("Client(") + to_string(client.getFD()) + ", " + client.getNickname() + ", " + client.getUsername() + ", " + client.getHostname() + ", " + client.getServername() + ", " + client.getRealname() + ")";
-// 	os << str;
-// 	return os;
-// }
+ostream& operator<<(ostream& os, const Client& client) {
+	string str = string("Client(") + to_string(client.getFD()) + ", " + client.getNickname() + ", " + client.getUsername() + ", " + client.getHostname() + ", " + client.getRealname() + ")";
+	os << str;
+	return os;
+}
 

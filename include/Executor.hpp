@@ -98,7 +98,7 @@ class Executor {
 		Env& e;
 
 		Channel&		getChannelByName(const string name);
-		deque<Client>&	getClients();
+		const deque<Client *>&	getClients() const;
 		deque<Channel>&	getChannels();
 		const string&	getHostname() const;
 

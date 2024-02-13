@@ -32,18 +32,18 @@ Env::Env(int port, string pass) : pass(pass), port(port) {
 	Msg("env - constructor(port, pass)", "CLASS");
 };
 
-Client&	Env::getClientByFD(int fd) {
+Client&	Env::getClientByFD(int fd) const{
 	for (auto& el : this->clients) {
-		if (el.getPFD().fd == fd)
-			return el;
+		if (el->getPFD().fd == fd)
+			return *el;
 	}
 	return Client::nullclient;
 }
 
 Client&	Env::getClientByNick(const string& nick) {
 	for (auto& el : this->clients) {
-		if (el.getNickname() == nick)
-			return el;
+		if (el->getNickname() == nick)
+			return *el;
 	}
 	return Client::nullclient;
 }
@@ -57,9 +57,9 @@ Channel&	Env::getChannelByName(const string& name) {
 	return Channel::nullchan;
 }
 
-deque<Client>::iterator	Env::getItToClientByFD(int fd) {
-	for (deque<Client>::iterator it = clients.begin(); it != clients.end(); it++) {
-		if (it->getFD() == fd)
+deque<Client *>::iterator	Env::getItToClientByFD(int fd) {
+	for (deque<Client *>::iterator it = clients.begin(); it != clients.end(); it++) {
+		if ((*it)->getFD() == fd)
 			return (it);
 	}
 	return clients.end();
@@ -73,7 +73,7 @@ deque<Channel>::iterator	Env::getItToChannelByName(const string& name) {
 	return channels.end();
 }
 
-deque<Client>&	Env::getClients() {
+const deque<Client *>&	Env::getClients() const {
 	return this->clients;
 }
 
@@ -104,6 +104,37 @@ void	Env::setHostname(const string &hostname) {
 void	Env::setIP(const string &ip) {
 	this->ip = ip;
 }
+
+void	Env::addClient(int fd) {
+	Client *pointer = NULL;
+	pointer = new Client(fd);
+	this->clients.emplace_back(pointer);
+}
+
+void	Env::removeClient(int fd) {
+	if (clients.empty())
+	{
+		Msg("BIG ERROR!", "ERROR");
+		return ;
+	}
+	for (deque<Client *>::iterator it = clients.begin(); it != clients.end(); it++) {
+		std::cout << "teest : " << *(*it) << endl;
+		if ((*(*it)).getFD() == fd) {
+			
+			clients.erase(it);
+			break ;
+		}
+	}
+}
+
+void	Env::clearClients()
+{
+	for (deque<Client *>::iterator it = clients.begin(); it != clients.end(); it++) {
+		delete(*it);
+	}
+	this->clients.clear();
+}
+
 
 std::ostream& operator<<(std::ostream& os, const Env& e) {
 	os << "env(" << e.getHostname() << ", " << e.getIP() << ", "<< e.getPort() << ")";

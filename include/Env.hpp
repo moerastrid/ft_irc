@@ -25,7 +25,8 @@
 
 class Env {
 	private:
-		deque<Client>		clients;
+		deque<Client *>		clients;
+		// deque<Client>		clients;
 		deque<Channel>		channels;
 
 		string				pass;
@@ -41,12 +42,12 @@ class Env {
 		~Env();
 		Env(int port, string pass);
 
-		Client&						getClientByFD(int fd);
+		Client&						getClientByFD(int fd) const;
 		Client&						getClientByNick(const string& nick);
 		Channel&					getChannelByName(const string& name);
-		deque<Client>::iterator		getItToClientByFD(int fd);
+		deque<Client *>::iterator	getItToClientByFD(int fd);
 		deque<Channel>::iterator	getItToChannelByName(const string& name);
-		deque<Client>&				getClients();
+		const deque<Client *>&		getClients() const;
 		deque<Channel>& 			getChannels();
 		int							getPort() const;
 		const string&				getPass() const;
@@ -55,6 +56,10 @@ class Env {
 
 		void						setHostname(const string &hostname);
 		void						setIP(const string &ip);
+
+		void						addClient(int fd);
+		void						removeClient(int fd);
+		void						clearClients();
 };
 
 std::ostream& operator<<(std::ostream& os, const Env& e);

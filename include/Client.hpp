@@ -28,7 +28,9 @@
 
 class Client {
 	private:
-		struct pollfd	pfd;
+		struct pollfd	pfd = {
+			0, POLLIN|POLLHUP|POLLRDHUP, 0 
+		};
 
 		string			nickname = "";
 		string			username = "";
@@ -39,6 +41,8 @@ class Client {
 		string			datatosend = ""; // data we need to send to this client
 		string			datatorecv = ""; // data we need to recv from this client
 		bool			expelled = false;
+
+		Client();
 
 	public:
 		static Client	nullclient;
@@ -84,4 +88,5 @@ class Client {
 };
 
 bool operator==(const Client& lhs, const Client& rhs);
-//std::ostream& operator<<(std::ostream& os, const Client& client);
+
+std::ostream& operator<<(std::ostream& os, const Client& client);

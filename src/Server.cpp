@@ -47,8 +47,8 @@ int	Server::setPoll() {
 	vector<struct pollfd>	pollFds;
 
 	pollFds.push_back(sockfd);
-	for (const Client& client : this->e.getClients()) {
-		pollFds.push_back(client.getPFD());
+	for (const Client* client : this->e.getClients()) {
+		pollFds.push_back(client->getPFD());
 	}
 	int ret = poll(pollFds.data(), pollFds.size(), -1);
 	if (ret < 0) {
@@ -83,25 +83,34 @@ void	Server::addConnection() {
 		throw ServerException("error in Server::addConnection - accept");
 	else {
 		Msg("Connection accepted on " + std::to_string(new_fd), "INFO");
-		this->e.getClients().emplace_back(new_fd);
+		//Client *pointer = NULL;
+		//pointer = new Client(new_fd);
+		//this->e.getClients().emplace_back(pointer);
+		this->e.addClient(new_fd);
+		//this->e.getClients().emplace_back(new_fd);
 	}
 }
 void	Server::closeConnection(const int fd) {
 	std::deque<Channel>& channels = this->e.getChannels();
-	std::deque<Client>::iterator client = this->e.getItToClientByFD(fd);
+	//std::deque<Client *>::iterator client = this->e.getItToClientByFD(fd);
+	Client& client = this->e.getClientByFD(fd);
+
 	if (!channels.empty()) {
 		for (Channel& channel : channels) {
-			if (channel.hasMember(*client)) {
-				channel.sendMessageToOtherMembers(*client, ":" + (*client).getFullName() + " QUIT :lost connection\r\n");
-				channel.removeMember(*client);
+			if (channel.hasMember(client)) {
+				channel.sendMessageToOtherMembers(client, ":" + (client).getFullName() + " QUIT :lost connection\r\n");
+				channel.removeMember(client);
 			}
 			if (channel.empty())
 				this->e.getChannels().erase(this->e.getItToChannelByName(channel.getName()));
 		}
 	}
 	Msg("Connection closed on " + std::to_string(fd), "INFO");
+	// close(fd);
+	this->e.removeClient(fd);
+	
 	close(fd);
-	this->e.getClients().erase(client);
+	//this->e.getClients().erase(this->e.getItToClientByFD(fd));
 }
 
 bool	Server::receivefromClient(Client &c) {
@@ -200,10 +209,12 @@ void	Server::run(Executor& ex) {
 	} else if (sockfd.revents & POLLERR )
 		throw ServerException("error in Server::run - sockfd.revents & POLLERR");
 
-	deque<Client>&	clients = this->e.getClients();
+	const deque<Client *>&	clients = this->e.getClients();
 
 	for (size_t	i = 0; i < clients.size(); i++) {
-		Client& client = clients[i];
+		Client& client = *clients[i];
+
+		cout << "TEST: " << client << std::endl;
 
 		if (client.getPFD().revents == 0) {
 			continue ;

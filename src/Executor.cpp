@@ -17,7 +17,7 @@
 Channel& Executor::getChannelByName(const string name) {
 	return this->e.getChannelByName(name);
 }
-deque<Client>& Executor::getClients() {
+const deque<Client *>& Executor::getClients() const {
 	return this->e.getClients();
 }
 deque<Channel>& Executor::getChannels() {
@@ -62,8 +62,8 @@ void Executor::addChannel(const string& name, const string& password, Client& ca
 }
 
 bool Executor::name_exists(const string& name) {
-	for (const Client& c : this->getClients()) {
-		const string& clientName = c.getNickname();
+	for (const Client* c : this->getClients()) {
+		const string& clientName = c->getNickname();
 
 		if (compare_lowercase(name, clientName)) {
 			return true;
