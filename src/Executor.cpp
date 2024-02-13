@@ -55,7 +55,7 @@ bool Executor::parseUserArguments(const vector<string>& args, string& username, 
 }
 
 void Executor::addChannel(const string& name, const string& password, Client& caller) {
-	this->getChannels().emplace_back(name, password, this->getClients());
+	this->getChannels().emplace_back(name, password, this->e.getClients());
 	Channel& chan = this->getChannels().back();
 	chan.addOperator(caller);
 	chan.addMember(caller);

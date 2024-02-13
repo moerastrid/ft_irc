@@ -4,9 +4,9 @@
 /*   Channel.cpp                                        :+:    :+:            */
 /*                                                     +:+                    */
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
-/*       tnuyten <tnuyten@student.codam.nl>          +#+                      */
+/*                                                   +#+                      */
 /*   Created: 2024/01/31 11:13:19 by ageels        #+#    #+#                 */
-/*   Updated: 2024/01/31 19:35:28 by ageels        ########   odam.nl         */
+/*   Updated: 2024/02/13 16:07:05 by ageels        ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,7 +57,7 @@ Channel& Channel::operator=(const Channel& other) {
 	return *this;
 	Msg("channel - assignation operator", "CLASS");
 }
-Channel::Channel(string name, string password, deque<Client>& clientlist) {
+Channel::Channel(string name, string password, const deque<Client *>& clientlist) {
 	this->name = name;
 	this->password = password;
 	this->topic = "Welcome to channel " + name;
@@ -112,8 +112,8 @@ Client& Channel::getClientByFD(int fd) {
 	if (this->clientlist == NULL)
 		return Client::nullclient;
 	for (auto& client : *(this->clientlist)) {
-		if (client.getFD() == fd)
-			return client;
+		if (client->getFD() == fd)
+			return *client;
 	}
 	return Client::nullclient;
 }

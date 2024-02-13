@@ -4,11 +4,12 @@
 /*   Channel.hpp                                        :+:    :+:            */
 /*                                                     +:+                    */
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
-/*       tnuyten <tnuyten@student.codam.nl>          +#+                      */
+/*                                                   +#+                      */
 /*   Created: 2024/01/31 11:09:53 by ageels        #+#    #+#                 */
-/*   Updated: 2024/01/31 20:26:45 by ageels        ########   odam.nl         */
+/*   Updated: 2024/02/13 16:07:27 by ageels        ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
+
 #pragma once
 #include <vector>
 	using std::vector;
@@ -34,7 +35,7 @@ class Channel {
 		vector<int>		members;
 		vector<int>		operators;
 		vector<int>		invited;
-		deque<Client>*	clientlist;
+		const deque<Client *>*	clientlist;
 		bool			inviteOnly;
 		bool			operatorOnly = true;
 		size_t			userLimit;
@@ -44,7 +45,7 @@ class Channel {
 		~Channel();
 		Channel(const Channel& other);
 		Channel& operator=(const Channel& other);
-		Channel(string name, string password, deque<Client>& clientlist);
+		Channel(string name, string password, const deque<Client *>& clientlist);
 		const string&		getName() const;
 		const string&		getPassword() const;
 		const string&		getTopic() const;
