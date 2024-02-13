@@ -118,7 +118,6 @@ void	Env::removeClient(int fd) {
 		return ;
 	}
 	for (deque<Client *>::iterator it = clients.begin(); it != clients.end(); it++) {
-		std::cout << "teest : " << *(*it) << endl;
 		if ((*(*it)).getFD() == fd) {
 			delete *it;
 			clients.erase(it);

@@ -26,7 +26,9 @@ int main(int argc, char **argv) {
 
 	try {
 		Server ircServer(env);
-		cout << "Successfully booted the " << ircServer << " at " << env << " \\^.^/" << endl;
+		std::stringstream ss1;
+		ss1 << "Successfully booted the " << ircServer << " at " << env << " \\^.^/" << endl;
+		Msg(ss1.str(), "INFO");
 		while (sh.getInterrupted() == false) {
 				ircServer.run(ex);
 		}
@@ -41,7 +43,9 @@ int main(int argc, char **argv) {
 		if (!env.getChannels().empty())
 			env.getChannels().clear();
 
-		cout << "Successfully ended the " << ircServer << " \\^.^/" << endl;
+		std::stringstream ss2;
+		ss2 << "Successfully ended the " << ircServer << " \\^.^/" << endl;
+		Msg(ss2.str(), "INFO");
 	} catch (const Server::ServerException &ex) {
 		Msg("ServerException caught: ", "ERROR");
 		cerr << ex.what() << endl;

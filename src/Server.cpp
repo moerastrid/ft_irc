@@ -191,7 +191,7 @@ Server::Server(Env& e) : e(e) {
 	Server::setUp();
 	Server::setInfo();
 
-	Msg("server waiting for connections ... ", "INFO");
+	Msg("server waiting for connections ... ", "DEBUG");
 }
 
 Server::~Server() {
@@ -213,8 +213,6 @@ void	Server::run(Executor& ex) {
 
 	for (size_t	i = 0; i < clients.size(); i++) {
 		Client& client = *clients[i];
-
-		cout << "TEST: " << client << std::endl;
 
 		if (client.getPFD().revents == 0) {
 			continue ;

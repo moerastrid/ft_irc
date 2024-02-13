@@ -651,9 +651,5 @@ int Executor::run(const Command& cmd, Client& caller) {
 	}
 
 	caller.addSendData(message);
-	if (message.find("Nickname collision KILL") != string::npos)
-		return false;
-	// if (message.find("QUIT") != string::npos)
-	// 	return false;
 	return true;
 }

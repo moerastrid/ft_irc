@@ -12,8 +12,8 @@
 
 #include "Msg.hpp"
 
-void	Msg::structure(const string text) {
-	cout << "\x1B[35m" << "CLASS-\t\t" << text << "\x1B[0m" << endl;
+void	Msg::structure([[maybe_unused]]const string text) {
+	// cout << "\x1B[35m" << "CLASS-\t\t" << text << "\x1B[0m" << endl;
 }
 void	Msg::customStream(const string text) {
 	cout << "\x1B[44m" << "STREAM-\t\t";
