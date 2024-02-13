@@ -4,7 +4,7 @@
 /*   Channel.cpp                                        :+:    :+:            */
 /*                                                     +:+                    */
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
-/*       tnuyten <tnuyten@student.codam.nl>			 +#+                      */
+/*       tnuyten <tnuyten@student.codam.nl>          +#+                      */
 /*   Created: 2024/01/31 11:13:19 by ageels        #+#    #+#                 */
 /*   Updated: 2024/01/31 19:35:28 by ageels        ########   odam.nl         */
 /*                                                                            */
@@ -23,6 +23,7 @@ Channel::Channel() {
 	this->inviteOnly = false;
 	this->operatorOnly = true;
 	this->userLimit = 0;
+	this->clientlist = NULL;
 	Msg("channel - default constructor", "CLASS");
 };
 
@@ -38,6 +39,7 @@ Channel::Channel(const Channel& other) {
 	this->inviteOnly = other.inviteOnly;
 	this->operatorOnly = other.operatorOnly;
 	this->userLimit = other.userLimit;
+	this->clientlist = other.clientlist;
 	Msg("channel - copy constructor", "CLASS");
 }
 
@@ -50,18 +52,19 @@ Channel& Channel::operator=(const Channel& other) {
 		this->inviteOnly = other.inviteOnly;
 		this->operatorOnly = other.operatorOnly;
 		this->userLimit = other.userLimit;
+		this->clientlist = other.clientlist;
 	}
 	return *this;
 	Msg("channel - assignation operator", "CLASS");
 }
-
-Channel::Channel(string name, string password) {
+Channel::Channel(string name, string password, deque<Client>& clientlist) {
 	this->name = name;
 	this->password = password;
 	this->topic = "Welcome to channel " + name;
 	this->inviteOnly = false;
 	this->operatorOnly = true;
 	this->userLimit = 0;
+	this->clientlist = &clientlist;
 	Msg("channel - constructor(name, pass)", "CLASS");
 }
 
@@ -74,13 +77,13 @@ const string& Channel::getPassword() const {
 const string& Channel::getTopic() const {
 	return this->topic;
 }
-vector<Client *>& Channel::getMembers() {
+vector<int>& Channel::getMembers() {
 	return this->members;
 }
-const vector<Client *>& Channel::getMembersConst() const {
+const vector<int>& Channel::getMembersConst() const {
 	return this->members;
 }
-const vector<Client *>& Channel::getOperators() const {
+const vector<int>& Channel::getOperators() const {
 	return this->operators;
 }
 size_t Channel::getUserLimit() const {
@@ -105,7 +108,15 @@ pair<string,string> Channel::getModes() const { // modes: i t k l (o not shown h
 	pair<string,string> p = std::make_pair(set, modeargs);
 	return p;
 }
-
+Client& Channel::getClientByFD(int fd) {
+	if (this->clientlist == NULL)
+		return Client::nullclient;
+	for (auto& client : *(this->clientlist)) {
+		if (client.getFD() == fd)
+			return client;
+	}
+	return Client::nullclient;
+}
 bool	Channel::empty() const {
 	return (members.empty());
 }
@@ -116,19 +127,19 @@ bool Channel::hasTopicRestricted() const {
 	return this->operatorOnly;
 }
 bool Channel::hasOperator(const Client &client) const {
-	if (find(this->operators.begin(), this->operators.end(), &client) != this->operators.end()) {
+	if (find(this->operators.begin(), this->operators.end(), client.getFD()) != this->operators.end()) {
 		return true;
 	}
 	return false;
 }
 bool Channel::hasMember(const Client& client) const {
-	if (find(this->members.begin(), this->members.end(), &client) != this->members.end()) {
+	if (find(this->members.begin(), this->members.end(), client.getFD()) != this->members.end()) {
 		return true;
 	}
 	return false;
 }
 bool	Channel::hasInvited(const Client &client) const {
-	if (find(this->invited.begin(), this->invited.end(), &client) != this->invited.end()) {
+	if (find(this->invited.begin(), this->invited.end(), client.getFD()) != this->invited.end()) {
 		return true;
 	}
 	return false;
@@ -151,21 +162,21 @@ void Channel::makeInviteOnly() {
 	this->inviteOnly = true;
 }
 void Channel::addOperator(Client &client) {
-	if (find(operators.begin(), operators.end(), &client) == operators.end()) {
-		this->operators.push_back(&client);
+	if (find(operators.begin(), operators.end(), client.getFD()) == operators.end()) {
+		this->operators.push_back(client.getFD());
 	}
 }
 void Channel::addMember(Client& client) {
-	if (find(this->members.begin(), this->members.end(), &client) == this->members.end()) {
-		this->members.push_back(&client);
+	if (find(this->members.begin(), this->members.end(), client.getFD()) == this->members.end()) {
+		this->members.push_back(client.getFD());
 	}
 	if (this->hasInvited(client)) {
 		this->removeInvited(client);
-	} 
+	}
 }
 void	Channel::addInvited(Client& client) {
-	if (find(this->invited.begin(), this->invited.end(), &client) == this->invited.end()) {
-		this->invited.push_back(&client);
+	if (find(this->invited.begin(), this->invited.end(), client.getFD()) == this->invited.end()) {
+		this->invited.push_back(client.getFD());
 	}
 }
 
@@ -176,7 +187,7 @@ void Channel::takeInviteOnly() {
 	this->inviteOnly = false;
 }
 bool Channel::removeOperator(const Client& client) {
-	auto it = find(operators.begin(), operators.end(), &client);
+	auto it = find(operators.begin(), operators.end(), client.getFD());
 	if (it == operators.end()) {
 		return false;
 	}
@@ -184,7 +195,7 @@ bool Channel::removeOperator(const Client& client) {
 	return true;
 }
 bool Channel::removeMember(const Client& client) {
-	auto it = find(members.begin(), members.end(), &client);
+	auto it = find(members.begin(), members.end(), client.getFD());
 	if (it == members.end()) {
 		return false;
 	}
@@ -195,12 +206,12 @@ bool Channel::removeMember(const Client& client) {
 
 	if (this->hasInvited(client)) {
 		this->removeInvited(client);
-	} 
+	}
 
 	return true;
 }
 bool Channel::removeInvited(const Client& client) {
-	auto it = find(invited.begin(), invited.end(), &client);
+	auto it = find(invited.begin(), invited.end(), client.getFD());
 	if (it == invited.end()) {
 		return false;
 	}
@@ -209,40 +220,37 @@ bool Channel::removeInvited(const Client& client) {
 }
 
 void	Channel::sendMessageToOtherMembers(const Client& sender, const string& message) {
-
-	vector<Client *> channel_members = this->getMembers();
+	vector<int> channel_members = this->getMembers();
 	if (channel_members.empty())
 		return ;
-
-	for (Client * member : channel_members) {
-		if (member->getFD() != sender.getFD())
-			member->addSendData(message);
+	for (int memberFD : channel_members) {
+		Client& member = getClientByFD(memberFD);
+		if (&member != &sender)
+			member.addSendData(message);
 	}
 }
 void	Channel::broadcastToChannel(const string& message) {
-	vector<Client *> channel_members = this->getMembers();
+	vector<int> channel_members = this->getMembers();
 	if (channel_members.empty())
 		return ;
-
-	for (Client * member : channel_members) {
-		member->addSendData(message);
+	for (int memberFD : channel_members) {
+		Client& member = getClientByFD(memberFD);
+		member.addSendData(message);
 	}
 }
 
 bool operator==(const Channel& lhs, const Channel& rhs) {
 	return lhs.getName() == rhs.getName();
 }
-
-// ostream& operator<<(ostream& os, const Channel& channel) {
-// 	os << "Channel(" << channel.getName() << ", [";
-// 	const vector<Client *>& members = channel.getMembersConst();
-// 	for (vector<Client *>::const_iterator it = members.begin(); it != members.end(); it++) {
-// 		os << *it;
-// 		if (it + 1 != members.end()) {
-// 			os << ", ";
-// 		}
-// 	}
-// 	os << "])";
-
-// 	return os;
-// }
+ostream& operator<<(ostream& os, const Channel& channel) {
+	os << "Channel(" << channel.getName() << ", [";
+	const vector<int>& members = channel.getMembersConst();
+	for (vector<int>::const_iterator it = members.begin(); it != members.end(); it++) {
+		os << *it;
+		if (it + 1 != members.end()) {
+			os << ", ";
+		}
+	}
+	os << "])";
+	return os;
+}

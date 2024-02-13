@@ -55,7 +55,7 @@ bool Executor::parseUserArguments(const vector<string>& args, string& username, 
 }
 
 void Executor::addChannel(const string& name, const string& password, Client& caller) {
-	this->getChannels().emplace_back(name, password);
+	this->getChannels().emplace_back(name, password, this->getClients());
 	Channel& chan = this->getChannels().back();
 	chan.addOperator(caller);
 	chan.addMember(caller);
@@ -323,7 +323,7 @@ string Executor::run_JOIN(const vector<string>& args, Client& caller) {
 			}
 		} else {
 			string password = ch.getPassword();
-			const vector<Client *>& clients = ch.getMembers();
+			const vector<int>& clients = ch.getMembers();
 			size_t userLimit = ch.getUserLimit();
 
 			if (userLimit != 0 && clients.size() >= userLimit) {
@@ -331,7 +331,7 @@ string Executor::run_JOIN(const vector<string>& args, Client& caller) {
 				continue;
 			}
 
-			if (find(clients.begin(), clients.end(), &caller) != clients.end()) {
+			if (find(clients.begin(), clients.end(), caller.getFD()) != clients.end()) {
 				message += build_reply(ERR_USERONCHANNEL, caller.getNickname(), caller.getNickname(), "is already on channel");
 				continue;
 			}
@@ -536,6 +536,8 @@ string Executor::run_QUIT(const vector<string>& args, Client& caller) {
 	string	fullName = caller.getFullName();
 	string	reason = ":Client Quit!";
 
+	caller.expell();
+
 	if (!args.empty())
 		reason = args[0];
 
@@ -651,7 +653,7 @@ int Executor::run(const Command& cmd, Client& caller) {
 	caller.addSendData(message);
 	if (message.find("Nickname collision KILL") != string::npos)
 		return false;
-	if (message.find("QUIT") != string::npos)
-		return false;
+	// if (message.find("QUIT") != string::npos)
+	// 	return false;
 	return true;
 }
