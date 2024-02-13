@@ -530,6 +530,12 @@ string Executor::run_TOPIC(const vector<string>& args, Client& caller) {
  *		some sort of message reflecting the nature of the event which
  *		caused it to happen.
  */
+
+bool should_remove(const Channel &value)
+{
+	return (value.empty());
+}
+
 string Executor::run_QUIT(const vector<string>& args, Client& caller) {
 	deque<Channel>& channels = this->getChannels();
 	
@@ -541,18 +547,18 @@ string Executor::run_QUIT(const vector<string>& args, Client& caller) {
 	if (!args.empty())
 		reason = args[0];
 
-	for (Channel& chan : channels) {
-		if (chan.hasOperator(caller))
-			chan.removeOperator(caller);
-		if (chan.hasMember(caller)) {
-			chan.removeMember(caller);
-			chan.broadcastToChannel(":" + fullName + " QUIT " + reason + "\r\n");
-		}
-		if (chan.empty()) {
-			this->getChannels().erase(this->e.getItToChannelByName(chan.getName()));
+	for (auto it = channels.begin(); it != channels.end(); it++) {
+		if ((*it).hasOperator(caller))
+			(*it).removeOperator(caller);
+		if ((*it).hasMember(caller)) {
+			(*it).removeMember(caller);
+			(*it).broadcastToChannel(":" + fullName + " QUIT " + reason + "\r\n");
 		}
 	}
-	return (":" + fullName + " QUIT " + reason + "\r\n");
+
+    auto newEnd = std::remove_if(channels.begin(), channels.end(), should_remove);
+    channels.erase(newEnd, channels.end());
+	return "";
 }
 
 
@@ -651,9 +657,7 @@ int Executor::run(const Command& cmd, Client& caller) {
 	}
 
 	caller.addSendData(message);
-	if (message.find("Nickname collision KILL") != string::npos)
+	if (caller.isExpelled())
 		return false;
-	// if (message.find("QUIT") != string::npos)
-	// 	return false;
 	return true;
 }
