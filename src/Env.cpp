@@ -120,7 +120,7 @@ void	Env::removeClient(int fd) {
 	for (deque<Client *>::iterator it = clients.begin(); it != clients.end(); it++) {
 		std::cout << "teest : " << *(*it) << endl;
 		if ((*(*it)).getFD() == fd) {
-			
+			delete *it;
 			clients.erase(it);
 			break ;
 		}
@@ -130,7 +130,7 @@ void	Env::removeClient(int fd) {
 void	Env::clearClients()
 {
 	for (deque<Client *>::iterator it = clients.begin(); it != clients.end(); it++) {
-		delete(*it);
+		delete *it;
 	}
 	this->clients.clear();
 }
