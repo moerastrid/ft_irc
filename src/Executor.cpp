@@ -281,17 +281,17 @@ string Executor::run_NOTICE(const vector<string>& args, Client& caller) {
  */
 string Executor::run_JOIN(const vector<string>& args, Client& caller) {
 	string target = args[0];
-	if (target[0] == '0') { // /JOIN 0 = leave all joined channels.
-		std::deque<Channel>& channels = this->getChannels();
-		for (Channel &chan : channels) {
-			if (chan.hasMember(caller)) {
-				chan.removeMember(caller);
-				if (chan.empty())
-					channels.erase(this->e.getItToChannelByName(chan.getName()));
-			}
-		}
-		return "";
-	}
+	// if (target[0] == '0') { // /JOIN 0 = leave all joined channels.
+	// 	std::deque<Channel>& channels = this->getChannels();
+	// 	for (Channel &chan : channels) {
+	// 		if (chan.hasMember(caller)) {
+	// 			chan.removeMember(caller);
+	// 			if (chan.empty())
+	// 				channels.erase(this->e.getItToChannelByName(chan.getName()));
+	// 		}
+	// 	}
+	// 	return "";
+	// }
 	string pwds = "";
 	if (args.size() == 2) {
 		pwds = args[1];
@@ -531,11 +531,6 @@ string Executor::run_TOPIC(const vector<string>& args, Client& caller) {
  *		caused it to happen.
  */
 
-bool should_remove(const Channel &value)
-{
-	return (value.empty());
-}
-
 string Executor::run_QUIT(const vector<string>& args, Client& caller) {
 	deque<Channel>& channels = this->getChannels();
 	
@@ -556,7 +551,7 @@ string Executor::run_QUIT(const vector<string>& args, Client& caller) {
 		}
 	}
 
-    auto newEnd = std::remove_if(channels.begin(), channels.end(), should_remove);
+    auto newEnd = std::remove_if(channels.begin(), channels.end(), channel_is_empty);
     channels.erase(newEnd, channels.end());
 	return "";
 }

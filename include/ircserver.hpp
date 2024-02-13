@@ -37,3 +37,4 @@ bool			is_channel(const string& name);
 bool 			is_name(const string &name);
 vector<string>	split_args(const string& args);
 bool			compare_lowercase(const string& a, const string& b);
+bool			channel_is_empty(const Channel &value);
