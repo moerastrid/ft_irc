@@ -60,3 +60,8 @@ bool compare_lowercase(const string& a, const string& b) {
 	});
 	return ac == bc;
 }
+
+bool channel_is_empty(const Channel &value)
+{
+	return (value.empty());
+}

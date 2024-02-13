@@ -58,7 +58,6 @@ int	Server::setPoll() {
 			throw ServerException("error in Server::setPoll - poll");
 		return (0);
 	} else if (ret == 0) {
-		//Msg("None of the FD's are ready", "INFO");
 		return (ret);
 	}
 
@@ -83,34 +82,26 @@ void	Server::addConnection() {
 		throw ServerException("error in Server::addConnection - accept");
 	else {
 		Msg("Connection accepted on " + std::to_string(new_fd), "INFO");
-		//Client *pointer = NULL;
-		//pointer = new Client(new_fd);
-		//this->e.getClients().emplace_back(pointer);
 		this->e.addClient(new_fd);
-		//this->e.getClients().emplace_back(new_fd);
 	}
 }
 void	Server::closeConnection(const int fd) {
 	std::deque<Channel>& channels = this->e.getChannels();
-	//std::deque<Client *>::iterator client = this->e.getItToClientByFD(fd);
 	Client& client = this->e.getClientByFD(fd);
 
-	if (!channels.empty()) {
-		for (Channel& channel : channels) {
-			if (channel.hasMember(client)) {
-				channel.sendMessageToOtherMembers(client, ":" + (client).getFullName() + " QUIT :lost connection\r\n");
-				channel.removeMember(client);
-			}
-			if (channel.empty())
-				this->e.getChannels().erase(this->e.getItToChannelByName(channel.getName()));
+	for (Channel& channel : channels) {
+		if (channel.hasMember(client)) {
+			channel.sendMessageToOtherMembers(client, ":" + (client).getFullName() + " QUIT :lost connection\r\n");
+			channel.removeMember(client);
 		}
 	}
-	Msg("Connection closed on " + std::to_string(fd), "INFO");
-	// close(fd);
-	this->e.removeClient(fd);
+	auto newEnd = std::remove_if(channels.begin(), channels.end(), channel_is_empty);
+	channels.erase(newEnd, channels.end());
 	
+	Msg("Connection closed on " + std::to_string(fd), "INFO");
+	this->e.removeClient(fd);
+
 	close(fd);
-	//this->e.getClients().erase(this->e.getItToClientByFD(fd));
 }
 
 bool	Server::receivefromClient(Client &c) {
