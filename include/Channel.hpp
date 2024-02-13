@@ -6,11 +6,12 @@
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/01/31 11:09:53 by ageels        #+#    #+#                 */
-/*   Updated: 2024/02/13 16:07:27 by ageels        ########   odam.nl         */
+/*   Updated: 2024/02/13 20:58:25 by ageels        ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
+
 #include <vector>
 	using std::vector;
 #include <ostream>
@@ -24,9 +25,11 @@
 	using std::to_string;
 #include <deque>
 	using std::deque;
+
 #include "Client.hpp"
 	class Client; // Forward declaration;
 #include "Msg.hpp"
+
 class Channel {
 	private:
 		string			name;
@@ -41,7 +44,7 @@ class Channel {
 		size_t			userLimit;
 	public:
 		static Channel	nullchan;
-		Channel(); // Give each channel a reference to the whole client list for searching by FD.
+		Channel();
 		~Channel();
 		Channel(const Channel& other);
 		Channel& operator=(const Channel& other);

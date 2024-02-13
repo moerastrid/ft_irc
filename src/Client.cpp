@@ -12,7 +12,6 @@
 
 #include "Client.hpp"
 
-// Static
 Client Client::nullclient = Client(-1);
 
 Client::~Client() { 
@@ -160,7 +159,6 @@ const bool&	Client::isExpelled() const {
 	return(this->expelled);
 }
 
-// Out of Class
 bool operator==(const Client &lhs, const Client &rhs) {
 	return 	lhs.getFD() == rhs.getFD() &&
 			lhs.getNickname() == rhs.getNickname() &&

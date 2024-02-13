@@ -6,16 +6,14 @@
 /*   By: ageels <ageels@student.codam.nl>             +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/01/31 11:13:19 by ageels        #+#    #+#                 */
-/*   Updated: 2024/02/13 16:07:05 by ageels        ########   odam.nl         */
+/*   Updated: 2024/02/13 20:59:07 by ageels        ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Channel.hpp"
 
-// Static
 Channel Channel::nullchan;
 
-// Public
 Channel::Channel() {
 	this->name = "";
 	this->password = "";

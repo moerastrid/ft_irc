@@ -94,7 +94,7 @@ static pair<string,string> get_current_modes(const Channel& ch) {
 	string args = "";
 	string password = ch.getPassword();
 	size_t userLimit = ch.getUserLimit();
-	std::cerr << "Userlimit: " << userLimit << endl;
+	Msg("Userlimit: " + to_string(userLimit), "DEBUG");
 	if (!password.empty()) {
 		modes += 'k';
 		args += password;
@@ -174,7 +174,7 @@ void Executor::handle_l_mode(const bool add, const string& arg, Channel& target)
 		} catch (const std::exception& e) {
 			throw std::runtime_error("");
 		}
-		std::cerr << "num: " << num << endl;
+		Msg("num: " + to_string(num), "DEBUG");
 		if (num > 1)
 			target.setUserLimit(num);
 		else

@@ -12,15 +12,13 @@
 
 #include "Server.hpp"
 
-//private
-
 void	Server::setUp() {
 	this->sockfd.fd = socket(AF_INET, SOCK_STREAM|SOCK_NONBLOCK, 0);
 	if (this->sockfd.fd == -1)
 		throw ServerException("error in Server::setUp - socket");
 	fcntl(this->sockfd.fd, F_SETFL, O_NONBLOCK);
 	int yes = 1;
-	if (setsockopt(this->sockfd.fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1) //yes to NULL
+	if (setsockopt(this->sockfd.fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1)
 		throw ServerException("error in Server::setUp - setsockopt");
 	if (bind(this->sockfd.fd, (struct sockaddr *) &this->sockin, sizeof(this->sockin)) == -1) {
 		if (this->e.getPort() < 1024)
@@ -168,7 +166,6 @@ void	Server::comm_pollout(Client &client) {
 }
 
 
-//public
 Server::Server(Env& e) : e(e) {
 	Msg("Server - constructor (e)", "CLASS");
 	memset(&this->sockin, 0, sizeof(this->sockin));

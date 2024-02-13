@@ -19,7 +19,6 @@
 #include <algorithm>
 	using std::reverse;
 #include <iostream>
-	using std::cout;
 	using std::cerr;
 #include <unistd.h>
 

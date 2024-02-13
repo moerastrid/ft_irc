@@ -12,7 +12,6 @@
 
 #include "Executor.hpp"
 
-//private
 
 Channel& Executor::getChannelByName(const string name) {
 	return this->e.getChannelByName(name);

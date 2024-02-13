@@ -37,7 +37,6 @@ int main(int argc, char **argv) {
 			for (const auto &client : env.getClients()) {
 				close(client->getFD());
 			}
-			//env.getClients().clear();
 			env.clearClients();
 		}
 		if (!env.getChannels().empty())

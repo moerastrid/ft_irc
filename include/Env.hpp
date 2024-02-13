@@ -26,7 +26,6 @@
 class Env {
 	private:
 		deque<Client *>		clients;
-		// deque<Client>		clients;
 		deque<Channel>		channels;
 
 		string				pass;

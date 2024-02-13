@@ -12,7 +12,6 @@
 
 #include "Command.hpp"
 
-// private
 void Command::addArg(string arg) {
 	this->args.push_back(arg);
 }
@@ -20,7 +19,6 @@ void Command::setCmd(string cmd) {
 	this->command = cmd;
 }
 
-// public
 Command::Command() {
 	Msg("command - default constructor", "CLASS");
 }
