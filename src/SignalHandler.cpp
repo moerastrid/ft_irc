@@ -17,6 +17,11 @@ SignalHandler::~SignalHandler() {}
 
 bool SignalHandler::interrupted = false;
 
+void	SignalHandler::sigintHandler(int signum) {
+	Msg("Interrupted signal (" + std::to_string(signum) + ") received", "WARNING");
+	interrupted = true;
+}
+
 void	SignalHandler::setDefault(void) {
 	signal(SIGINT, SIG_DFL);
 }
