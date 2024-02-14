@@ -189,9 +189,10 @@ Server::Server(Env& e) : e(e) {
 Server::~Server() {
 	Msg("Server - default destructor", "CLASS");
 	close(sockfd.fd);
-			stringstream the_end;
-		the_end << "Successfully ended the " << *this << " \\^.^/";
-		Msg(the_end.str(), "INFO");
+
+	stringstream the_end;
+	the_end << "Successfully ended the " << *this << " \\^.^/";
+	Msg(the_end.str(), "INFO");
 }
 
 void	Server::run(Executor& ex) {
