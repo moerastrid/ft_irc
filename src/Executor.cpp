@@ -523,7 +523,7 @@ string Executor::run_QUIT(const vector<string>& args, Client& caller) {
 	deque<Channel>& channels = this->getChannels();
 	
 	string	fullName = caller.getFullName();
-	string	reason = ":Client Quit!";
+	string	reason = ":" + caller.getNickname();
 
 	caller.expell();
 
