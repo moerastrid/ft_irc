@@ -12,6 +12,8 @@
 
 #pragma once
 
+#include <unistd.h>
+
 #include <deque>
 	using std::deque;
 #include <ostream>
@@ -58,7 +60,7 @@ class Env {
 
 		void						addClient(int fd);
 		void						removeClient(int fd);
-		void						clearClients();
+		void						reset();
 };
 
 std::ostream& operator<<(std::ostream& os, const Env& e);

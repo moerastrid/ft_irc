@@ -13,44 +13,28 @@
 #include "ircserver.hpp"
 
 int main(int argc, char **argv) {
-	SignalHandler	sh;
-	sh.setCustom();
-
+	int	exit_status = EXIT_SUCCESS;
 	int	port = parse(argc, argv);
+
 	if (port < 0) {
 		return (EXIT_FAILURE);
 	}
 
-	Env env(port, argv[2]);
-	Executor	ex(env);
+	Env				env(port, argv[2]);
+	Executor		exec(env);
+	SignalHandler	sh;
 
+	sh.setCustom();
 	try {
 		Server ircServer(env);
-		std::stringstream ss1;
-		ss1 << "Successfully booted the " << ircServer << " at " << env << " \\^.^/" << endl;
-		Msg(ss1.str(), "INFO");
-		while (sh.getInterrupted() == false) {
-				ircServer.run(ex);
-		}
-
-		if (!env.getClients().empty()) {
-			for (const auto &client : env.getClients()) {
-				close(client->getFD());
-			}
-			env.clearClients();
-		}
-		if (!env.getChannels().empty())
-			env.getChannels().clear();
-
-		std::stringstream ss2;
-		ss2 << "Successfully ended the " << ircServer << " \\^.^/" << endl;
-		Msg(ss2.str(), "INFO");
-	} catch (const Server::ServerException &ex) {
+		while (sh.getInterrupted() == false)
+			ircServer.run(exec);
+	} catch (const Server::ServerException &exception) {
 		Msg("ServerException caught: ", "ERROR");
-		cerr << ex.what() << endl;
-		return (EXIT_FAILURE);
+		cerr << exception.what() << endl;
+		exit_status = EXIT_FAILURE;
 	}
+	env.reset();
 	sh.setDefault();
-	
-	return (EXIT_SUCCESS);
+	return (exit_status);
 }

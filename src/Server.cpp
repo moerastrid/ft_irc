@@ -180,11 +180,18 @@ Server::Server(Env& e) : e(e) {
 	Server::setInfo();
 
 	Msg("server waiting for connections ... ", "DEBUG");
+
+	stringstream welcome_message;
+	welcome_message << "Successfully booted the " << *this << " at " << this->e << " \\^.^/";
+	Msg(welcome_message.str(), "INFO");
 }
 
 Server::~Server() {
 	Msg("Server - default destructor", "CLASS");
 	close(sockfd.fd);
+			stringstream the_end;
+		the_end << "Successfully ended the " << *this << " \\^.^/";
+		Msg(the_end.str(), "INFO");
 }
 
 void	Server::run(Executor& ex) {

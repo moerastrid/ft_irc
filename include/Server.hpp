@@ -26,6 +26,8 @@
 	using std::string;
 #include <vector>
 	using std::vector;
+#include <sstream>
+	using std::stringstream;
 
 #include "Msg.hpp"
 #include "Client.hpp"

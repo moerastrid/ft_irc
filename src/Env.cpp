@@ -126,12 +126,17 @@ void	Env::removeClient(int fd) {
 	}
 }
 
-void	Env::clearClients()
+void	Env::reset()
 {
-	for (deque<Client *>::iterator it = clients.begin(); it != clients.end(); it++) {
-		delete *it;
+	if (!this->clients.empty()) {
+		for (deque<Client *>::iterator it = this->clients.begin(); it != this->clients.end(); it++) {
+			close((*it)->getFD());
+			delete *it;
+		}
+		this->clients.clear();
 	}
-	this->clients.clear();
+	if (!this->channels.empty())
+		this->channels.clear();
 }
 
 
