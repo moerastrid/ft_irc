@@ -56,6 +56,7 @@ int	Server::setPoll() {
 			throw ServerException("error in Server::setPoll - poll");
 		return (0);
 	} else if (ret == 0) {
+		Msg("poll returned 0", "INFO");
 		return (ret);
 	}
 
@@ -125,7 +126,11 @@ bool	Server::sendtoClient(Client &c) {
 		return (true);
 	}
 	int nbytes = send(c.getFD(), dataToSend.c_str(), dataToSend.size(), 0);
-	if (nbytes <= 0) {
+	if (nbytes == 0) { 
+		Msg("CONNECTION END " + to_string(c.getFD()), "WARNING"); 
+		return (false);
+	}
+	if (nbytes < 0) {
 		Msg("error in sending data", "ERROR");
 		return (false);
 	}
@@ -156,6 +161,7 @@ bool	Server::comm_pollin(Executor& ex, Client &client) {
 void	Server::comm_pollout(Client &client) {
 	if (sendtoClient(client) == false) {
 		closeConnection(client.getFD());
+		return ;
 	}
 	if (!client.hasSendData())
 	{

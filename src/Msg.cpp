@@ -15,21 +15,21 @@
 void	Msg::structure([[maybe_unused]]const string text) {
 	// cout << "\x1B[35m" << "CLASS-\t\t" << text << "\x1B[0m" << endl;
 }
-void	Msg::customStream(const string text) {
-	cout << "\x1B[44m" << "STREAM-\t\t";
-	for (auto i : text) {
-		if (i == '\r') {
-			cout << "\\r";
-		} else if (i == '\n') {
-			cout << "\\n";
-		} else {
-			cout << i;
-		}
-	}
-	cout << "\033[0m" << endl;
+void	Msg::customStream([[maybe_unused]]const string text) {
+	// cout << "\x1B[44m" << "STREAM-\t\t";
+	// for (auto i : text) {
+	// 	if (i == '\r') {
+	// 		cout << "\\r";
+	// 	} else if (i == '\n') {
+	// 		cout << "\\n";
+	// 	} else {
+	// 		cout << i;
+	// 	}
+	// }
+	// cout << "\033[0m" << endl;
 }
-void	Msg::debug(const string text) {
-	cout << "\x1B[36m" << "DEBUG-\t\t" << text << "\x1B[0m" << endl;
+void	Msg::debug([[maybe_unused]]const string text) {
+	// cout << "\x1B[36m" << "DEBUG-\t\t" << text << "\x1B[0m" << endl;
 }
 void	Msg::info(const string text) {
 	cout << "\x1B[34m" << "INFO-\t\t" << text << "\x1B[0m" << endl;

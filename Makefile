@@ -14,7 +14,7 @@
 
 NAME := ircserv
 CXX = c++
-CXXFLAGS = -Wall -Wextra -Werror -Iinclude
+CXXFLAGS = -Wall -Wextra -Werror -Iinclude -Ofast
 # CXXFLAGS += -g -fno-omit-frame-pointer #-fsanitize=address
 # MAKEFLAGS += --no-print-directory
 
